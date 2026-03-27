@@ -1,5 +1,14 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('title') ?> Rutas <?= $this->endSection() ?>
+<?= $this->section('styles') ?>
+<style>
+    label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+</style>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
 
 <!-- Content Header (Page header) -->
@@ -56,14 +65,14 @@
         </div>
 
         <!-- Modal -->
-        <div class="modal fade" id="model-rutas" tabindex="-1" aria-labelledby="model-rutas-label" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
+        <div class="modal fade" id="model-rutas" tabindex="-1" aria-labelledby="model-rutas-label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="model-rutas-label">Opciones del usuario</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
-                        </button>
+                        </button> -->
                     </div>
                     <div class="modal-body">
                         <div class="user">
@@ -84,7 +93,7 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label for="desde">Desde</label>
+                                        <label for="desde">Dirección Desde</label>
                                         <div class="input-group mb-3">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text"><i></i></span>
@@ -95,7 +104,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label for="hasta">Hasta</label>
+                                        <label for="hasta">Dirección Hasta</label>
                                         <div class="input-group mb-3">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text"><i></i></span>

@@ -28,6 +28,10 @@ function abrirModelEditarInstalador(elemento) {
     $('#correo').val(dataInstaladores.correo);
     $('#id-instalador').val(dataInstaladores.id_instalador);
 
+    eliminarColorYfocus(inputNombre);
+    eliminarColorYfocus(inputDui);
+    eliminarColorYfocus(inputCorreo);
+
     $('#modal-instaladores').modal('show');
 }
 
@@ -112,6 +116,10 @@ function abrirModalNuevoInstalador() {
     $('#direccion').val('');
     $('#correo').val('');
     $('#id-instalador').val('');
+
+    eliminarColorYfocus(inputNombre);
+    eliminarColorYfocus(inputDui);
+    eliminarColorYfocus(inputCorreo);
 
     $('#modal-instaladores').modal('show');
 }

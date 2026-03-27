@@ -46,6 +46,8 @@ function traerTiposCliente() {
                     $('.modal-guardar').hide();
                     $('.modal-editar').show();
 
+                    eliminarColorYfocus(inputTipoCliente);
+
                     // Obtener todo el objeto del usuario desde el data-attribute
                     var dataTipoCliente = JSON.parse(
                         decodeURIComponent($(this).attr('data-tipo-cliente'))
@@ -73,6 +75,8 @@ function abrirModalNuevoTipoCliente() {
     // limpiar campos del formulario
     $('#tipo-cliente').val('');
     $('#id-tipo-cliente').val('');
+
+    eliminarColorYfocus(inputTipoCliente);
 
     $('#modal-tipo-cliente').modal('show');
 }

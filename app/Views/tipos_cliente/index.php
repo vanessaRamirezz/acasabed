@@ -1,5 +1,14 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('title') ?> Tipos de Cliente <?= $this->endSection() ?>
+<?= $this->section('styles') ?>
+<style>
+    label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+</style>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
 
 <!-- Content Header (Page header) -->
@@ -40,19 +49,19 @@
         </div>
 
         <!-- Modal -->
-        <div class="modal fade" id="modal-tipo-cliente" tabindex="-1" aria-labelledby="mantenimiento-tipo-cliente-label" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
+        <div class="modal fade" id="modal-tipo-cliente" tabindex="-1" aria-labelledby="mantenimiento-tipo-cliente-label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="mantenimiento-tipo-cliente-label">Opciones del usuario</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
-                        </button>
+                        </button> -->
                     </div>
                     <div class="modal-body">
                         <div class="user">
                             <div class="row">
-                                <div class="col-sm-6">
+                                <div class="col-sm-9">
                                     <div class="form-group">
                                         <label for="tipo-cliente">Tipo de Cliente</label>
                                         <div class="input-group mb-3">

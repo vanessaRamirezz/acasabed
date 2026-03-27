@@ -19,6 +19,10 @@ function abrirModalNuevaRuta() {
     $('#hasta').val('');
     $('#id-ruta').val('');
 
+    eliminarColorYfocus(inputCodigo);
+    eliminarColorYfocus(inputDesde);
+    eliminarColorYfocus(inputHasta);
+
     $('#model-rutas').modal('show');
 }
 
@@ -34,6 +38,10 @@ function abrirModalEditarRuta(elemento) {
     $('#desde').val(dataRutas.desde);
     $('#hasta').val(dataRutas.hasta);
     $('#id-ruta').val(dataRutas.id_ruta);
+
+    eliminarColorYfocus(inputCodigo);
+    eliminarColorYfocus(inputDesde);
+    eliminarColorYfocus(inputHasta);
 
     $('#model-rutas').modal('show');
 }

@@ -66,6 +66,13 @@ function traerUsuarios() {
                     $('.modal-editar').show();
                     $('#clave').val('');
 
+                    eliminarColorYfocus(inputDui);
+                    eliminarColorYfocus(inputNombres);
+                    eliminarColorYfocus(inputApellidos);
+                    eliminarColorYfocus(inputCorreo);
+                    eliminarColorYfocus(inputPerfil);
+                    eliminarColorYfocus(inputClave);
+
                     // Obtener todo el objeto del usuario desde el data-attribute
                     var usuario = JSON.parse(
                         decodeURIComponent($(this).attr('data-usuario'))
@@ -157,6 +164,12 @@ function abrirModalNuevoUsuario() {
     inputEstado.value = 'SI';
     divGenerador.style.display = 'block';
 
+    eliminarColorYfocus(inputDui);
+    eliminarColorYfocus(inputNombres);
+    eliminarColorYfocus(inputApellidos);
+    eliminarColorYfocus(inputCorreo);
+    eliminarColorYfocus(inputPerfil);
+    eliminarColorYfocus(inputClave);
 
     $('#mantenimiento-usuarios').modal('show');
 }
@@ -199,7 +212,7 @@ function actualizarEstado() {
                 success: function (response) {
                     if (response.status === 'success') {
                         Swal.close();
-                        alertEnSweet('success','Éxito', response.mensaje)
+                        alertEnSweet('success', 'Éxito', response.mensaje)
                         traerUsuarios();
                         $('#mantenimiento-usuarios').modal('hide');
                     } else {
@@ -209,7 +222,7 @@ function actualizarEstado() {
                 },
                 error: function () {
                     Swal.close();
-                    alertEnSweet('error','Error','No se logro actualizar el estado del usuarios');
+                    alertEnSweet('error', 'Error', 'No se logro actualizar el estado del usuarios');
                 }
             });
         }

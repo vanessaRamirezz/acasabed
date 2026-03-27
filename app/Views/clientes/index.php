@@ -1,0 +1,302 @@
+<?= $this->extend('layouts/main') ?>
+<?= $this->section('title') ?> Clientes <?= $this->endSection() ?>
+<?= $this->section('styles') ?>
+<style>
+    label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+</style>
+<?= $this->endSection() ?>
+<?= $this->section('content') ?>
+
+<!-- Content Header (Page header) -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark texto">Listado de Clientes</h1>
+            </div><!-- /.col -->
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Agregar Nuevo</button>
+            </div>
+            <!-- <div class="card-body">
+
+                <div class="d-flex justify-content-end mb-4">
+                    <div class="input-group col-md-6">
+                        <input type="text" id="customSearchPeriodos" placeholder="Buscar desde, hasta ó estado" class="form-control">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" id="searchBtnPeriodos" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" id="clearSearchBtnPeriodos" type="button">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm" id="tbl-periodos">
+                        <thead>
+                            <tr>
+                                <th>Desde</th>
+                                <th>Hasta</th>
+                                <th>Estado</th>
+                                <th>Operaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-center">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div> -->
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="modal-clientes" tabindex="-1" aria-labelledby="mantenimiento-usuarios-label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="mantenimiento-usuarios-label">Opciones del usuario</h5>
+                        <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button> -->
+                    </div>
+                    <div class="modal-body ">
+                        <div class="user">
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="codigo">Código</label>
+                                        <input type="text" class="form-control" name="codigo" id="codigo">
+                                    </div>
+                                </div>
+                                <div class="col-sm-9">
+                                    <div class="form-group">
+                                        <label for="nombre">Nombre Completo / Razón Social</label>
+                                        <input type="text" class="form-control" name="nombre" id="nombre">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label>Sexo</label>
+                                        <select class="form-control" name="sexo" id="sexo">
+                                            <option value="">Seleccione</option>
+                                            <option value="1">Masculino</option>
+                                            <option value="0">Femenino</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label for="ocupacion">Ocupación</label>
+                                        <input type="text" class="form-control" name="ocupacion" id="ocupacion">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="fecha-de-nacimiento">Fecha de Nacimiento</label>
+                                        <input type="date" class="form-control" name="fecha-de-nacimiento" id="fecha-de-nacimiento">
+                                    </div>
+                                </div>
+                            </div>
+                            <p>Puede agregar varios numeros separados por (,) sin guiones (-)</p>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="telefono">Telefonos</label>
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" name="telefono" id="telefono">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="correo">Correo</label>
+                                        <input type="email" class="form-control" name="correo" id="correo">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="dui">DUI</label>
+                                        <input type="text" class="form-control" name="dui" id="dui">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="nit">NIT</label>
+                                        <input type="text" class="form-control" name="nit" id="nit">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="nrc">NRC</label>
+                                        <input type="text" class="form-control" name="nrc" id="nrc">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-9">
+                                    <div class="form-group">
+                                        <label for="actividad-economica">Actividad Económica</label>
+                                        <select id="actividad-economica" class="form-control">
+                                            <option value="">Seleccione...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="tipo-cliente">Tipo de Cliente</label>
+                                        <select class="form-control select2" style="width: 100%;" id="tipo-cliente">
+                                            <option value="">Seleccione</option>
+                                            <?php
+                                            foreach ($tipoClientes as $tipoCliente) {
+                                                echo '<option value="' . $tipoCliente['id_tipo_cliente'] . '">' . $tipoCliente['nombre'] . '</option>';
+                                            }
+
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <!-- DATOS DEL CONTACTO -->
+                            <h6 class="text-primary mb-3">Datos del contacto</h6>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="contacto-nombre">Nombre contacto</label>
+                                        <input type="text" class="form-control" name="contacto-nombre" id="contacto-nombre">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="contacto-dui">DUI</label>
+                                        <input type="text" class="form-control" name="contacto-dui" id="contacto-dui">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="contacto-telefono">Telefonos</label>
+                                        <input type="text" class="form-control" name="contacto-telefono" id="contacto-telefono">
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <h5>Dirección</h5>
+                            <div class="row">
+                                <div class="col-sm-9">
+                                    <div class="form-row">
+                                        <div class="form-group col-sm">
+                                            <label for="departamentos">Departamentos</label>
+                                            <select id="departamentos" class="form-control" name="departamentos">
+                                                <option value="-1">Seleccione...</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-sm">
+                                            <label for="municipios">Municipios</label>
+                                            <select id="municipios" class="form-control">
+                                                <option value="-1" selected>Seleccione...</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-sm">
+                                            <label for="distritos">Distritos</label>
+                                            <select id="distritos" class="form-control" data-distrito-seleccionado="-1">
+                                                <option value="-1" selected>Seleccione...</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-sm">
+                                            <label for="direccion">Zonas</label>
+                                            <select id="direccion" class="form-control">
+                                                <option value="-1" selected>Seleccione...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="complemento-direccion">Complemento</label>
+                                        <input type="text" class="form-control" name="complemento-direccion" id="complemento-direccion">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="fecha-vencimiento-dui">Fecha de Vencimiento del DUI</label>
+                                        <input type="date" class="form-control" name="fecha-vencimiento-dui" id="fecha-vencimiento-dui">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+
+                                <!-- DUI FRONTAL -->
+                                <div class="col-md-6">
+                                    <label class="form-label" for="dui-frontal-input">DUI Frontal</label>
+                                    <input type="file" class="form-control mb-2" name="dui-frontal-input" id="dui-frontal-input" accept=".jpg,.jpeg,.png">
+
+                                    <img id="vista-previa-frontal"
+                                        src=""
+                                        class="img-fluid border rounded"
+                                        style="max-height: 200px; display:none;">
+                                </div>
+
+                                <!-- DUI REVERSO -->
+                                <div class="col-md-6">
+                                    <label class="form-label" for="dui-reverso-input">DUI Reverso</label>
+                                    <input type="file" class="form-control mb-2" name="dui-reverso-input" id="dui-reverso-input" accept=".jpg,.jpeg,.png">
+
+                                    <img id="vista-previa-reversa"
+                                        src=""
+                                        class="img-fluid border rounded"
+                                        style="max-height: 200px; display:none;">
+                                </div>
+
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label for="comentarios">Comentarios</label>
+                                        <textarea name="comentarios" id="comentarios" class="form-control"></textarea>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="id-cliente">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary modal-guardar" id="guardar-registro">Guardar registro</button>
+                        <button type="button" class="btn btn-warning modal-editar" id="actualizar-registro">Guardar registro</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.container-fluid -->
+</section>
+<!-- /.content -->
+
+<?= $this->endSection() ?>
+<?= $this->section('scripts') ?>
+<script type="module" src="<?= base_url('dist/js/clientes/clientes.js') ?>"></script>
+<?= $this->endSection() ?>

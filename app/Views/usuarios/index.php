@@ -1,5 +1,14 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('title') ?> Usuarios <?= $this->endSection() ?>
+<?= $this->section('styles') ?>
+<style>
+    label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+</style>
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
 
 <!-- Content Header (Page header) -->
@@ -46,14 +55,14 @@
         </div>
 
         <!-- Modal -->
-        <div class="modal fade" id="mantenimiento-usuarios" tabindex="-1" aria-labelledby="mantenimiento-usuarios-label" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
+        <div class="modal fade" id="mantenimiento-usuarios" tabindex="-1" aria-labelledby="mantenimiento-usuarios-label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="mantenimiento-usuarios-label">Opciones del usuario</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
-                        </button>
+                        </button> -->
                     </div>
                     <div class="modal-body">
                         <div class="user">

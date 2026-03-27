@@ -68,4 +68,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getPeriodos', 'Periodos::getPeriodos');
     $routes->post('nuevoPeriodo', 'Periodos::nuevoPeriodo');
     $routes->post('editarPeriodo', 'Periodos::editarPeriodo');
+
+    // CLIENTES
+    $routes->get('clientes', 'Clientes::index');
+    $routes->get('getActividades', 'Clientes::getActividades');
+    // $routes->get('getPeriodos', 'Periodos::getPeriodos');
+    $routes->post('nuevoCliente', 'Clientes::nuevoCliente');
+    // $routes->post('editarPeriodo', 'Periodos::editarPeriodo');
 });

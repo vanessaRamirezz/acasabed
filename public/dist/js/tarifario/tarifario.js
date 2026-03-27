@@ -28,6 +28,10 @@ function abrirModalNuevaTarifa() {
 
     limpiarFormulario();
 
+    eliminarColorYfocus(inputs.codigo[0]);
+    eliminarColorYfocus(inputs.tipoCliente[0]);
+    eliminarColorYfocus(inputs.valorMetro[0]);
+
     $('#model-tarifario').modal('show');
 }
 
@@ -49,6 +53,10 @@ function abrirModalEditarTarifa(elemento) {
     $('#desde-n-metros').val(dataTarifas.desde_n_metros);
     $('#hasta-n-metros').val(dataTarifas.hasta_n_metros);
     $('#id-tarifa').val(dataTarifas.id_tarifa);
+
+    eliminarColorYfocus(inputs.codigo[0]);
+    eliminarColorYfocus(inputs.tipoCliente[0]);
+    eliminarColorYfocus(inputs.valorMetro[0]);
 
     $('#model-tarifario').modal('show');
 }

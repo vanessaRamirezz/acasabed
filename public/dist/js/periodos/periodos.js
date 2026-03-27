@@ -36,6 +36,8 @@ function abrirModalNuevoPeriodo() {
 
     limpiarFormulario();
 
+    eliminarColorYfocus(inputs.desde[0]);
+
     $('#modal-periodos').modal('show');
 }
 
@@ -49,12 +51,14 @@ function abrirModalEditarPeriodo(elemento) {
 
     $('#fecha-desde').val(dataPeriodo.fecha1);
     $('#fecha-hasta').val(dataPeriodo.fecha2);
-    if (dataPeriodo.status == 1) {
+    if (dataPeriodo.status == 'ACTIVO') {
         $('#estado-activo').prop('checked', true);
     } else {
         $('#estado-inactivo').prop('checked', true);
     }
     $('#id-periodo').val(dataPeriodo.id);
+
+    eliminarColorYfocus(inputs.desde[0]);
 
     $('#modal-periodos').modal('show');
 }
@@ -87,7 +91,7 @@ function cargarPeriodos() {
                     if (data == 'ACTIVO') {
                         return '<span class="badge badge-success">Activo</span>';
                     } else {
-                        return '<span class="badge badge-secondary">Inactivo</span>';
+                        return '<span class="badge badge-secondary">Cerrado</span>';
                     }
                 }
             },
