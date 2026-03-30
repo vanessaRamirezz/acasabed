@@ -48,29 +48,38 @@ class Periodos extends BaseController
     public function nuevoPeriodo()
     {
         try {
+            $nombrePeriodo = $this->request->getPost('nombre') ?: null;
             $desde = $this->request->getPost('desde') ?: null;
             $hasta = $this->request->getPost('hasta') ?: null;
-            $estado = $this->request->getPost('estado') ?: null;
+            // $estado = $this->request->getPost('estado') ?: null;
             $idUsuario = $_SESSION['id_usuario'];
             $fechaCreacion = date('Y-m-d H:i:s');
             log_message('debug', print_r($this->request->getPost(), true));
+
+            if(!$nombrePeriodo){
+                log_message('error', 'El campo nombre de periodo es requerido');
+                return $this->respondError('El campo nombre de periodo es requerido');
+            }
 
             if (!$desde) {
                 log_message('error', 'El campo fecha desde es requerido');
                 return $this->respondError('El campo fecha desde es requerido');
             }
 
-            if ($estado == '1') {
-                $estadoNuevo = 'ACTIVO';
-            } else {
-                $estadoNuevo = 'CERRADO';
-            }
+            // if ($estado == '1') {
+            //     $estadoNuevo = 'ACTIVO';
+            // } else {
+            //     $estadoNuevo = 'CERRADO';
+            // }
+
+            $estadoNuevo = 'ACTIVO';
 
             // INICIAR TRANSACCIÓN
             $db = $this->periodosModel->db;
             $db->transBegin();
 
             $resultado = $this->periodosModel->insertarNuevoPeriodo(
+                $nombrePeriodo,
                 $desde,
                 $hasta,
                 $estadoNuevo,
@@ -109,11 +118,17 @@ class Periodos extends BaseController
     public function editarPeriodo()
     {
         try {
+            $nombrePeriodo = $this->request->getPost('nombre') ?: null;
             $desde = $this->request->getPost('desde') ?: null;
             $hasta = $this->request->getPost('hasta') ?: null;
             $estado = $this->request->getPost('estado') ?: null;
             $idPeriodo = $this->request->getPost('idPeriodo');
             log_message('debug', print_r($this->request->getPost(), true));
+
+            if(!$nombrePeriodo){
+                log_message('error', 'El campo nombre de periodo es requerido');
+                return $this->respondError('El campo nombre de periodo es requerido');
+            }
 
             if (!$desde) {
                 log_message('error', 'El campo fecha desde es requerido');
@@ -130,6 +145,7 @@ class Periodos extends BaseController
             $db->transBegin();
 
             $resultado = $this->periodosModel->actualizarPeriodo(
+                $nombrePeriodo,
                 $desde,
                 $hasta,
                 $estadoNuevo,

@@ -35,7 +35,7 @@
 
                 <div class="d-flex justify-content-end mb-4">
                     <div class="input-group col-md-6">
-                        <input type="text" id="customSearchPeriodos" placeholder="Buscar desde, hasta ó estado" class="form-control">
+                        <input type="text" id="customSearchPeriodos" placeholder="Buscar nombre, desde, hasta ó estado" class="form-control">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" id="searchBtnPeriodos" type="button">
                                 <i class="fas fa-search"></i>
@@ -50,6 +50,7 @@
                     <table class="table table-bordered table-sm" id="tbl-periodos">
                         <thead>
                             <tr>
+                                <th>Periodo</th>
                                 <th>Desde</th>
                                 <th>Hasta</th>
                                 <th>Estado</th>
@@ -75,7 +76,14 @@
                         </button> -->
                     </div>
                     <div class="modal-body">
-
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="form-group">
+                                    <label for="periodo" class="form-label">Nombre de periodo</label>
+                                    <input type="text" class="form-control" id="periodo">
+                                </div>
+                            </div>
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label for="fecha-desde" class="form-label">Fecha Desde</label>

@@ -3,6 +3,7 @@ import { alertaError, alertaOk, alertEnSweet, colorEnInputConFocus, eliminarColo
 let tablaPeriodos;
 
 const inputs = {
+    nombre: $("#periodo"),
     desde: $("#fecha-desde"),
     hasta: $("#fecha-hasta"),
     estado: $('input[name="estado"]'),
@@ -11,6 +12,7 @@ const inputs = {
 
 function getData() {
     return {
+        nombre: inputs.nombre.val(),
         desde: inputs.desde.val(),
         hasta: inputs.hasta.val(),
         estado: $('input[name="estado"]:checked').val() || null,
@@ -19,6 +21,7 @@ function getData() {
 }
 
 function limpiarFormulario() {
+    inputs.nombre.val('');
     inputs.desde.val('');
     inputs.hasta.val('');
     inputs.idPeriodo.val('');
@@ -27,6 +30,7 @@ function limpiarFormulario() {
     $('input[name="estado"]').prop('checked', false);
     $('#estado-activo').prop('checked', true);
 
+    eliminarColorYfocus(inputs.nombre[0]);
     eliminarColorYfocus(inputs.desde[0]);
 }
 
@@ -36,7 +40,10 @@ function abrirModalNuevoPeriodo() {
 
     limpiarFormulario();
 
+    eliminarColorYfocus(inputs.nombre[0]);
     eliminarColorYfocus(inputs.desde[0]);
+
+    $('#estado-inactivo').prop('disabled', true);
 
     $('#modal-periodos').modal('show');
 }
@@ -49,6 +56,7 @@ function abrirModalEditarPeriodo(elemento) {
         decodeURIComponent($(elemento).attr('data-periodo'))
     );
 
+    $('#periodo').val(dataPeriodo.nombre_periodo);
     $('#fecha-desde').val(dataPeriodo.fecha1);
     $('#fecha-hasta').val(dataPeriodo.fecha2);
     if (dataPeriodo.status == 'ACTIVO') {
@@ -58,7 +66,10 @@ function abrirModalEditarPeriodo(elemento) {
     }
     $('#id-periodo').val(dataPeriodo.id);
 
+    eliminarColorYfocus(inputs.nombre[0]);
     eliminarColorYfocus(inputs.desde[0]);
+
+    $('#estado-inactivo').prop('disabled', false);
 
     $('#modal-periodos').modal('show');
 }
@@ -79,6 +90,9 @@ function cargarPeriodos() {
             }
         },
         columns: [
+            {
+                data: 'nombre_periodo'
+            },
             {
                 data: 'fecha1'
             },
@@ -139,6 +153,7 @@ function guardarOeditarPeriodo(tipoProceso) {
 
     let tipo_proceso = tipoProceso === '1' ? 'nuevoPeriodo' : 'editarPeriodo';
 
+    if (!validarCampo(data.nombre, 'Nombre de periodo es requerido', inputs.nombre)) return;
     if (!validarCampo(data.desde, 'Fecha desde es requerido', inputs.desde)) return;
 
     Swal.fire({

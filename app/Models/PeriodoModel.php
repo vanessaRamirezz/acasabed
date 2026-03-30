@@ -8,7 +8,7 @@ class PeriodoModel extends Model
 {
     protected $table = 'periodos';
     protected $primaryKey = 'id_periodo';
-    protected $allowedFields = ['fecha_desde', 'fecha_hasta', 'estado', 'id_usuario', 'fecha_creacion'];
+    protected $allowedFields = ['nombre', 'fecha_desde', 'fecha_hasta', 'estado', 'id_usuario', 'fecha_creacion'];
 
     public function getTodosPeriodo($start, $length, $searchValue = '')
     {
@@ -27,7 +27,8 @@ class PeriodoModel extends Model
         // =============================
         if (!empty($searchValue)) {
             $builder->groupStart()
-                ->like('fecha_desde', $searchValue)
+                ->like('nombre', $searchValue)
+                ->orLike('fecha_hasta', $searchValue)
                 ->orLike('fecha_hasta', $searchValue)
                 ->orLike('estado', $searchValue)
                 ->groupEnd();
@@ -43,7 +44,7 @@ class PeriodoModel extends Model
         // DATA
         // =============================
         $data = $builder
-            ->select('id_periodo as id, fecha_desde as fecha1, fecha_hasta as fecha2, estado as status')
+            ->select('id_periodo as id, nombre AS nombre_periodo, fecha_desde as fecha1, fecha_hasta as fecha2, estado as status')
             ->orderBy('id_periodo', 'DESC')
             ->limit($length, $start)
             ->get()
@@ -57,6 +58,7 @@ class PeriodoModel extends Model
     }
 
     public function insertarNuevoPeriodo(
+        $nombre,
         $desde,
         $hasta,
         $estado,
@@ -64,6 +66,7 @@ class PeriodoModel extends Model
         $fechaCreacion
     ) {
         return $this->insert([
+            'nombre' => $nombre,
             'fecha_desde' => $desde,
             'fecha_hasta' => $hasta,
             'estado' => $estado,
@@ -73,12 +76,14 @@ class PeriodoModel extends Model
     }
 
     public function actualizarPeriodo(
+        $nombre,
         $desde,
         $hasta,
         $estado,
         $idPeriodo,
     ) {
         return $this->update($idPeriodo, [
+            'nombre' => $nombre,
             'fecha_desde' => $desde,
             'fecha_hasta' => $hasta,
             'estado' => $estado,
