@@ -72,7 +72,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // CLIENTES
     $routes->get('clientes', 'Clientes::index');
     $routes->get('getActividades', 'Clientes::getActividades');
-    // $routes->get('getPeriodos', 'Periodos::getPeriodos');
+    $routes->get('getClientes', 'Clientes::getClientes');
     $routes->post('nuevoCliente', 'Clientes::nuevoCliente');
-    // $routes->post('editarPeriodo', 'Periodos::editarPeriodo');
+    $routes->post('editarCliente', 'Clientes::editarCliente');
 });

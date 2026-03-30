@@ -31,28 +31,31 @@
             <div class="card-header py-3">
                 <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Agregar Nuevo</button>
             </div>
-            <!-- <div class="card-body">
+            <div class="card-body">
 
                 <div class="d-flex justify-content-end mb-4">
                     <div class="input-group col-md-6">
-                        <input type="text" id="customSearchPeriodos" placeholder="Buscar desde, hasta ó estado" class="form-control">
+                        <input type="text" id="customSearchClientes" placeholder="Buscar código, nombre, tipo cliente" class="form-control">
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" id="searchBtnPeriodos" type="button">
+                            <button class="btn btn-outline-secondary" id="searchBtnClientes" type="button">
                                 <i class="fas fa-search"></i>
                             </button>
-                            <button class="btn btn-outline-secondary" id="clearSearchBtnPeriodos" type="button">
+                            <button class="btn btn-outline-secondary" id="clearSearchBtnClientes" type="button">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-sm" id="tbl-periodos">
+                    <table class="table table-bordered table-sm" id="tbl-clientes">
                         <thead>
                             <tr>
-                                <th>Desde</th>
-                                <th>Hasta</th>
-                                <th>Estado</th>
+                                <th>Código</th>
+                                <th>Nombre / Razón social</th>
+                                <th>Tipo cliente</th>
+                                <th>DUI</th>
+                                <th>NIT</th>
+                                <th>NRC</th>
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -61,7 +64,7 @@
                         </tbody>
                     </table>
                 </div>
-            </div> -->
+            </div>
         </div>
 
         <!-- Modal -->
@@ -77,13 +80,26 @@
                     <div class="modal-body ">
                         <div class="user">
                             <div class="row">
+                                <div class="col-md-9">
+                                    <div class="form-group">
+                                        <label class="form-label" for="foto-cliente-input">Imagen</label>
+                                        <input type="file" class="form-control mb-2" name="foto-cliente-input" id="foto-cliente-input" accept=".jpg,.jpeg,.png">
+
+                                        <img id="vista-previa-foto-cliente"
+                                            src=""
+                                            class="img-fluid border rounded"
+                                            style="max-height: 150px; display:none;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label for="codigo">Código</label>
                                         <input type="text" class="form-control" name="codigo" id="codigo">
                                     </div>
                                 </div>
-                                <div class="col-sm-9">
+                                <div class="col-sm-5">
                                     <div class="form-group">
                                         <label for="nombre">Nombre Completo / Razón Social</label>
                                         <input type="text" class="form-control" name="nombre" id="nombre">
@@ -96,8 +112,8 @@
                                         <label>Sexo</label>
                                         <select class="form-control" name="sexo" id="sexo">
                                             <option value="">Seleccione</option>
-                                            <option value="1">Masculino</option>
-                                            <option value="0">Femenino</option>
+                                            <option value="Masculino">Masculino</option>
+                                            <option value="Femenino">Femenino</option>
                                         </select>
                                     </div>
                                 </div>
@@ -127,7 +143,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-3">
+                                <div class="col-sm-5">
                                     <div class="form-group">
                                         <label for="correo">Correo</label>
                                         <input type="email" class="form-control" name="correo" id="correo">

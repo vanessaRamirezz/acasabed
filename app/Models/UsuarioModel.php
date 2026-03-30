@@ -36,15 +36,21 @@ class UsuarioModel extends Model
 
     public function actualizarUsuario($idUsuario, $dui, $nombres, $apellidos, $correo, $perfil, $telefono, $contrasena)
     {
-        return $this->update($idUsuario, [
+        $data = [
             'dui' => $dui,
             'nombres' => $nombres,
             'apellidos' => $apellidos,
             'correo' => $correo,
             'id_perfil' => $perfil,
             'telefono' => $telefono,
-            'clave' => $contrasena,
-        ]);
+        ];
+
+        // Solo actualizar contraseña si viene
+        if (!empty($contrasena)) {
+            $data['clave'] = $contrasena;
+        }
+
+        return $this->update($idUsuario, $data);
     }
 
     public function insertarNuevoUsuario($dui, $nombres, $apellidos, $correo, $perfil, $telefono, $contrasena, $fecha)
@@ -61,7 +67,8 @@ class UsuarioModel extends Model
         ]);
     }
 
-    public function actualizarEstado($idUsuario, $nuevoEstado){
+    public function actualizarEstado($idUsuario, $nuevoEstado)
+    {
         return $this->update($idUsuario, [
             'estado' => $nuevoEstado
         ]);

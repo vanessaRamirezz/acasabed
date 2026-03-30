@@ -1,8 +1,9 @@
-import { alertaError, alertaOk, alertEnSweet, colorEnInputConFocus, eliminarColorYfocus, validarCampo } from "../metodos/metodos.js";
+import { alertaError, alertaInfo, alertaOk, alertEnSweet, colorEnInputConFocus, eliminarColorYfocus, validarCampo } from "../metodos/metodos.js";
 
 let tablaClientes;
 
 const inputs = {
+    fotoCliente: $("#foto-cliente-input"),
     codigo: $("#codigo"),
     nombre: $("#nombre"),
     sexo: $("#sexo"),
@@ -28,11 +29,15 @@ const inputs = {
     fotoDuiReversa: $("#dui-reverso-input"),
     comentarios: $("#comentarios"),
     idCliente: $("#id-cliente"),
-    
+
 };
 
 function getData() {
     let formData = new FormData();
+
+    if (inputs.fotoCliente[0].files[0]) {
+        formData.append('fotoDeCliente', inputs.fotoCliente[0].files[0]);
+    }
 
     formData.append('codigo', inputs.codigo.val().trim());
     formData.append('nombre', inputs.nombre.val().trim());
@@ -77,7 +82,10 @@ function validarCampoDui() {
 
 
 function limpiarFormulario() {
+    inputs.fotoCliente.val('');
+    $('#vista-previa-foto-cliente').attr('src', '').hide();
     inputs.codigo.val('');
+    inputs.codigo.prop('disabled', false);
     inputs.nombre.val('');
     inputs.sexo.val('');
     inputs.ocupacion.val('');
@@ -99,9 +107,9 @@ function limpiarFormulario() {
     inputs.complementoDireccion.val('');
     inputs.fechaDeVencimientoDui.val('');
     inputs.fotoDuiFrontal.val('');
-    $('#vista-previa-frontal').attr('src', '');
-    inputs.fotoDuiFrontal.val('');
-    $('#vista-previa-reversa').attr('src', '');
+    $('#vista-previa-frontal').attr('src', '').hide();
+    inputs.fotoDuiReversa.val('');
+    $('#vista-previa-reversa').attr('src', '').hide();
     inputs.comentarios.val('');
     inputs.idCliente.val('');
 }
@@ -166,7 +174,7 @@ function cargarDepartamentos() {
     });
 }
 
-function cargarMunicipios(idDepartamento) {
+function cargarMunicipios(idDepartamento, callback = null) {
     Swal.fire({
         title: 'Espere...',
         html: 'Cargando municipios...',
@@ -176,12 +184,11 @@ function cargarMunicipios(idDepartamento) {
             Swal.showLoading();
         }
     });
+
     $.ajax({
         type: 'POST',
         url: baseURL + 'getMunicipios',
-        data: {
-            idDepartamento
-        },
+        data: { idDepartamento },
         dataType: 'json',
         success: function (response) {
             if (response.status == 'success') {
@@ -199,7 +206,12 @@ function cargarMunicipios(idDepartamento) {
                         .text(municipio.nombre);
                     selectMunicipios.append(option);
                 });
+
                 Swal.close();
+
+                // AQUI ejecutas el callback
+                if (callback) callback();
+
             } else {
                 Swal.close();
                 alertaError(response.mensaje);
@@ -212,7 +224,7 @@ function cargarMunicipios(idDepartamento) {
     });
 }
 
-function cargarDistritos(idMunicipio) {
+function cargarDistritos(idMunicipio, callback = null) {
     Swal.fire({
         title: 'Espere...',
         html: 'Cargando distritos...',
@@ -247,6 +259,8 @@ function cargarDistritos(idMunicipio) {
                 });
 
                 Swal.close();
+
+                if (callback) callback();
             } else {
                 Swal.close();
                 alertaError(response.mensaje);
@@ -259,7 +273,7 @@ function cargarDistritos(idMunicipio) {
     });
 }
 
-function cargarDirecciones(idDistrito) {
+function cargarDirecciones(idDistrito, callback = null) {
     Swal.fire({
         title: 'Espere...',
         html: 'Cargando colonias...',
@@ -303,6 +317,9 @@ function cargarDirecciones(idDistrito) {
 
                 Swal.close();
 
+                // AQUI ejecutas el callback
+                if (callback) callback();
+
             } else {
                 Swal.close();
                 alertaError(response.mensaje);
@@ -315,11 +332,188 @@ function cargarDirecciones(idDistrito) {
     });
 }
 
+function setSelect2Value(selector, id, text) {
+    const option = new Option(text, id, true, true);
+    $(selector).append(option).trigger('change');
+}
+
+function cargarClientes() {
+    tablaClientes = $('#tbl-clientes').DataTable({
+        serverSide: true,
+        processing: true,
+        searching: false,
+        pageLength: 5,
+        lengthMenu: [5, 10, 15, 20],
+        ordering: false,
+        ajax: {
+            type: 'GET',
+            url: baseURL + 'getClientes',
+            data: function (d) {
+                d.searchValue = $('#customSearchClientes').val();
+            }
+        },
+        columns: [
+            {
+                data: 'codigo'
+            },
+            {
+                data: 'nombre'
+            },
+            {
+                data: 'nombre_tipo_cliente'
+            },
+            {
+                data: 'numero_de_dui'
+            },
+            {
+                data: 'numero_de_nit'
+            },
+            {
+                data: 'numero_de_nrc'
+            },
+            {
+                data: null,
+                render: function (data, type, row) {
+                    return `<button class="btn btn-info btn-sm btn-ver-opciones"
+                                data-cliente='${encodeURIComponent(JSON.stringify(row))}'>
+                                <i class="fa fa-edit"></i>
+                            </button>`;
+                }
+            }
+        ],
+        language: {
+            url: baseURL + "plugins/datatables/es-ES.json"
+        },
+        stateSave: false,
+        responsive: true,
+        autoWidth: false,
+        initComplete: function () {
+            let searchInput = $('.dataTables_filter input');
+            searchInput.val('').trigger('input');
+        }
+    });
+
+    //Buscar al presionar Enter en tu input
+    $('#customSearchClientes').on('keypress', function (e) {
+        if (e.which == 13) { // Enter
+            tablaClientes.draw(); // ahora sí funciona
+        }
+    });
+
+    $('#searchBtnClientes').off('click').on('click', function () {
+        tablaClientes.draw();
+    });
+
+    $('#clearSearchBtnClientes').on('click', function (e) {
+        $('#customSearchClientes').val('');
+        tablaClientes.draw();
+    });
+}
+
 function abrirModalNuevoCliente() {
     $('.modal-guardar').show();
     $('.modal-editar').hide();
 
     limpiarFormulario();
+
+    $('#modal-clientes').modal('show');
+}
+
+function abrirModalEditarCliente(elemento) {
+
+    limpiarFormulario();
+
+    $('.modal-guardar').hide();
+    $('.modal-editar').show();
+
+    var dataClientes = JSON.parse(
+        decodeURIComponent($(elemento).attr('data-cliente'))
+    );
+
+    // Ruta base donde están tus imágenes
+    var baseImagenes = baseURL; // o algo como: baseURL + 'uploads/'
+
+
+    // FOTO DE CLIENTE
+    if (dataClientes.foto_de_cliente) {
+        $('#vista-previa-foto-cliente')
+            .attr('src', baseImagenes + dataClientes.foto_de_cliente + '?t=' + Date.now())
+            .show();
+    } else {
+        inputs.fotoCliente.val('');
+        $('#vista-previa-foto-cliente').hide();
+    }
+
+    $('#codigo').val(dataClientes.codigo).prop('disabled', true);
+    $('#nombre').val(dataClientes.nombre);
+    var sexo = (dataClientes.sexo || '').trim();
+    var $selectSexo = $('#sexo');
+    $selectSexo.find('option').each(function () {
+        $(this).prop('selected', $(this).text().trim() === sexo);
+    });
+    $('#ocupacion').val(dataClientes.ocupacion);
+    $('#fecha-de-nacimiento').val(dataClientes.fecha_de_nacimiento);
+    $('#telefono').val(dataClientes.telefonos);
+    $('#correo').val(dataClientes.email);
+    $('#dui').val(dataClientes.numero_de_dui);
+    $('#nit').val(dataClientes.numero_de_nit);
+    $('#nrc').val(dataClientes.numero_de_nrc);
+    setSelect2Value('#actividad-economica',
+        dataClientes.id_actividad_economica,
+        dataClientes.nombre_actividad_economica
+    );
+    $('#tipo-cliente')
+        .val(dataClientes.id_tipo_cliente || '')
+        .trigger('change');
+    $('#contacto-nombre').val(dataClientes.nombre_de_contacto);
+    $('#contacto-dui').val(dataClientes.numero_de_dui);
+    $('#contacto-telefono').val(dataClientes.numeros_de_telefonos);
+
+    $('#departamentos')
+        .val(dataClientes.id_departamento || '-1');
+
+    cargarMunicipios(dataClientes.id_departamento, function () {
+
+        $('#municipios')
+            .val(dataClientes.id_municipio || '-1');
+
+        cargarDistritos(dataClientes.id_municipio, function () {
+
+            $('#distritos')
+                .val(dataClientes.id_distrito || '-1');
+
+            cargarDirecciones(dataClientes.id_distrito, function () {
+
+                $('#direccion')
+                    .val(dataClientes.id_direccion || '-1');
+            });
+        });
+    });
+    $('#complemento-direccion').val(dataClientes.direccion_complemento);
+    $('#fecha-vencimiento-dui').val(dataClientes.fecha_de_vencimiento_dui);
+
+    // DUI FRONTAL
+    if (dataClientes.foto_de_dui_frontal) {
+        $('#vista-previa-frontal')
+            .attr('src', baseImagenes + dataClientes.foto_de_dui_frontal + '?t=' + Date.now())
+            .show();
+    } else {
+        inputs.fotoDuiFrontal.val('');
+        $('#vista-previa-frontal').hide();
+    }
+
+    // DUI REVERSO
+    if (dataClientes.foto_de_dui_reversa) {
+        $('#vista-previa-reversa')
+            .attr('src', baseImagenes + dataClientes.foto_de_dui_reversa + '?t=' + Date.now())
+            .show();
+    } else {
+        inputs.fotoDuiReversa.val('');
+        $('#vista-previa-reversa').hide();
+    }
+
+    $('#comentarios').val(dataClientes.comentarios);
+    $('#id-cliente').val(dataClientes.id_cliente);
 
     $('#modal-clientes').modal('show');
 }
@@ -373,9 +567,10 @@ function guardarOeditarCliente(tipoProceso) {
         success: function (response) {
             if (response.status == 'success') {
                 alertaOk(response.mensaje);
-                // tablaTarifas.ajax.reload();
+                tablaClientes.ajax.reload();
                 Swal.close();
                 $('#modal-clientes').modal('hide');
+                window.reload();
             } else {
                 alertEnSweet('error', 'Uups..', response.mensaje);
             }
@@ -385,6 +580,7 @@ function guardarOeditarCliente(tipoProceso) {
         }
     });
 }
+
 
 function eventosUsuarios() {
 
@@ -415,9 +611,9 @@ function eventosUsuarios() {
         abrirModalNuevoCliente();
     });
 
-    // $("#tbl-periodos tbody").on("click", '.btn-ver-opciones', function () {
-    //     abrirModalEditarPeriodo(this);
-    // });
+    $("#tbl-clientes tbody").on("click", '.btn-ver-opciones', function () {
+        abrirModalEditarCliente(this);
+    });
 
     $("#dui-frontal-input").on("change", function () {
         previewImage(this, "vista-previa-frontal");
@@ -426,6 +622,10 @@ function eventosUsuarios() {
     $("#dui-reverso-input").on("change", function () {
         previewImage(this, "vista-previa-reversa");
     });
+
+    $("#foto-cliente-input").on("change", function () {
+        previewImage(this, "vista-previa-foto-cliente");
+    });
 }
 
 function iniciarTodo() {
@@ -433,6 +633,7 @@ function iniciarTodo() {
     validarCampoDui();
     cargarActividadesEconomicas();
     cargarDepartamentos();
+    cargarClientes();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

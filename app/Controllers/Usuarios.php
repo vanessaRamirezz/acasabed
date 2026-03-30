@@ -53,7 +53,11 @@ class Usuarios extends BaseController
             $clave = $this->request->getPost('clave');
             $idUsuario = $this->request->getPost('idUsuario');
 
-            $contrasena = base64_encode($this->encrypter->encrypt($clave));
+            $contrasena = null;
+
+            if (!empty($clave)) {
+                $contrasena = base64_encode($this->encrypter->encrypt($clave));
+            }
 
             // INICIAR TRANSACCIÓN
             $db = $this->usuariosModel->db;
