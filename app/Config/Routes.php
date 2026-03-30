@@ -56,6 +56,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getInstaladores', 'Instaladores::getInstaladores');
     $routes->post('nuevoInstalador', 'Instaladores::nuevoInstalador');
     $routes->post('editarInstalador', 'Instaladores::editarInstalador');
+    $routes->post('actualizarEstadoInstalador', 'Instaladores::actualizarEstadoInstalador');
 
     // TARIFARIO
     $routes->get('tarifario', 'Tarifario::index');

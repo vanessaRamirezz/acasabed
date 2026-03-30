@@ -8,7 +8,7 @@ class InstaladorModel extends Model
 {
     protected $table = 'instaladores';
     protected $primaryKey = 'id_instalador';
-    protected $allowedFields = ['nombre_completo', 'telefono', 'dui', 'direccion', 'correo', 'fecha_creacion', 'id_usuario'];
+    protected $allowedFields = ['nombre_completo', 'telefono', 'dui', 'direccion', 'correo', 'fecha_creacion', 'id_usuario', 'estado'];
 
     public function getTodosInstaladores($start, $length, $searchValue = '')
     {
@@ -42,7 +42,13 @@ class InstaladorModel extends Model
         // DATA
         // =============================
         $data = $builder
-            ->select('id_instalador, nombre_completo, telefono, dui, direccion, correo')
+            ->select('id_instalador AS id,
+                    nombre_completo AS nombre_instalador, 
+                    telefono AS telefono_instalador, 
+                    dui AS dui_instalador, 
+                    direccion AS direccion_instalador, 
+                    correo AS correo_instalador, 
+                    estado AS estado_instalador')
             ->orderBy('id_instalador', 'DESC')
             ->limit($length, $start)
             ->get()
@@ -70,12 +76,19 @@ class InstaladorModel extends Model
 
     public function actualizarInstalador($nombre, $telefono, $dui, $direccion, $correo, $idInstalador)
     {
-        return $this->update($idInstalador,[
+        return $this->update($idInstalador, [
             'nombre_completo' => $nombre,
             'telefono' => $telefono,
             'dui' => $dui,
             'direccion' => $direccion,
             'correo' => $correo
+        ]);
+    }
+
+    public function actualizarEstado($idInstalador, $nuevoEstado)
+    {
+        return $this->update($idInstalador, [
+            'estado' => $nuevoEstado
         ]);
     }
 }

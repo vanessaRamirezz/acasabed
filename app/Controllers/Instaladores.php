@@ -116,7 +116,8 @@ class Instaladores extends BaseController
         }
     }
 
-    public function editarInstalador(){
+    public function editarInstalador()
+    {
         try {
             $nombre = $this->request->getPost('nombre');
             $telefono = $this->request->getPost('telefono') ?: null;
@@ -181,6 +182,63 @@ class Instaladores extends BaseController
             log_message('error', $errorMessage);
 
             return $this->respondError('Error al actualizar el instalador');
+        }
+    }
+
+    public function actualizarEstadoInstalador()
+    {
+        try {
+            $idInstalador    = $this->request->getPost('idInstalador');
+            $nuevoEstado = $this->request->getPost('nuevoEstado');
+
+            // Log para depuración
+            // log_message('debug', 'POST recibido en actualizarEstado -> id: {id}, Estado: {activo}', [
+            //     'id'    => $idUsuario,
+            //     'activo' => $nuevoEstado
+            // ]);
+
+
+            if (!$idInstalador || !$idInstalador) {
+                log_message('error', 'Datos incompletos en actualizarEstado. ID: {id}, Estado: {estado}', [
+                    'id'    => $idInstalador,
+                    'activo' => $nuevoEstado
+                ]);
+
+                return $this->respondError('Datos incompletos');
+            }
+
+            // INICIAR TRANSACCIÓN
+            $db = $this->instaladoresModel->db;
+            $db->transBegin();
+
+            $resultado = $this->instaladoresModel->actualizarEstado($idInstalador, $nuevoEstado);
+
+            // verificar si falló
+            if (!$resultado) {
+                $db->transRollback();
+                log_message('error', 'Error en transacción de actualizara estado de Instalador');
+                return $this->respondError('No se logro actualizar el estado del Instalador');
+            }
+
+            if ($db->transStatus() === false) {
+                $db->transRollback();
+                return $this->respondError('Error en la transacción actualizar estado Instalador');
+            }
+
+            $db->transCommit();
+
+            log_message('info', 'Estado actualizado correctamente para id: ' . $idInstalador);
+            return $this->respondOk('Estado actualizado correctamente.');
+        } catch (\Throwable $th) {
+            if (isset($db)) {
+                $db->transRollback();
+            }
+
+            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
+            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
+            log_message('error', $errorMessage);
+
+            return $this->respondError('Error al actualizar el estado del instalador desde catch');
         }
     }
 }

@@ -53,6 +53,7 @@
                                 <th>DUI</th>
                                 <th>Dirección</th>
                                 <th>Correo</th>
+                                <th>Activo</th>
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -77,7 +78,18 @@
                     <div class="modal-body">
                         <div class="user">
                             <div class="row">
-                                <div class="col-sm-6">
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label for="estado">Estado Activo</label>
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-info-circle"></i></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" name="estado" id="estado" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-5">
                                     <div class="form-group">
                                         <label for="nombre">Nombre</label>
                                         <div class="input-group mb-3">
@@ -88,7 +100,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-6">
+                                <div class="col-sm-5">
                                     <div class="form-group">
                                         <label for="telefono">Télefono</label>
                                         <div class="input-group mb-3">
@@ -142,6 +154,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-danger modal-editar" id="actualizar-estado">Desactivar Instalador</button>
                         <button type="button" class="btn btn-primary modal-guardar" id="guardar-registro">Guardar registro</button>
                         <button type="button" class="btn btn-warning modal-editar" id="actualizar-registro">Guardar registro</button>
                     </div>

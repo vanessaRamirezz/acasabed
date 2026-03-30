@@ -12,6 +12,7 @@ let tablaIstaladores;
 let inputNombre = document.getElementById('nombre');
 let inputDui = document.getElementById('dui');
 let inputCorreo = document.getElementById('correo');
+let inputEstado = document.getElementById('estado');
 
 function abrirModelEditarInstalador(elemento) {
     $('.modal-guardar').hide();
@@ -21,16 +22,25 @@ function abrirModelEditarInstalador(elemento) {
         decodeURIComponent($(elemento).attr('data-instaladores'))
     );
 
-    $('#nombre').val(dataInstaladores.nombre_completo);
-    $('#telefono').val(dataInstaladores.telefono);
-    $('#dui').val(dataInstaladores.dui);
-    $('#direccion').val(dataInstaladores.direccion);
-    $('#correo').val(dataInstaladores.correo);
-    $('#id-instalador').val(dataInstaladores.id_instalador);
+    $('#estado').val(dataInstaladores.estado_instalador);
+    $('#nombre').val(dataInstaladores.nombre_instalador);
+    $('#telefono').val(dataInstaladores.telefono_instalador);
+    $('#dui').val(dataInstaladores.dui_instalador);
+    $('#direccion').val(dataInstaladores.direccion_instalador);
+    $('#correo').val(dataInstaladores.correo_instalador);
+    $('#id-instalador').val(dataInstaladores.id);
 
     eliminarColorYfocus(inputNombre);
     eliminarColorYfocus(inputDui);
     eliminarColorYfocus(inputCorreo);
+
+    // Botón estado
+    var $btnEstado = $('#actualizar-estado');
+    if (dataInstaladores.estado_instalador.trim().toUpperCase() === 'SI') {
+        $btnEstado.removeClass('btn-success').addClass('btn-danger').text('Desactivar instalador');
+    } else {
+        $btnEstado.removeClass('btn-danger').addClass('btn-success').text('Activar instalador');
+    }
 
     $('#modal-instaladores').modal('show');
 }
@@ -52,19 +62,22 @@ function cargarInstaladores() {
         },
         columns: [
             {
-                data: 'nombre_completo'
+                data: 'nombre_instalador'
             },
             {
-                data: 'telefono'
+                data: 'telefono_instalador'
             },
             {
-                data: 'dui'
+                data: 'dui_instalador'
             },
             {
-                data: 'direccion'
+                data: 'direccion_instalador'
             },
             {
-                data: 'correo'
+                data: 'correo_instalador'
+            },
+            {
+                data: 'estado_instalador'
             },
             {
                 data: null,
@@ -116,6 +129,7 @@ function abrirModalNuevoInstalador() {
     $('#direccion').val('');
     $('#correo').val('');
     $('#id-instalador').val('');
+    inputEstado.value = 'SI';
 
     eliminarColorYfocus(inputNombre);
     eliminarColorYfocus(inputDui);
@@ -202,6 +216,61 @@ function guardarOeditarInstalador(tipoProceso) {
     })
 }
 
+function actualizarEstado() {
+    idInstalador = $("#id-instalador").val().trim();
+    var estadoActual = $('#estado').val().trim().toUpperCase();
+    var nuevoEstado = (estadoActual === "SI") ? "NO" : "SI";
+
+    var accionTexto = (estadoActual === "SI")
+        ? "desactivar al instalador"
+        : "activar al instalador";
+
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: `¿Deseas ${accionTexto}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Espere...',
+                html: 'Procesando actualización...',
+                allowEscapeKey: false,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            // Aquí mandas la petición AJAX
+            $.ajax({
+                url: baseURL + 'actualizarEstadoInstalador',
+                type: 'POST',
+                data: {
+                    idInstalador,
+                    nuevoEstado
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        Swal.close();
+                        alertEnSweet('success', 'Éxito', response.mensaje)
+                        tablaIstaladores.ajax.reload();
+                        $('#modal-instaladores').modal('hide');
+                    } else {
+                        Swal.close();
+                        alertaError(response.mensaje);
+                    }
+                },
+                error: function () {
+                    Swal.close();
+                    alertEnSweet('error', 'Error', 'No se logro actualizar el estado del usuarios');
+                }
+            });
+        }
+    });
+}
+
 function eventosUsuarios() {
     $("#btn-agregar").on("click", function () {
         abrirModalNuevoInstalador();
@@ -217,6 +286,10 @@ function eventosUsuarios() {
 
     $("#tbl-instaladores tbody").on("click", '.btn-ver-opciones', function () {
         abrirModelEditarInstalador(this);
+    });
+
+    $("#actualizar-estado").on("click", function () {
+        actualizarEstado();
     });
 }
 
