@@ -2,7 +2,9 @@ import { alertaError, alertaOk, alertEnSweet, colorEnInputConFocus, eliminarColo
 
 let tablaTipoCliente;
 let inputTipoCliente = document.getElementById('tipo-cliente');
+let inputCodigo = document.getElementById('codigo');
 let tipoCliente;
+let codigo;
 let idTipoCliente;
 
 function cargarTabla() {
@@ -26,7 +28,7 @@ function traerTiposCliente() {
                 tablaTipoCliente.clear();
 
                 response.data.forEach(function (row) {
-                    var keysToShow = ['nombre']
+                    var keysToShow = ['codigo','nombre']
 
                     var rowData = keysToShow.map(function (key) {
                         return row[key];
@@ -46,6 +48,7 @@ function traerTiposCliente() {
                     $('.modal-guardar').hide();
                     $('.modal-editar').show();
 
+                    eliminarColorYfocus(inputCodigo);
                     eliminarColorYfocus(inputTipoCliente);
 
                     // Obtener todo el objeto del usuario desde el data-attribute
@@ -53,7 +56,10 @@ function traerTiposCliente() {
                         decodeURIComponent($(this).attr('data-tipo-cliente'))
                     );
 
+                    $('#codigo').val(dataTipoCliente.codigo).prop('disabled', true);
+
                     // Llenar los campos del formulario
+                    $('#codigo').val(dataTipoCliente.codigo);
                     $('#tipo-cliente').val(dataTipoCliente.nombre);
                     $('#id-tipo-cliente').val(dataTipoCliente.id_tipo_cliente);
 
@@ -73,19 +79,31 @@ function abrirModalNuevoTipoCliente() {
     $('.modal-editar').hide();
 
     // limpiar campos del formulario
+    $('#codigo').val('');
     $('#tipo-cliente').val('');
     $('#id-tipo-cliente').val('');
+    $('#codigo').val('').prop('disabled', false);
 
+    eliminarColorYfocus(inputCodigo);
     eliminarColorYfocus(inputTipoCliente);
 
     $('#modal-tipo-cliente').modal('show');
 }
 
 function guardarOeditarTipoCliente(tipoProceso) {
+    codigo = $('#codigo').val().trim();
     tipoCliente = $('#tipo-cliente').val().trim();
     idTipoCliente = $("#id-tipo-cliente").val().trim();
 
     var tipo_proceso = tipoProceso === '1' ? 'nuevoTipoCliente' : 'editarTipoCliente';
+
+    if (codigo === "") {
+        alertaError('El nombre es requerido');
+        colorEnInputConFocus(inputCodigo);
+        return false;
+    } else {
+        eliminarColorYfocus(inputCodigo);
+    }
 
     if (tipoCliente === "") {
         alertaError('El nombre es requerido');
@@ -109,6 +127,7 @@ function guardarOeditarTipoCliente(tipoProceso) {
         type: 'POST',
         url: baseURL + tipo_proceso,
         data: {
+            codigo,
             tipoCliente,
             idTipoCliente
         },

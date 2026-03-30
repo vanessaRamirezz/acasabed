@@ -8,10 +8,11 @@ class TipoClienteModel extends Model
 {
     protected $table = 'tipos_de_cliente';
     protected $primaryKey = 'id_tipo_cliente';
-    protected $allowedFields = ['nombre', 'id_usuario', 'fecha_creacion'];
+    protected $allowedFields = ['codigo', 'nombre', 'id_usuario', 'fecha_creacion'];
 
-    public function insertarNuevoTipoCliente($tipoCliente, $idUsuario, $fechaCreacion){
+    public function insertarNuevoTipoCliente($codigo, $tipoCliente, $idUsuario, $fechaCreacion){
         return $this->insert([
+            'codigo' => $codigo,
             'nombre' => $tipoCliente,
             'id_usuario' => $idUsuario,
             'fecha_creacion' => $fechaCreacion

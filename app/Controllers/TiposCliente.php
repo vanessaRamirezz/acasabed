@@ -36,9 +36,16 @@ class TiposCliente extends BaseController
     public function nuevoTipoCliente()
     {
         try {
+            $codigo = $this->request->getPost('codigo');
             $tipoCliente = $this->request->getPost('tipoCliente');
             $idUsuario = $_SESSION['id_usuario'];
             $fechaCreacion = date('Y-m-d H:i:s');
+
+            if (!$codigo) {
+                log_message('error', 'El código esta incompleto');
+
+                return $this->respondError('El código esta incompleto');
+            }
 
             if (!$tipoCliente) {
                 log_message('error', 'Tipo de Cliente incompleto');
@@ -51,12 +58,21 @@ class TiposCliente extends BaseController
             $db->transBegin();
 
             $resultado = $this->tipoClienteModel->insertarNuevoTipoCliente(
+                $codigo,
                 $tipoCliente,
                 $idUsuario,
                 $fechaCreacion
             );
 
             if (!$resultado) {
+                $errorDB = $db->error();
+
+                // Código MySQL para duplicate entry
+                if ($errorDB['code'] == 1062) {
+                    $db->transRollback();
+                    return $this->respondError('El Código de tipo de cliente ya existe');
+                }
+
                 $db->transRollback();
                 log_message('error', 'Error en transacción guardar nuevo tipo de cliente');
                 return $this->respondError('No se pudieron guardar los datos del nuevo tipo de cliente');
@@ -100,6 +116,14 @@ class TiposCliente extends BaseController
             );
 
             if (!$resultado) {
+                $errorDB = $db->error();
+
+                // Código MySQL para duplicate entry
+                if ($errorDB['code'] == 1062) {
+                    $db->transRollback();
+                    return $this->respondError('El Código de tipo de cliente ya existe');
+                }
+
                 $db->transRollback();
                 log_message('error', 'Error en transacción editar tipo de cliente');
                 return $this->respondError('No se pudieron actualizar los datos del tipo de cliente');

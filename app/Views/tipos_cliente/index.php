@@ -36,6 +36,7 @@
                     <table class="table table-bordered table-sm" id="tbl-tipos-cliente">
                         <thead>
                             <tr>
+                                <th>Código</th>
                                 <th>Tipo</th>
                                 <th>Operaciones</th>
                             </tr>
@@ -61,6 +62,17 @@
                     <div class="modal-body">
                         <div class="user">
                             <div class="row">
+                                <div class="col-sm-9">
+                                    <div class="form-group">
+                                        <label for="codigo">Código</label>
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" name="codigo" id="codigo">
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="col-sm-9">
                                     <div class="form-group">
                                         <label for="tipo-cliente">Tipo de Cliente</label>
