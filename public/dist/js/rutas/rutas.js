@@ -1,11 +1,10 @@
 import { alertaError, eliminarColorYfocus, colorEnInputConFocus, alertaOk, alertEnSweet } from "../metodos/metodos.js";
 
 let inputCodigo = document.getElementById('codigo');
-let inputDesde = document.getElementById('desde');
-let inputHasta = document.getElementById('hasta');
+let inputNombre = document.getElementById('nombre');
+
 let codigo;
-let desde;
-let hasta;
+let nombreRuta;
 let idRuta;
 let tablaRutas;
 
@@ -15,13 +14,11 @@ function abrirModalNuevaRuta() {
 
     // limpiar campos del formulario
     $('#codigo').val('').prop('disabled', false);
-    $('#desde').val('');
-    $('#hasta').val('');
+    $('#nombre').val('');
     $('#id-ruta').val('');
 
     eliminarColorYfocus(inputCodigo);
-    eliminarColorYfocus(inputDesde);
-    eliminarColorYfocus(inputHasta);
+    eliminarColorYfocus(inputNombre);
 
     $('#model-rutas').modal('show');
 }
@@ -34,14 +31,12 @@ function abrirModalEditarRuta(elemento) {
         decodeURIComponent($(elemento).attr('data-ruta'))
     );
 
-    $('#codigo').val(dataRutas.codigo).prop('disabled', true);
-    $('#desde').val(dataRutas.desde);
-    $('#hasta').val(dataRutas.hasta);
-    $('#id-ruta').val(dataRutas.id_ruta);
+    $('#codigo').val(dataRutas.codigo_ruta).prop('disabled', true);
+    $('#nombre').val(dataRutas.nombre_ruta);
+    $('#id-ruta').val(dataRutas.id);
 
     eliminarColorYfocus(inputCodigo);
-    eliminarColorYfocus(inputDesde);
-    eliminarColorYfocus(inputHasta);
+    eliminarColorYfocus(inputNombre);
 
     $('#model-rutas').modal('show');
 }
@@ -63,13 +58,10 @@ function cargarRutas() {
         },
         columns: [
             {
-                data: 'codigo'
+                data: 'codigo_ruta'
             },
             {
-                data: 'desde'
-            },
-            {
-                data: 'hasta'
+                data: 'nombre_ruta'
             },
             {
                 data: null,
@@ -113,8 +105,7 @@ function cargarRutas() {
 
 function guardarOeditarRuta(tipoProceso) {
     codigo = $("#codigo").val().trim();
-    desde = $('#desde').val().trim();
-    hasta = $('#hasta').val().trim();
+    nombreRuta = $('#nombre').val().trim();
     idRuta = $('#id-ruta').val().trim();
 
     var tipo_proceso = tipoProceso === '1' ? 'nuevaRuta' : 'editarRuta';
@@ -127,20 +118,12 @@ function guardarOeditarRuta(tipoProceso) {
         eliminarColorYfocus(inputCodigo);
     }
 
-    if (desde === "") {
-        alertaError('Campo desde es requerido');
-        colorEnInputConFocus(inputDesde);
+    if (nombreRuta === "") {
+        alertaError('Campo nombre de ruta es requerido');
+        colorEnInputConFocus(inputNombre);
         return false;
     } else {
-        eliminarColorYfocus(inputDesde);
-    }
-
-    if (hasta === "") {
-        alertaError('Campo hasta es requerido');
-        colorEnInputConFocus(inputHasta);
-        return false;
-    } else {
-        eliminarColorYfocus(inputHasta);
+        eliminarColorYfocus(inputNombre);
     }
 
     Swal.fire({
@@ -158,8 +141,7 @@ function guardarOeditarRuta(tipoProceso) {
         url: baseURL + tipo_proceso,
         data: {
             codigo,
-            desde,
-            hasta,
+            nombreRuta,
             idRuta
         },
         dataType: 'json',

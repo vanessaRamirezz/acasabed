@@ -49,8 +49,7 @@ class Rutas extends BaseController
     {
         try {
             $codigo = $this->request->getPost('codigo');
-            $desde = $this->request->getPost('desde');
-            $hasta = $this->request->getPost('hasta');
+            $nombreRuta = $this->request->getPost('nombreRuta');
             $idUsuario = $_SESSION['id_usuario'];
             $fechaCreacion = date('Y-m-d H:i:s');
 
@@ -59,14 +58,9 @@ class Rutas extends BaseController
                 return $this->respondError('El código es requerido');
             }
 
-            if (!$desde) {
-                log_message('error', 'El campo desde es requerido');
-                return $this->respondError('El campo desde es requerido');
-            }
-
-            if (!$hasta) {
-                log_message('error', 'El campo hasta es requerido');
-                return $this->respondError('El campo hasta es requerido');
+            if (!$nombreRuta) {
+                log_message('error', 'El campo nombre de la ruta es requerido');
+                return $this->respondError('El campo nombre de la ruta es requerido');
             }
 
             // INICIAR TRANSACCIÓN
@@ -75,8 +69,7 @@ class Rutas extends BaseController
 
             $resultado = $this->rutasModel->insertarNuevaRuta(
                 $codigo,
-                $desde,
-                $hasta,
+                $nombreRuta,
                 $fechaCreacion,
                 $idUsuario
             );
@@ -120,18 +113,12 @@ class Rutas extends BaseController
     public function editarRuta()
     {
         try {
-            $desde = $this->request->getPost('desde');
-            $hasta = $this->request->getPost('hasta');
+            $nombreRuta = $this->request->getPost('nombreRuta');
             $idRuta = $this->request->getPost('idRuta');
 
-            if (!$desde) {
-                log_message('error', 'El campo desde es requerido');
-                return $this->respondError('El campo desde es requerido');
-            }
-
-            if (!$desde) {
-                log_message('error', 'El campo hasta es requerido');
-                return $this->respondError('El campo hasta es requerido');
+            if (!$nombreRuta) {
+                log_message('error', 'El campo nombre de la ruta es requerido');
+                return $this->respondError('El campo nombre de la ruta es requerido');
             }
 
             // INICIAR TRANSACCIÓN
@@ -139,8 +126,7 @@ class Rutas extends BaseController
             $db->transBegin();
 
             $resultado = $this->rutasModel->actualizarRuta(
-                $desde,
-                $hasta,
+                $nombreRuta,
                 $idRuta
             );
 

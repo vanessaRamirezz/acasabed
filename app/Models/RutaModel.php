@@ -8,7 +8,7 @@ class RutaModel extends Model
 {
     protected $table = 'rutas';
     protected $primaryKey = 'id_ruta';
-    protected $allowedFields = ['codigo', 'desde', 'hasta', 'fecha_creacion', 'id_usuario'];
+    protected $allowedFields = ['codigo', 'nombre', 'fecha_creacion', 'id_usuario'];
 
 
     public function getTodasRutas($start, $length, $searchValue = '')
@@ -29,8 +29,7 @@ class RutaModel extends Model
         if (!empty($searchValue)) {
             $builder->groupStart()
                 ->like('codigo', $searchValue)
-                ->orLike('desde', $searchValue)
-                ->orLike('hasta', $searchValue)
+                ->orLike('nombre', $searchValue)
                 ->groupEnd();
         }
 
@@ -44,7 +43,11 @@ class RutaModel extends Model
         // DATA
         // =============================
         $data = $builder
-            ->select('id_ruta, codigo, desde, hasta')
+            ->select(
+                'id_ruta AS id, 
+                codigo AS codigo_ruta, 
+                nombre AS nombre_ruta'
+            )
             ->orderBy('id_ruta', 'DESC')
             ->limit($length, $start)
             ->get()
@@ -57,22 +60,20 @@ class RutaModel extends Model
         ];
     }
 
-    public function insertarNuevaRuta($codigo, $desde, $hasta, $fechaCreacion, $idUsuario)
+    public function insertarNuevaRuta($codigo, $nombre, $fechaCreacion, $idUsuario)
     {
         return $this->insert([
             'codigo' => $codigo,
-            'desde' => $desde,
-            'hasta' => $hasta,
+            'nombre' => $nombre,
             'fecha_creacion' => $fechaCreacion,
             'id_usuario' => $idUsuario
         ]);
     }
 
-    public function actualizarRuta($desde, $hasta, $idRuta)
+    public function actualizarRuta($nombre, $idRuta)
     {
         return $this->update($idRuta, [
-            'desde' => $desde,
-            'hasta' => $hasta,
+            'nombre' => $nombre
         ]);
     }
 }

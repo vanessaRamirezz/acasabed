@@ -51,8 +51,7 @@
                         <thead>
                             <tr>
                                 <th>Código</th>
-                                <th>Desde</th>
-                                <th>Hasta</th>
+                                <th>Nombre de Ruta</th>
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -88,31 +87,21 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label for="nombre">Nombre de ruta</label>
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class=""></i></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" name="nombre" id="nombre">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <hr>
                             <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label for="desde">Dirección Desde</label>
-                                        <div class="input-group mb-3">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i></i></span>
-                                            </div>
-                                            <input type="text" class="form-control" name="desde" id="desde">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <div class="form-group">
-                                        <label for="hasta">Dirección Hasta</label>
-                                        <div class="input-group mb-3">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i></i></span>
-                                            </div>
-                                            <input type="text" class="form-control" name="hasta" id="hasta">
-                                        </div>
-                                    </div>
-                                </div>
                                 <input type="hidden" value="id-ruta" id="id-ruta">
                             </div>
                         </div>
