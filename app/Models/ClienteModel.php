@@ -20,7 +20,7 @@ class ClienteModel extends Model
         'id_departamento',
         'id_municipio',
         'id_distrito',
-        'id_direccion',
+        'id_colonia',
         'complemento_direccion',
         'telefono',
         'fecha_vencimiento_dui',
@@ -57,7 +57,7 @@ class ClienteModel extends Model
         $departamentos,
         $municipios,
         $distritos,
-        $direccion,
+        $colonia,
         $complementoDireccion,
         $fechaDeVencimientoDui,
         $rutaFrontalDB,
@@ -87,7 +87,7 @@ class ClienteModel extends Model
             'id_departamento' => $departamentos,
             'id_municipio' => $municipios,
             'id_distrito' => $distritos,
-            'id_direccion' => $direccion,
+            'id_colonia' => $colonia,
             'complemento_direccion' => $complementoDireccion,
             'fecha_vencimiento_dui' => $fechaDeVencimientoDui,
             'dui_frontal' => $rutaFrontalDB,
@@ -131,6 +131,12 @@ class ClienteModel extends Model
         $builder->join(
             'distritos',
             'clientes.id_distrito = distritos.id_distrito',
+            'left'
+        );
+
+        $builder->join(
+            'colonias',
+            'clientes.id_colonia = colonias.id_colonia',
             'left'
         );
 
@@ -181,6 +187,7 @@ class ClienteModel extends Model
                 departamentos.id_departamento,
                 municipios.id_municipio,
                 distritos.id_distrito,
+                colonias.id_colonia,
                 clientes.complemento_direccion  AS direccion_complemento,
                 clientes.fecha_vencimiento_dui AS fecha_de_vencimiento_dui,
                 clientes.dui_frontal AS foto_de_dui_frontal,
@@ -207,59 +214,6 @@ class ClienteModel extends Model
             ->first();
     }
 
-    // public function actualizarCliente(
-    //     $nombre,
-    //     $sexo,
-    //     $ocupacion,
-    //     $fechaDeNacimiento,
-    //     $telefonos,
-    //     $correo,
-    //     $dui,
-    //     $nit,
-    //     $nrc,
-    //     $actividadEconomica,
-    //     $tipoCliente,
-    //     $contactoNombre,
-    //     $contactoDui,
-    //     $contactoTelefonos,
-    //     $departamentos,
-    //     $municipios,
-    //     $distritos,
-    //     $direccion,
-    //     $complementoDireccion,
-    //     $fechaDeVencimientoDui,
-    //     $rutaFrontalDB,
-    //     $rutaReversaDB,
-    //     $comentarios,
-    //     $idCliente
-    // ) {
-    //     return $this->update($idCliente, [
-    //         'nombre_completo' => $nombre,
-    //         'sexo' => $sexo,
-    //         'ocupacion' => $ocupacion,
-    //         'fecha_nacimiento' => $fechaDeNacimiento,
-    //         'telefono' => $telefonos,
-    //         'correo' => $correo,
-    //         'dui' => $dui,
-    //         'nit' => $nit,
-    //         'nrc' => $nrc,
-    //         'id_actividad_economica' => $actividadEconomica,
-    //         'id_tipo_cliente' => $tipoCliente,
-    //         'contacto' => $contactoNombre,
-    //         'contacto_dui' => $contactoDui,
-    //         'contacto_telefono' => $contactoTelefonos,
-    //         'id_departamento' => $departamentos,
-    //         'id_municipio' => $municipios,
-    //         'id_distrito' => $distritos,
-    //         'id_direccion' => $direccion,
-    //         'complemento_direccion' => $complementoDireccion,
-    //         'fecha_vencimiento_dui' => $fechaDeVencimientoDui,
-    //         'dui_frontal' => $rutaFrontalDB,
-    //         'dui_reversa' => $rutaReversaDB,
-    //         'comentarios' => $comentarios,
-    //     ]);
-    // }
-
     public function actualizarCliente(
         $nombre,
         $sexo,
@@ -278,7 +232,7 @@ class ClienteModel extends Model
         $departamentos,
         $municipios,
         $distritos,
-        $direccion,
+        $colonia,
         $complementoDireccion,
         $fechaDeVencimientoDui,
         $rutaFrontalDB,
@@ -306,7 +260,7 @@ class ClienteModel extends Model
             'id_departamento' => $departamentos,
             'id_municipio' => $municipios,
             'id_distrito' => $distritos,
-            'id_direccion' => $direccion,
+            'id_colonia' => $colonia,
             'complemento_direccion' => $complementoDireccion,
             'fecha_vencimiento_dui' => $fechaDeVencimientoDui,
             'comentarios' => $comentarios,

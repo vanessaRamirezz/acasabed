@@ -241,8 +241,8 @@
                                             </select>
                                         </div>
                                         <div class="form-group col-sm">
-                                            <label for="direccion">Zonas</label>
-                                            <select id="direccion" class="form-control">
+                                            <label for="colonia">Colonias</label>
+                                            <select id="colonia" class="form-control">
                                                 <option value="-1" selected>Seleccione...</option>
                                             </select>
                                         </div>

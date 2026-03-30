@@ -22,7 +22,7 @@ const inputs = {
     departamentos: $("#departamentos"),
     municipios: $("#municipios"),
     distritos: $("#distritos"),
-    direccion: $("#direccion"),
+    colonia: $("#colonia"),
     complementoDireccion: $("#complemento-direccion"),
     fechaDeVencimientoDui: $("#fecha-vencimiento-dui"),
     fotoDuiFrontal: $("#dui-frontal-input"),
@@ -57,7 +57,7 @@ function getData() {
     formData.append('departamentos', inputs.departamentos.val());
     formData.append('municipios', inputs.municipios.val());
     formData.append('distritos', inputs.distritos.val());
-    formData.append('direccion', inputs.direccion.val().trim());
+    formData.append('colonia', inputs.colonia.val().trim());
     formData.append('complementoDireccion', inputs.complementoDireccion.val().trim());
     formData.append('fechaDeVencimientoDui', inputs.fechaDeVencimientoDui.val());
 
@@ -103,7 +103,7 @@ function limpiarFormulario() {
     inputs.departamentos.val('-1');
     inputs.municipios.val('-1');
     inputs.distritos.val('-1');
-    inputs.direccion.val('-1');
+    inputs.colonia.val('-1');
     inputs.complementoDireccion.val('');
     inputs.fechaDeVencimientoDui.val('');
     inputs.fotoDuiFrontal.val('');
@@ -273,7 +273,7 @@ function cargarDistritos(idMunicipio, callback = null) {
     });
 }
 
-function cargarDirecciones(idDistrito, callback = null) {
+function cargarColonias(idDistrito, callback = null) {
     Swal.fire({
         title: 'Espere...',
         html: 'Cargando colonias...',
@@ -286,7 +286,7 @@ function cargarDirecciones(idDistrito, callback = null) {
 
     $.ajax({
         type: 'POST',
-        url: baseURL + 'getDirecciones',
+        url: baseURL + 'getColonias',
         data: {
             idDistrito
         },
@@ -295,24 +295,24 @@ function cargarDirecciones(idDistrito, callback = null) {
 
             if (response.status === 'success') {
 
-                var selectDirecciones = $('#direccion');
-                selectDirecciones.empty();
+                var selectColonias = $('#colonia');
+                selectColonias.empty();
 
                 // Validar si viene vacío
                 if (!response.data || response.data.length === 0) {
-                    selectDirecciones.append('<option value="-1">No hay Zonas</option>');
+                    selectColonias.append('<option value="-1">No hay Colonias</option>');
                     Swal.close();
-                    alertaInfo('No hay Zonas registradas aún');
+                    alertaInfo('No hay colonias registradas aún');
                     return;
                 }
 
-                selectDirecciones.append('<option value="-1">Seleccione...</option>');
+                selectColonias.append('<option value="-1">Seleccione...</option>');
 
-                response.data.forEach(function (direccion) {
+                response.data.forEach(function (colonia) {
                     let option = $('<option></option>')
-                        .attr('value', direccion.id_direccion)
-                        .text(direccion.nombre);
-                    selectDirecciones.append(option);
+                        .attr('value', colonia.id_colonia)
+                        .text(colonia.nombre);
+                    selectColonias.append(option);
                 });
 
                 Swal.close();
@@ -482,10 +482,10 @@ function abrirModalEditarCliente(elemento) {
             $('#distritos')
                 .val(dataClientes.id_distrito || '-1');
 
-            cargarDirecciones(dataClientes.id_distrito, function () {
+            cargarColonias(dataClientes.id_distrito, function () {
 
-                $('#direccion')
-                    .val(dataClientes.id_direccion || '-1');
+                $('#colonia')
+                    .val(dataClientes.id_colonia || '-1');
             });
         });
     });
@@ -570,7 +570,6 @@ function guardarOeditarCliente(tipoProceso) {
                 tablaClientes.ajax.reload();
                 Swal.close();
                 $('#modal-clientes').modal('hide');
-                window.reload();
             } else {
                 alertEnSweet('error', 'Uups..', response.mensaje);
             }
@@ -596,7 +595,7 @@ function eventosUsuarios() {
 
     $('#distritos').on('change', function () {
         var distritoSeleccionado = $(this).val();
-        cargarDirecciones(distritoSeleccionado);
+        cargarColonias(distritoSeleccionado);
     });
 
     $("#guardar-registro").on("click", function () {

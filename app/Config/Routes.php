@@ -29,15 +29,15 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('editarUsuario', 'Usuarios::editarUsuario');
     $routes->post('actualizarEstadoUsuario', 'Usuarios::actualizarEstadoUsuario');
 
-    //DEPARTAMENTOS, MUNICIPIOS, DIRECCIONES
+    //DEPARTAMENTOS, MUNICIPIOS, COLONIAS
     $routes->get('getDepartamentos', 'Departamentos::index');
     $routes->post('getMunicipios', 'Municipios::index');
     $routes->post('getDistritos', 'Distritos::index');
-    $routes->post('getDirecciones', 'Direcciones::getDirecciones');
+    $routes->post('getColonias', 'Colonias::getColonias');
 
-    // DIRECCION
-    $routes->get('direcciones', 'Direcciones::index');
-    $routes->post('guardarDireccion', 'Direcciones::guardarDireccion');
+    // COLONIAS
+    $routes->get('colonias', 'Colonias::index');
+    $routes->post('guardarColonia', 'Colonias::guardarColonia');
 
     // TIPOS DE CLIENTES
     $routes->get('tipos_cliente', 'TiposCliente::index');

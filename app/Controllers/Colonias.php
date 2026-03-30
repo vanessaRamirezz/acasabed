@@ -2,90 +2,90 @@
 
 namespace App\Controllers;
 
-use App\Models\DireccionModel;
+use App\Models\ColoniaModel;
 
-class Direcciones extends BaseController
+class Colonias extends BaseController
 {
 
-    private $direccionesModel;
+    private $coloniasModel;
 
     public function __construct()
     {
-        $this->direccionesModel = new DireccionModel();
+        $this->coloniasModel = new ColoniaModel();
     }
 
     public function index()
     {
-        return view('direcciones/index');
+        return view('colonias/index');
     }
 
-    public function getDirecciones()
+    public function getColonias()
     {
         try {
             $idDistrito = $this->request->getPost('idDistrito');
 
-            $direccion = $this->direccionesModel->getDireccionesPorDistrito($idDistrito);
+            $colonias = $this->coloniasModel->getColoniasPorDistrito($idDistrito);
             // log_message('info', 'colonias obtenidas '. print_r($colonias,true));
             // exit;
-            return $this->respondSuccess($direccion);
+            return $this->respondSuccess($colonias);
         } catch (\Throwable $th) {
             $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
             $errorMessage .= 'Trace: ' . $th->getTraceAsString();
             log_message('error', $errorMessage);
 
-            return $this->respondError('Error al obtener las direcciones por distrito');
+            return $this->respondError('Error al obtener las colonias por distrito');
         }
     }
 
-    public function guardarDireccion()
+    public function guardarColonia()
     {
 
         try {
             $idDistrito = $this->request->getPost('idDistrito');
-            $nombreDireccion = $this->request->getPost('nombreDireccion');
+            $nombreColonia = $this->request->getPost('nombreColonia');
             $idUsuario = $_SESSION['id_usuario'];
             // log_message('info', 'id de distrito recibido ' . print_r($idDistrito, true));
-            // log_message('info', 'nombre nueva direccion recibido ' . print_r($nombreDireccion, true));
+            // log_message('info', 'nombre nueva de colonia recibido ' . print_r($nombreColonia, true));
 
-            if (empty($idDistrito) || empty($nombreDireccion)) {
+            if (empty($idDistrito) || empty($nombreColonia)) {
                 return $this->respondError('El nombre y distrito son requeridos');
             }
 
             // INICIAR TRANSACCION
-            $db = $this->direccionesModel->db;
+            $db = $this->coloniasModel->db;
             $db->transBegin();
 
-            $resultado = $this->direccionesModel->guardarNuevaDireccion(
+            $resultado = $this->coloniasModel->guardarNuevaColonia(
                 $idDistrito,
-                $nombreDireccion,
+                $nombreColonia,
                 $idUsuario
             );
 
             if (!$resultado) {
                 $db->transRollback();
-                log_message('error', 'Error en transacción de guardar nueva dirección');
-                return $this->respondError('No se logro guardar la nueva dirección');
+                log_message('error', 'Error en transacción de guardar nueva colonia');
+                return $this->respondError('No se logro guardar la nueva colonia');
             }
 
             if ($db->transStatus() === false) {
                 $db->transRollback();
-                return $this->respondError('Error en la transacción nueva dirección');
+                return $this->respondError('Error en la transacción nueva colonia');
             }
 
             $db->transCommit();
 
-            log_message('info', 'Zona registrada correctamente');
-            return $this->respondOk('Zona registrada correctamente.');
+            log_message('info', 'Colonia registrada correctamente');
+            return $this->respondOk('Colonia registrada correctamente.');
         } catch (\Throwable $th) {
             if (isset($db)) {
                 $db->transRollback();
             }
 
-            $errorMessage = 'Ocurrió un error en insertar dirección: ' . $th->getMessage() . PHP_EOL;
+            $errorMessage = 'Ocurrió un error en insertar colonia: ' . $th->getMessage() . PHP_EOL;
             $errorMessage .= 'Trace: ' . $th->getTraceAsString();
             log_message('error', $errorMessage);
 
-            return $this->respondError('Error al guardar la nueva zona');
+            return $this->respondError('Error al guardar la nueva colonia');
         }
     }
 }

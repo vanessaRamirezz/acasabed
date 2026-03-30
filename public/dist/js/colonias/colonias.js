@@ -4,7 +4,7 @@ import { alertaError, alertaInfo, alertaOk } from "../metodos/metodos.js";
 var selectDepartamento;
 var selectMunicipios;
 var selectDistrito;
-var selectDirecciones;
+var selectColonias;
 var municipioSeleccionado;
 var departamentoSeleccionado;
 var distritoSeleccionado;
@@ -135,7 +135,7 @@ function cargarDistritos(idMunicipio) {
     });
 }
 
-function cargarDirecciones(idDistrito) {
+function cargarColonias(idDistrito) {
     Swal.fire({
         title: 'Espere...',
         html: 'Cargando colonias...',
@@ -148,7 +148,7 @@ function cargarDirecciones(idDistrito) {
 
     $.ajax({
         type: 'POST',
-        url: baseURL + 'getDirecciones',
+        url: baseURL + 'getColonias',
         data: {
             idDistrito
         },
@@ -157,24 +157,24 @@ function cargarDirecciones(idDistrito) {
 
             if (response.status === 'success') {
 
-                selectDirecciones = $('#direccion');
-                selectDirecciones.empty();
+                selectColonias = $('#colonia');
+                selectColonias.empty();
 
                 // Validar si viene vacío
                 if (!response.data || response.data.length === 0) {
-                    selectDirecciones.append('<option value="-1">No hay Zonas</option>');
+                    selectColonias.append('<option value="-1">No hay Colonias</option>');
                     Swal.close();
-                    alertaInfo('No hay Zonas registradas aún');
+                    alertaInfo('No hay Colonias registradas aún');
                     return;
                 }
 
-                selectDirecciones.append('<option value="-1">Seleccione...</option>');
+                selectColonias.append('<option value="-1">Seleccione...</option>');
 
-                response.data.forEach(function (direccion) {
+                response.data.forEach(function (colonia) {
                     let option = $('<option></option>')
-                        .attr('value', direccion.id_direccion)
-                        .text(direccion.nombre);
-                    selectDirecciones.append(option);
+                        .attr('value', colonia.id_colonia)
+                        .text(colonia.nombre);
+                    selectColonias.append(option);
                 });
 
                 Swal.close();
@@ -186,12 +186,12 @@ function cargarDirecciones(idDistrito) {
         },
         error: function () {
             Swal.close();
-            alertaError('Error al cargar las zonas');
+            alertaError('Error al cargar las colonias');
         }
     });
 }
 
-function guardarNuevaDireccion() {
+function guardarNuevaColonia() {
     Swal.fire({
         title: 'Espere...',
         html: 'Agregando colonia...',
@@ -202,36 +202,36 @@ function guardarNuevaDireccion() {
         }
     });
 
-    var nombreDireccion = $('#nueva-direccion').val();
+    var nombreColonia = $('#nueva-colonia').val();
     var idDistrito = $('#distritos').val();
 
-    if (nombreDireccion === "" || idDistrito === "-1") {
+    if (nombreColonia === "" || idDistrito === "-1") {
         alertaError('Debes ingresar un nombre para la colonia y seleccionar un ditrito.')
         return;
     }
 
     $.ajax({
         type: 'POST',
-        url: baseURL + 'guardarDireccion',
+        url: baseURL + 'guardarColonia',
         data: {
             idDistrito,
-            nombreDireccion
+            nombreColonia
         },
         dataType: 'json',
         success: function (response) {
             if (response.status == 'success') {
                 Swal.close();
                 alertaOk(response.mensaje);
-                $('#nueva-direccion').val('');
+                $('#nueva-colonia').val('');
             } else {
                 Swal.close();
                 alertaError(response.mensaje);
             }
-            cargarDirecciones(idDistrito);
+            cargarColonias(idDistrito);
         },
         error: function () {
             Swal.close();
-            alertaError('Error al guardar la nueva dirección');
+            alertaError('Error al guardar la nueva colonia');
         }
     })
 }
@@ -250,16 +250,16 @@ function eventosUsuarioSelects() {
     $('#distritos').on('change', function () {
         distritoSeleccionado = $(this).val();
         if (distritoSeleccionado !== "-1") {
-            $('#opcion-nueva-direccion').show();
+            $('#opcion-nueva-colonia').show();
         } else {
-            $('#opcion-nueva-direccion').hide();
+            $('#opcion-nueva-colonia').hide();
         }
 
-        cargarDirecciones(distritoSeleccionado);
+        cargarColonias(distritoSeleccionado);
     });
 
-    $('#agregar-direccion').on('click', function () {
-        guardarNuevaDireccion();
+    $('#agregar-colonia').on('click', function () {
+        guardarNuevaColonia();
     })
 }
 
@@ -270,7 +270,7 @@ function iniciarTodo() {
     $('#municipios').html('<option value="-1">Seleccione...</option>');
 
     $(document).ready(function () {
-        $('#direccion').select2({
+        $('#colonia').select2({
             theme: 'bootstrap4'
         });
     });

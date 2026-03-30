@@ -85,9 +85,9 @@ class Clientes extends BaseController
                 $distritos = null;
             }
 
-            $direccion = $this->request->getPost('direccion') ?: null;
-            if ($direccion == '-1') {
-                $direccion = null;
+            $colonia = $this->request->getPost('colonia') ?: null;
+            if ($colonia == '-1') {
+                $colonia = null;
             }
 
             $complementoDireccion = $this->request->getPost('complementoDireccion') ?: null;
@@ -188,7 +188,7 @@ class Clientes extends BaseController
                 $departamentos,
                 $municipios,
                 $distritos,
-                $direccion,
+                $colonia,
                 $complementoDireccion,
                 $fechaDeVencimientoDui,
                 $rutaFrontalDB,
@@ -349,12 +349,12 @@ class Clientes extends BaseController
             $departamentos = $this->request->getPost('departamentos');
             $municipios = $this->request->getPost('municipios');
             $distritos = $this->request->getPost('distritos');
-            $direccion = $this->request->getPost('direccion');
+            $colonia = $this->request->getPost('colonia');
 
             $departamentos = ($departamentos == '-1') ? null : $departamentos;
             $municipios = ($municipios == '-1') ? null : $municipios;
             $distritos = ($distritos == '-1') ? null : $distritos;
-            $direccion = ($direccion == '-1') ? null : $direccion;
+            $colonia = ($colonia == '-1') ? null : $colonia;
 
             $complementoDireccion = $this->request->getPost('complementoDireccion') ?: null;
             $fechaDeVencimientoDui = $this->request->getPost('fechaDeVencimientoDui') ?: null;
@@ -464,7 +464,7 @@ class Clientes extends BaseController
                 $departamentos,
                 $municipios,
                 $distritos,
-                $direccion,
+                $colonia,
                 $complementoDireccion,
                 $fechaDeVencimientoDui,
                 $rutaFrontalDB,
