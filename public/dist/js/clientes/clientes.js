@@ -416,6 +416,9 @@ function abrirModalNuevoCliente() {
 
     limpiarFormulario();
 
+    eliminarColorYfocus(inputs.codigo[0]);
+    eliminarColorYfocus(inputs.correo[0]);
+
     $('#modal-clientes').modal('show');
 }
 
@@ -466,7 +469,7 @@ function abrirModalEditarCliente(elemento) {
         .val(dataClientes.id_tipo_cliente || '')
         .trigger('change');
     $('#contacto-nombre').val(dataClientes.nombre_de_contacto);
-    $('#contacto-dui').val(dataClientes.numero_de_dui);
+    $('#contacto-dui').val(dataClientes.numero_de_dui_contacto);
     $('#contacto-telefono').val(dataClientes.numeros_de_telefonos);
 
     $('#departamentos')
@@ -511,6 +514,9 @@ function abrirModalEditarCliente(elemento) {
         inputs.fotoDuiReversa.val('');
         $('#vista-previa-reversa').hide();
     }
+
+    eliminarColorYfocus(inputs.codigo[0]);
+    eliminarColorYfocus(inputs.correo[0]);
 
     $('#comentarios').val(dataClientes.comentarios);
     $('#id-cliente').val(dataClientes.id_cliente);

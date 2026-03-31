@@ -91,4 +91,13 @@ class InstaladorModel extends Model
             'estado' => $nuevoEstado
         ]);
     }
+
+    public function buscarInstaladores($search)
+    {
+        return $this->select('id_instalador AS id, nombre_completo AS nombre_de_instalador')
+            ->like('nombre_completo', $search)
+            ->orderBy('id_instalador', 'ASC')
+            ->limit(10)
+            ->findAll();
+    }
 }

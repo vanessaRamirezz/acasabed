@@ -76,4 +76,12 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getClientes', 'Clientes::getClientes');
     $routes->post('nuevoCliente', 'Clientes::nuevoCliente');
     $routes->post('editarCliente', 'Clientes::editarCliente');
+
+    // MEDIDORES
+    $routes->get('medidores', 'Medidores::index');
+    $routes->get('getMedidores', 'Medidores::getMedidores');
+    $routes->get('getContratos', 'Medidores::getContratos');
+    $routes->get('getSelectInstaladores', 'Medidores::getSelectInstaladores');
+    $routes->post('nuevoMedidor', 'Medidores::nuevoMedidor');
+    $routes->post('editarMedidor', 'Medidores::editarMedidor');
 });

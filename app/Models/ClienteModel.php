@@ -182,7 +182,7 @@ class ClienteModel extends Model
                 tipos_de_cliente.id_tipo_cliente,
                 tipos_de_cliente.nombre AS nombre_tipo_cliente,
                 clientes.contacto AS nombre_de_contacto,
-                clientes.contacto_dui AS numero_de_dui,
+                clientes.contacto_dui AS numero_de_dui_contacto,
                 clientes.contacto_telefono AS numeros_de_telefonos,
                 departamentos.id_departamento,
                 municipios.id_municipio,
