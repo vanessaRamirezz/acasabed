@@ -84,4 +84,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getSelectInstaladores', 'Medidores::getSelectInstaladores');
     $routes->post('nuevoMedidor', 'Medidores::nuevoMedidor');
     $routes->post('editarMedidor', 'Medidores::editarMedidor');
+
+    // LECTURAS
+    $routes->get('lecturas', 'Lecturas::index');
+    $routes->get('getLecturas', 'Lecturas::getLecturas');
+    $routes->get('getPeriodosSelect', 'Lecturas::getPeriodosSelect');
+    $routes->post('nuevaLectura', 'Lecturas::nuevaLectura');
+    $routes->post('editarLectura', 'Lecturas::editarLectura');
 });

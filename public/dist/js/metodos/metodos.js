@@ -42,3 +42,14 @@ export function validarCampo(valor, mensaje, input) {
     eliminarColorYfocus(input[0]);
     return true;
 }
+
+// para selects
+
+export function colorEnInputConFocusSelect(input) {
+    input.classList.add('is-invalid');
+    input.focus();
+}
+
+export function eliminarColorYfocusSelect(input) {
+    input.classList.remove('is-invalid');
+}

@@ -89,4 +89,14 @@ class PeriodoModel extends Model
             'estado' => $estado,
         ]);
     }
+
+    public function buscarPeriodos($search)
+    {
+        return $this->select('id_periodo AS id, nombre AS periodo')
+            ->where('estado','ACTIVO')
+            ->like('nombre', $search)
+            ->orderBy('id_periodo', 'ASC')
+            ->limit(10)
+            ->findAll();
+    }
 }
