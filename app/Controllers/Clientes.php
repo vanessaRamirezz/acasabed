@@ -396,11 +396,15 @@ class Clientes extends BaseController
             if ($fotoCliente && $fotoCliente->isValid() && !$fotoCliente->hasMoved()) {
 
                 // eliminar anterior si existe
-                if ($rutaFotoActual && file_exists(FCPATH . $rutaFotoActual)) {
-                    unlink(FCPATH . $rutaFotoActual);
+                // if ($rutaFotoActual && file_exists(FCPATH . $rutaFotoActual)) {
+                //     unlink(FCPATH . $rutaFotoActual);
+                // }
+
+                foreach (glob($ruta . '/cliente_codigo_' . $codigo . '.*') as $file) {
+                    unlink($file);
                 }
 
-                $foto = 'cliente_' . 'codigo' . '_' . $codigo . '.' . $fotoCliente->getExtension();
+                $foto = 'cliente_codigo_' . $codigo . '.' . $fotoCliente->getExtension();
                 $fotoCliente->move($ruta, $foto, true); // 👈 true = overwrite
 
                 $rutaFotoDB = 'Documentos/' . $codigo . '/' . $foto;
@@ -410,13 +414,16 @@ class Clientes extends BaseController
             if ($fotoFrontal && $fotoFrontal->isValid() && !$fotoFrontal->hasMoved()) {
 
                 // eliminar anterior si existe
-                if ($rutaFrontalActual && file_exists(FCPATH . $rutaFrontalActual)) {
-                    unlink(FCPATH . $rutaFrontalActual);
+                foreach (glob($ruta . '/dui_frontal_codigo_' . $codigo . '.*') as $file) {
+                    unlink($file);
                 }
+                // if ($rutaFrontalActual && file_exists(FCPATH . $rutaFrontalActual)) {
+                //     unlink(FCPATH . $rutaFrontalActual);
+                // }
 
                 // $nombreFrontal = 'dui_frontal.' . $fotoFrontal->getExtension();
-                $nombreFrontal = 'dui_frontal_' . 'codigo' . '_' . $codigo . '.' . $fotoFrontal->getExtension();
-                $fotoFrontal->move($ruta, $nombreFrontal, true); // 👈 true = overwrite
+                $nombreFrontal = 'dui_frontal_codigo_' . $codigo . '.' . $fotoFrontal->getExtension();
+                $fotoFrontal->move($ruta, $nombreFrontal, true);
 
                 $rutaFrontalDB = 'Documentos/' . $codigo . '/' . $nombreFrontal;
             }
@@ -424,12 +431,16 @@ class Clientes extends BaseController
             // REVERSA
             if ($fotoReversa && $fotoReversa->isValid() && !$fotoReversa->hasMoved()) {
 
-                if ($rutaReversaActual && file_exists(FCPATH . $rutaReversaActual)) {
-                    unlink(FCPATH . $rutaReversaActual);
+                // if ($rutaReversaActual && file_exists(FCPATH . $rutaReversaActual)) {
+                //     unlink(FCPATH . $rutaReversaActual);
+                // }
+
+                foreach (glob($ruta . '/dui_reversa_codigo_' . $codigo . '.*') as $file) {
+                    unlink($file);
                 }
 
                 // $nombreReversa = 'dui_reversa.' . $fotoReversa->getExtension();
-                $nombreReversa = 'dui_reversa_' . 'codigo' . '_' . $codigo . '.' . $fotoReversa->getExtension();
+                $nombreReversa = 'dui_reversa_codigo_' . $codigo . '.' . $fotoReversa->getExtension();
                 $fotoReversa->move($ruta, $nombreReversa, true);
 
                 $rutaReversaDB = 'Documentos/' . $codigo . '/' . $nombreReversa;

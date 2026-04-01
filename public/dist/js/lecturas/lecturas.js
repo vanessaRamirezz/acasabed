@@ -268,7 +268,13 @@ function guardarOeditarLectura(tipoProceso) {
                 alertaOk(response.mensaje);
                 tablaLecturas.ajax.reload();
                 Swal.close();
-                $('#modal-lecturas').modal('hide');
+                if(tipoProceso != '1'){
+                    $('#modal-lecturas').modal('hide');
+                } else {
+                    inputs.contrato.val(null).trigger('change');
+                    inputs.valor.val('');
+                }
+                // $('#modal-lecturas').modal('hide');
             } else {
                 alertEnSweet('error', 'Uups..', response.mensaje);
             }
