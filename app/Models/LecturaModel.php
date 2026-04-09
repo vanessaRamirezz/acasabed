@@ -69,13 +69,13 @@ class LecturaModel extends Model
                 periodos.id_periodo AS id_de_periodo,
                 periodos.nombre AS nombre_de_periodo,
                 contratos.id_contrato AS id_de_contrato,
-                contratos.codigo AS codigo_de_contrato,
+                contratos.numero_contrato AS codigo_de_contrato,
                 lecturas.fecha AS fecha_toma_lectura,
                 lecturas.valor AS valor_obtenido,
                 instaladores.id_instalador AS id_de_instalador,
                 instaladores.nombre_completo AS nombre_instalador
             ')
-            ->orderBy('id_lectura', 'DESC')
+            ->orderBy('lecturas.id_lectura', 'DESC')
             ->limit($length, $start)
             ->get()
             ->getResultArray();

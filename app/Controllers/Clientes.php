@@ -48,6 +48,7 @@ class Clientes extends BaseController
 
             $codigo = $this->request->getPost('codigo');
             $nombre = $this->request->getPost('nombre') ?: null;
+            $edad = $this->request->getPost('edad') ?: null;
             $sexo = $this->request->getPost('sexo') ?: null;
             if ($sexo == 'Masculino') {
                 $sexo = 'Masculino';
@@ -55,10 +56,16 @@ class Clientes extends BaseController
                 $sexo = 'Femenino';
             }
             $ocupacion = $this->request->getPost('ocupacion') ?: null;
+            $estadoFamiliar = $this->request->getPost('estadoFamiliar') ?: null;
+            $numeroGrupoFamiliar = $this->request->getPost('numeroGrupoFamiliar') ?: null;
+            $lugarDeNacimiento = $this->request->getPost('lugarDeNacimiento') ?: null;
             $fechaDeNacimiento = $this->request->getPost('fechaDeNacimiento') ?: null;
+            $lugarTrabajo = $this->request->getPost('lugarDeTrabajo') ?: null;
             $telefonos = $this->request->getPost('telefonos') ?: null;
             $correo = $this->request->getPost('correo') ?: null;
             $dui = $this->request->getPost('dui') ?: null;
+            $extendido = $this->request->getPost('extendido') ?: null;
+            $fecha = $this->request->getPost('fecha') ?: null;
             $nit = $this->request->getPost('nit') ?: null;
             $nrc = $this->request->getPost('nrc') ?: null;
 
@@ -172,12 +179,19 @@ class Clientes extends BaseController
             $resultado = $this->clientesModel->insertarNuevoCliente(
                 $codigo,
                 $nombre,
+                $edad,
                 $sexo,
                 $ocupacion,
+                $estadoFamiliar,
+                $numeroGrupoFamiliar,
+                $lugarDeNacimiento,
                 $fechaDeNacimiento,
+                $lugarTrabajo,
                 $telefonos,
                 $correo,
                 $dui,
+                $extendido,
+                $fecha,
                 $nit,
                 $nrc,
                 $actividadEconomica,
@@ -317,14 +331,21 @@ class Clientes extends BaseController
             $idCliente = $this->request->getPost('id-cliente');
 
             $nombre = $this->request->getPost('nombre') ?: null;
+            $edad = $this->request->getPost('edad') ?: null;
             $sexo = $this->request->getPost('sexo') ?: null;
             $sexo = ($sexo === 'Masculino') ? 'Masculino' : 'Femenino';
 
             $ocupacion = $this->request->getPost('ocupacion') ?: null;
+            $estadoFamiliar = $this->request->getPost('estadoFamiliar') ?: null;
+            $numeroGrupoFamiliar = $this->request->getPost('numeroGrupoFamiliar') ?: null;
+            $lugarDeNacimiento = $this->request->getPost('lugarDeNacimiento') ?: null;
             $fechaDeNacimiento = $this->request->getPost('fechaDeNacimiento') ?: null;
+            $lugarTrabajo = $this->request->getPost('lugarDeTrabajo') ?: null;
             $telefonos = $this->request->getPost('telefonos') ?: null;
             $correo = $this->request->getPost('correo') ?: null;
             $dui = $this->request->getPost('dui') ?: null;
+            $extendido = $this->request->getPost('extendido') ?: null;
+            $fecha = $this->request->getPost('fecha') ?: null;
             $nit = $this->request->getPost('nit') ?: null;
             $nrc = $this->request->getPost('nrc') ?: null;
 
@@ -459,12 +480,19 @@ class Clientes extends BaseController
 
             $resultado = $this->clientesModel->actualizarCliente(
                 $nombre,
+                $edad,
                 $sexo,
                 $ocupacion,
+                $estadoFamiliar,
+                $numeroGrupoFamiliar,
+                $lugarDeNacimiento,
                 $fechaDeNacimiento,
+                $lugarTrabajo,
                 $telefonos,
                 $correo,
                 $dui,
+                $extendido,
+                $fecha,
                 $nit,
                 $nrc,
                 $actividadEconomica,

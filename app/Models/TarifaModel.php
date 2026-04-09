@@ -106,4 +106,13 @@ class TarifaModel extends Model
             'pago_minimo' => $pagoMinimo
         ]);
     }
+
+    public function buscarTarifas($search)
+    {
+        return $this->select('id_tarifa, codigo, desde_n_metros, hasta_n_metros')
+            ->like('codigo', $search)
+            ->orderBy('id_tarifa', 'ASC')
+            ->limit(10)
+            ->findAll();
+    }
 }

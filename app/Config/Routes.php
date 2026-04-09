@@ -91,4 +91,18 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getPeriodosSelect', 'Lecturas::getPeriodosSelect');
     $routes->post('nuevaLectura', 'Lecturas::nuevaLectura');
     $routes->post('editarLectura', 'Lecturas::editarLectura');
+
+    // SOLICITUDES
+    $routes->get('nueva_solicitud', 'Solicitudes::index');
+    $routes->get('getClientesSelect', 'Solicitudes::getClientesSelect');
+    $routes->post('nuevaSolicitudContrato', 'Solicitudes::nuevaSolicitudContrato');
+    $routes->get('getRutasSelect', 'Solicitudes::getRutasSelect');
+    $routes->get('getMedidoresSelect', 'Solicitudes::getMedidoresSelect');
+    $routes->get('getTarifasSelect', 'Solicitudes::getTarifasSelect');
+    
+
+    // CONTRATOS
+    $routes->get('contratos', 'Contratos::index');
+    $routes->post('contratos/pdf', 'Contratos::pdf');
+    $routes->get('getContratosTabla', 'Contratos::getContratosTabla');
 });

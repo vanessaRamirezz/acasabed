@@ -2,11 +2,11 @@
 <?= $this->section('title') ?> Periodos <?= $this->endSection() ?>
 <?= $this->section('styles') ?>
 <style>
-    label {
+    /* label {
         font-weight: 500;
         font-size: 0.9rem;
         color: #495057;
-    }
+    } */
 </style>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>

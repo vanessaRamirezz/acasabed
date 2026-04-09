@@ -37,6 +37,18 @@
     <link rel="stylesheet" href="<?= base_url('plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css') ?>">
     <!-- para mensajes tipo notificacion -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body,
+        .content-wrapper,
+        .main-header,
+        .main-sidebar {
+            font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-size: 14px;
+             color: #858796;
+        }
+    </style>
     <?= $this->renderSection('styles') ?>
 </head>
 
@@ -129,6 +141,11 @@
     <script>
         var baseURL = '<?= base_url() ?>/';
     </script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- jsPDF AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 
     <?= $this->renderSection('scripts') ?>

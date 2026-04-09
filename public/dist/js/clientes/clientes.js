@@ -6,12 +6,19 @@ const inputs = {
     fotoCliente: $("#foto-cliente-input"),
     codigo: $("#codigo"),
     nombre: $("#nombre"),
+    edad: $("#edad"),
     sexo: $("#sexo"),
     ocupacion: $("#ocupacion"),
+    estadoFamiliar: $("#estado-familiar"),
+    numeroGrupoFamiliar: $("#numero-grupo-familiar"),
+    lugarDeNacimiento: $("#lugar-de-nacimiento"),
     fechaDeNacimiento: $("#fecha-de-nacimiento"),
+    lugarDeTrabajo: $("#lugar-de-trabajo"),
     telefonos: $("#telefono"),
     correo: $("#correo"),
     dui: $("#dui"),
+    extendido: $("#extendido"),
+    fecha: $("#fecha"),
     nit: $("#nit"),
     nrc: $("#nrc"),
     actividadEconomica: $("#actividad-economica"),
@@ -41,12 +48,19 @@ function getData() {
 
     formData.append('codigo', inputs.codigo.val().trim());
     formData.append('nombre', inputs.nombre.val().trim());
+    formData.append('edad', inputs.edad.val().trim());
     formData.append('sexo', inputs.sexo.val());
     formData.append('ocupacion', inputs.ocupacion.val().trim());
+    formData.append('estadoFamiliar', inputs.estadoFamiliar.val().trim());
+    formData.append('numeroGrupoFamiliar', inputs.numeroGrupoFamiliar.val().trim());
+    formData.append('lugarDeNacimiento', inputs.lugarDeNacimiento.val());
     formData.append('fechaDeNacimiento', inputs.fechaDeNacimiento.val());
+    formData.append('lugarDeTrabajo', inputs.lugarDeTrabajo.val());
     formData.append('telefonos', inputs.telefonos.val().trim());
     formData.append('correo', inputs.correo.val().trim());
     formData.append('dui', inputs.dui.val().trim());
+    formData.append('extendido', inputs.extendido.val().trim());
+    formData.append('fecha', inputs.fecha.val().trim());
     formData.append('nit', inputs.nit.val().trim());
     formData.append('nrc', inputs.nrc.val().trim());
     formData.append('actividadEconomica', inputs.actividadEconomica.val());
@@ -87,12 +101,19 @@ function limpiarFormulario() {
     inputs.codigo.val('');
     inputs.codigo.prop('disabled', false);
     inputs.nombre.val('');
+    inputs.edad.val('');
     inputs.sexo.val('');
     inputs.ocupacion.val('');
+    inputs.estadoFamiliar.val('');
+    inputs.numeroGrupoFamiliar.val('');
+    inputs.lugarDeNacimiento.val('');
     inputs.fechaDeNacimiento.val('');
+    inputs.lugarDeTrabajo.val('');
     inputs.telefonos.val('');
     inputs.correo.val('');
     inputs.dui.val('');
+    inputs.extendido.val('');
+    inputs.fecha.val('');
     inputs.nit.val('');
     inputs.nrc.val('');
     inputs.actividadEconomica.val(null).trigger('change');
@@ -449,16 +470,23 @@ function abrirModalEditarCliente(elemento) {
 
     $('#codigo').val(dataClientes.codigo).prop('disabled', true);
     $('#nombre').val(dataClientes.nombre);
+    $('#edad').val(dataClientes.edad);
     var sexo = (dataClientes.sexo || '').trim();
     var $selectSexo = $('#sexo');
     $selectSexo.find('option').each(function () {
         $(this).prop('selected', $(this).text().trim() === sexo);
     });
     $('#ocupacion').val(dataClientes.ocupacion);
+    $('#estado-familiar').val(dataClientes.estado_familiar);
+    $('#numero-grupo-familiar').val(dataClientes.numero_grupo_familiar);
+    $('#lugar-de-nacimiento').val(dataClientes.lugar_de_nacimiento);
     $('#fecha-de-nacimiento').val(dataClientes.fecha_de_nacimiento);
+    $('#lugar-de-trabajo').val(dataClientes.lugar_trabajo);
     $('#telefono').val(dataClientes.telefonos);
     $('#correo').val(dataClientes.email);
     $('#dui').val(dataClientes.numero_de_dui);
+    $('#extendido').val(dataClientes.extendido);
+    $('#fecha').val(dataClientes.fecha);
     $('#nit').val(dataClientes.numero_de_nit);
     $('#nrc').val(dataClientes.numero_de_nrc);
     setSelect2Value('#actividad-economica',

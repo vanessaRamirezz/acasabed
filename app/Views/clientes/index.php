@@ -2,11 +2,11 @@
 <?= $this->section('title') ?> Clientes <?= $this->endSection() ?>
 <?= $this->section('styles') ?>
 <style>
-    label {
+    /* label {
         font-weight: 500;
         font-size: 0.9rem;
         color: #495057;
-    }
+    } */
 </style>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
@@ -105,6 +105,12 @@
                                         <input type="text" class="form-control" name="nombre" id="nombre">
                                     </div>
                                 </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label for="edad">Edad</label>
+                                        <input type="number" class="form-control" name="edad" id="edad" min="1">
+                                    </div>
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-3">
@@ -117,30 +123,61 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-sm-5">
+                                <div class="col-sm-3">
                                     <div class="form-group">
                                         <label for="ocupacion">Ocupación</label>
                                         <input type="text" class="form-control" name="ocupacion" id="ocupacion">
                                     </div>
                                 </div>
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <div class="form-group">
-                                        <label for="fecha-de-nacimiento">Fecha de Nacimiento</label>
-                                        <input type="date" class="form-control" name="fecha-de-nacimiento" id="fecha-de-nacimiento">
+                                        <label for="estado-familiar">Estado Familiar</label>
+                                        <input type="text" class="form-control" name="estado-familiar" id="estado-familiar">
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label for="numero-grupo-familiar">N° personas grupo familiar</label>
+                                        <input type="number" min="1" class="form-control" name="numero-grupo-familiar" id="numero-grupo-familiar">
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-sm-9">
+                                    <label>Lugar y Fecha de Nacimiento</label>
+
+                                    <div class="d-flex align-items-center">
+                                        <input type="text"
+                                            class="form-control flex-grow-1"
+                                            name="lugar-de-nacimiento"
+                                            id="lugar-de-nacimiento">
+
+                                        <span class="mx-2">,</span>
+
+                                        <input type="date"
+                                            class="form-control"
+                                            style="max-width: 180px;"
+                                            name="fecha-de-nacimiento"
+                                            id="fecha-de-nacimiento">
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="lugar-de-trabajo">Lugar de trabajo</label>
+                                        <input type="text" class="form-control" name="lugar-de-trabajo" id="lugar-de-trabajo">
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
                             <p>Puede agregar varios numeros separados por (,) sin guiones (-)</p>
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label for="telefono">Telefonos</label>
-                                        <div class="input-group mb-3">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text"><i></i></span>
-                                            </div>
-                                            <input type="text" class="form-control" name="telefono" id="telefono">
-                                        </div>
+                                        <input type="text" class="form-control" name="telefono" id="telefono">
                                     </div>
                                 </div>
                                 <div class="col-sm-5">
@@ -151,12 +188,22 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-sm-4">
+                                <div class="col-sm-3">
                                     <div class="form-group">
                                         <label for="dui">DUI</label>
                                         <input type="text" class="form-control" name="dui" id="dui">
                                     </div>
                                 </div>
+                                <div class="col-sm-6">
+                                    <label for="extendido">Extendido en</label>
+                                    <input type="text" class="form-control" name="extendido" id="extendido">
+                                </div>
+                                <div class="col-sm-3">
+                                    <label for="fecha">Fecha</label>
+                                    <input type="date" class="form-control" name="fecha" id="fecha">
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label for="nit">NIT</label>

@@ -22,7 +22,6 @@
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
-
             <?php
             $accesos = session('accesos');
             $current = service('uri')->getSegment(1);
@@ -30,9 +29,20 @@
             $menus = [];
 
             foreach ($accesos as $acceso) {
+
+                // ignorar los que contengan NO_AGRUPAR
+                if (!empty($acceso['agrupacion']) && strpos($acceso['agrupacion'], 'NO_AGRUPAR') !== false) {
+                    continue;
+                }
+
                 $grupo = $acceso['agrupacion'] ?? 'SIMPLE';
                 $menus[$grupo][] = $acceso;
             }
+
+            // foreach ($accesos as $acceso) {
+            //     $grupo = $acceso['agrupacion'] ?? 'SIMPLE';
+            //     $menus[$grupo][] = $acceso;
+            // }
             ?>
 
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">

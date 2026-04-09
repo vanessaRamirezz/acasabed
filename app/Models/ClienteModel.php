@@ -11,11 +11,16 @@ class ClienteModel extends Model
     protected $allowedFields = [
         'codigo',
         'dui',
+        'extendido',
+        'fecha',
         'sexo',
         'nombre_completo',
+        'edad',
         'nit',
         'nrc',
         'ocupacion',
+        'estado_familiar',
+        'numero_grupo_familiar',
         'id_actividad_economica',
         'id_departamento',
         'id_municipio',
@@ -26,6 +31,8 @@ class ClienteModel extends Model
         'fecha_vencimiento_dui',
         'id_tipo_cliente',
         'fecha_nacimiento',
+        'lugar_nacimiento',
+        'lugar_de_trabajo',
         'correo',
         'dui_frontal',
         'dui_reversa',
@@ -41,12 +48,19 @@ class ClienteModel extends Model
     public function insertarNuevoCliente(
         $codigo,
         $nombre,
+        $edad,
         $sexo,
         $ocupacion,
+        $estadoFamiliar,
+        $numeroGrupoFamiliar,
+        $lugarNacimiento,
         $fechaDeNacimiento,
+        $lugarDeTrabajo,
         $telefonos,
         $correo,
         $dui,
+        $extendido,
+        $fecha,
         $nit,
         $nrc,
         $actividadEconomica,
@@ -71,12 +85,19 @@ class ClienteModel extends Model
         return $this->insert([
             'codigo' => $codigo,
             'nombre_completo' => $nombre,
+            'edad' => $edad,
             'sexo' => $sexo,
             'ocupacion' => $ocupacion,
+            'estado_familiar' => $estadoFamiliar,
+            'numero_grupo_familiar' => $numeroGrupoFamiliar,
+            'lugar_nacimiento' => $lugarNacimiento,
             'fecha_nacimiento' => $fechaDeNacimiento,
+            'lugar_de_trabajo' => $lugarDeTrabajo,
             'telefono' => $telefonos,
             'correo' => $correo,
             'dui' => $dui,
+            'extendido' => $extendido,
+            'fecha' => $fecha,
             'nit' => $nit,
             'nrc' => $nrc,
             'id_actividad_economica' => $actividadEconomica,
@@ -169,12 +190,19 @@ class ClienteModel extends Model
                 clientes.id_cliente,
                 clientes.codigo,
                 clientes.nombre_completo AS nombre,
+                clientes.edad,
                 clientes.sexo,
                 clientes.ocupacion,
+                clientes.estado_familiar,
+                clientes.numero_grupo_familiar,
+                clientes.lugar_nacimiento AS lugar_de_nacimiento,
                 clientes.fecha_nacimiento AS fecha_de_nacimiento,
+                clientes.lugar_de_trabajo AS lugar_trabajo,
                 clientes.telefono AS telefonos,
                 clientes.correo AS email,
                 clientes.dui AS numero_de_dui,
+                clientes.extendido,
+                clientes.fecha,
                 clientes.nit AS numero_de_nit,
                 clientes.nrc AS numero_de_nrc,
                 actividades_economicas.id_actividad_economica,
@@ -216,12 +244,19 @@ class ClienteModel extends Model
 
     public function actualizarCliente(
         $nombre,
+        $edad,
         $sexo,
         $ocupacion,
+        $estadoFamiliar,
+        $numeroGrupoFamiliar,
+        $lugarNacimiento,
         $fechaDeNacimiento,
+        $lugarDeTrabajo,
         $telefonos,
         $correo,
         $dui,
+        $extendido,
+        $fecha,
         $nit,
         $nrc,
         $actividadEconomica,
@@ -244,12 +279,19 @@ class ClienteModel extends Model
 
         $data = [
             'nombre_completo' => $nombre,
+            'edad' => $edad,
             'sexo' => $sexo,
             'ocupacion' => $ocupacion,
+            'estado_familiar' => $estadoFamiliar,
+            'numero_grupo_familiar' => $numeroGrupoFamiliar,
+            'lugar_nacimiento' => $lugarNacimiento,
             'fecha_nacimiento' => $fechaDeNacimiento,
+            'lugar_de_trabajo' => $lugarDeTrabajo,
             'telefono' => $telefonos,
             'correo' => $correo,
             'dui' => $dui,
+            'extendido' => $extendido,
+            'fecha' => $fecha,
             'nit' => $nit,
             'nrc' => $nrc,
             'id_actividad_economica' => $actividadEconomica,
@@ -281,5 +323,39 @@ class ClienteModel extends Model
         }
 
         return $this->update($idCliente, $data);
+    }
+
+    public function buscarClientes($search)
+    {
+        return $this->select("
+                clientes.id_cliente,
+                clientes.nombre_completo,
+                clientes.edad,
+                clientes.dui,
+                clientes.extendido,
+                clientes.fecha,
+                clientes.lugar_nacimiento,
+                clientes.fecha_nacimiento,
+                clientes.estado_familiar,
+                clientes.numero_grupo_familiar,
+                CONCAT_WS(', ',
+                    departamentos.nombre,
+                    municipios.nombre,
+                    distritos.nombre,
+                    colonias.nombre,
+                    clientes.complemento_direccion
+                ) AS direccion_completa,
+                clientes.lugar_de_trabajo AS lugar_trabajo,
+                clientes.ocupacion,
+                clientes.telefono
+            ", false)
+            ->join('departamentos', 'departamentos.id_departamento = clientes.id_departamento', 'left')
+            ->join('municipios', 'municipios.id_municipio = clientes.id_municipio', 'left')
+            ->join('distritos', 'distritos.id_distrito = clientes.id_distrito', 'left')
+            ->join('colonias', 'colonias.id_colonia = clientes.id_colonia', 'left')
+            ->like('clientes.nombre_completo', $search)
+            ->orderBy('clientes.id_cliente', 'DESC')
+            ->limit(10)
+            ->findAll();
     }
 }

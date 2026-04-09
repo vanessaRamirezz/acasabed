@@ -76,4 +76,13 @@ class RutaModel extends Model
             'nombre' => $nombre
         ]);
     }
+
+    public function buscarRutas($search)
+    {
+        return $this->select('id_ruta, nombre')
+            ->like('nombre', $search)
+            ->orderBy('id_ruta', 'ASC')
+            ->limit(10)
+            ->findAll();
+    }
 }

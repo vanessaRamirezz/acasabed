@@ -43,7 +43,7 @@ class MedidorModel extends Model
         if (!empty($searchValue)) {
             $builder->groupStart()
                 ->like('medidores.numero_serie', $searchValue)
-                ->orLike('contratos.codigo', $searchValue)
+                ->orLike('contratos.numero_contrato', $searchValue)
                 ->orLike('instaladores.nombre_completo', $searchValue)
                 ->groupEnd();
         }
@@ -62,11 +62,11 @@ class MedidorModel extends Model
                 medidores.numero_serie AS numeros_de_serie,
                 medidores.fecha_instalacion AS fecha_de_instalacion,
                 contratos.id_contrato AS id_de_contrato,
-                contratos.codigo AS codigo_de_contrato,
+                contratos.numero_contrato AS codigo_de_contrato,
                 instaladores.id_instalador AS id_de_instalador,
                 instaladores.nombre_completo AS nombre_instalador
             ')
-            ->orderBy('id_medidor', 'DESC')
+            ->orderBy('medidores.id_medidor', 'DESC')
             ->limit($length, $start)
             ->get()
             ->getResultArray();
@@ -109,5 +109,14 @@ class MedidorModel extends Model
             'id_contrato' => $idContrato,
             'id_instalador' => $idInstalador,
         ]);
+    }
+
+    public function buscarMedidores($search)
+    {
+        return $this->select('id_medidor, numero_serie')
+            ->like('numero_serie', $search)
+            ->orderBy('id_medidor', 'ASC')
+            ->limit(10)
+            ->findAll();
     }
 }
