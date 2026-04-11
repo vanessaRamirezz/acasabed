@@ -6,6 +6,7 @@ use App\Models\BeneficiarioModel;
 use App\Models\ClienteModel;
 use App\Models\CobroContratoModel;
 use App\Models\ContratoModel;
+use App\Models\FirmanteModel;
 use App\Models\MedidorModel;
 use App\Models\PlanDePagoModel;
 use App\Models\RutaModel;
@@ -23,6 +24,7 @@ class Solicitudes extends BaseController
     private $tarifasModel;
     private $planDePagosModel;
     private $contratosCobrosModel;
+    private $firmantesModel;
 
     public function __construct()
     {
@@ -35,6 +37,7 @@ class Solicitudes extends BaseController
         $this->tarifasModel = new TarifaModel();
         $this->planDePagosModel = new PlanDePagoModel();
         $this->contratosCobrosModel = new CobroContratoModel();
+        $this->firmantesModel = new FirmanteModel();
     }
 
     public function index()
@@ -102,8 +105,67 @@ class Solicitudes extends BaseController
         }
     }
 
+    public function getBeneficiariosId()
+    {
+        try {
+            $idCliente = $this->request->getPost('idCliente');
+            $beneficiariosHistorial = $this->beneficiariosModel->getBeneficiarios($idCliente);
+            log_message('info', 'beneficiarios  ' . print_r($beneficiariosHistorial, true));
+            // exit;
+            return $this->respondSuccess($beneficiariosHistorial);
+        } catch (\Throwable $th) {
+            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
+            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
+            log_message('error', $errorMessage);
+            return $this->respondError('Error al traer los clientes');
+        }
+    }
+
+    public function getSolicitudesTabla()
+    {
+        try {
+            $start = (int)$this->request->getGet('start');
+            $length = (int)$this->request->getGet('length');
+            $draw = (int)$this->request->getGet('draw');
+            $searchValue = $this->request->getGet('searchValue') ?? '';
+
+            $result = $this->solicitudesModel->getSolicitudesCreadas($start, $length, $searchValue);
+
+            return $this->response->setJSON([
+                "draw" => $draw,
+                "recordsTotal" => $result['total'],
+                "recordsFiltered" => $result['filtered'],
+                "data" => $result['data']
+            ]);
+        } catch (\Throwable $th) {
+            log_message('error', $th->getMessage());
+            return $this->response->setJSON([
+                "draw" => 0,
+                "recordsTotal" => 0,
+                "recordsFiltered" => 0,
+                "data" => []
+            ]);
+        }
+    }
+
+    public function getSolicitudById()
+    {
+        try {
+            $idSolicitud = $this->request->getVar('id');
+            $infoSolicitud = $this->solicitudesModel->getInfoSolicitudPorId($idSolicitud);
+            return $this->respondSuccess($infoSolicitud);
+        } catch (\Throwable $th) {
+            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
+            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
+            log_message('error', $errorMessage);
+
+            return $this->respondError('Error al traer los clientes');
+        }
+    }
+
     public function crearBeneficiario($data)
     {
+        $idBeneficiario = $data['idBeneficiario'] ?? null;
         $nombre = $data['nombreBeneficiario'] ?? null;
         $edad = $data['edadBeneficiario'] ?? null;
         $parentesco = $data['parentescoBeneficiario'] ?? null;
@@ -134,6 +196,7 @@ class Solicitudes extends BaseController
         return [
             'valido' => true,
             'data' => [
+                'idBeneficiario' => $idBeneficiario,
                 'nombre' => $nombre,
                 'edad' => $edad,
                 'parentesco' => $parentesco,
@@ -145,25 +208,42 @@ class Solicitudes extends BaseController
     public function crearSolicitud($data)
     {
 
+        $idSolicitud = $data['idSolicitud'] ?? null;
+
+
         $fechaCreacion = $data['fechaCreacion'] ?? null;
         $direccionInmueble = $data['direccionInmueble'] ?? null;
         $propietario = filter_var($data['propietario'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $inquilino = filter_var($data['inquilino'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $representante = filter_var($data['representante'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $otroCheck = $data['otroCheck'] ?? null;
-        $abonera = $data['abonera'] ?? null;
-        $hoyoSeco = $data['hoyoSeco'] ?? null;
-        $lavable = $data['lavable'] ?? null;
+        $abonera = filter_var($data['abonera'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $hoyoSeco = filter_var($data['hoyoSeco'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $lavable = filter_var($data['lavable'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $otroBaño = $data['otroBaño'] ?? null;
         $si = filter_var($data['si'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $no = filter_var($data['no'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $tiempo = $data['tiempo'] ?? null;
         $aceptaContruccionLetrina = false;
         if ($si === true) {
             $aceptaContruccionLetrina = true;
         } else if ($no == false) {
             $aceptaContruccionLetrina = false;
         }
+        $tiempo = $data['tiempo'] ?? null;
+        $contado = filter_var($data['contado'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $otroTipoPago = $data['otro'] ?? null;
+        $costoInstalacion = $data['monto'] ?? null;
+        $acuerdo = $data['acuerdo'] ?? null;
+        $fechaSession = $data['fechaSession'] ?? null;
+        $numeroActa = $data['numeroActa'] ?? null;
+
+        if (!$idSolicitud) {
+            $estado = 'CREADA';
+        } else {
+            $estado = 'ACEPTADA';
+        }
+
+
 
         return [
             'valido' => true,
@@ -180,136 +260,213 @@ class Solicitudes extends BaseController
                 'otroBaño' => $otroBaño,
                 'aceptaContruccionLetrina' => $aceptaContruccionLetrina,
                 'tiempo' => $tiempo,
+                'contado' => $contado,
+                'otroTipoPago' => $otroTipoPago,
+                'costoInstalacion' => $costoInstalacion,
+                'acuerdo' => $acuerdo,
+                'fechaSession' => $fechaSession,
+                'numeroActa' => $numeroActa,
+                'estado' => $estado
             ]
         ];
     }
 
-    public function crearContrato($data)
+    private function tieneDatosBeneficiario(array $beneficiario)
     {
-        $fichaAlcaldia = $data['numeroActa'] ?? null; // preguntar aca
-        $fechaInicio = $data['fechaInicio'] ?? null;
-        $fechaVencimiento = $data['fechaVencimiento'] ?? null;
-        $estadoContrato = $data['estado'] ?? null;
+        return !empty($beneficiario['nombre'])
+            || !empty($beneficiario['edad'])
+            || !empty($beneficiario['parentesco'])
+            || !empty($beneficiario['direccion']);
+    }
 
-        $idRuta = $data['ruta'];
-        if (
-            $idRuta === '' ||
-            $idRuta === 'null' ||
-            $idRuta === '-1' ||
-            $idRuta === null
-        ) {
-            $idRuta = null;
-        }
-
-        $idMedidor = $data['medidor'];
-        if (
-            $idMedidor === '' ||
-            $idMedidor === 'null' ||
-            $idMedidor === '-1' ||
-            $idMedidor === null
-        ) {
-            $idMedidor = null;
-        }
-
-
-        $direccionMedidor = $data['direccionMedidor'] ?? null;
-
-        $idTarifa = $data['tarifa'];
-        if (
-            $idTarifa === '' ||
-            $idTarifa === 'null' ||
-            $idTarifa === '-1' ||
-            $idTarifa === null
-        ) {
-            $idTarifa = null;
-        }
-
-        $contado = filter_var($data['contado'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $otro = $data['otro'] ?? null;
-        $monto = $data['monto'] ?? null;
-        $idPlanDePago = null;
-        $saldoPendiente = $monto;
+    public function crearFirmantes($data)
+    {
+        $idFirmante = $data['idFirmante'] ?? null;
+        $nombreFirmante1 = $data['nombreFirmante1'] ?? null;
+        $puestoFirmante1 = $data['puestoFirmante1'] ?? null;
 
         return [
             'valido' => true,
             'data' => [
-                'fichaAlcaldia' => $fichaAlcaldia,
-                'fechaInicio' => $fechaInicio,
-                'fechaVencimiento' => $fechaVencimiento,
-                'estadoContrato' => $estadoContrato,
-                'idRuta' => $idRuta,
-                'idMedidor' => $idMedidor,
-                'direccionMedidor' => $direccionMedidor,
-                'idTarifa' => $idTarifa,
-                'contado' => $contado,
-                'otro' => $otro,
-                'monto' => $monto,
-                'idPlanDePago' => $idPlanDePago,
-                'saldoPendiente' => $saldoPendiente,
+                'idFirmante' => $idFirmante,
+                'nombreFirmante1' => $nombreFirmante1,
+                'puestoFirmante1' => $puestoFirmante1
             ]
         ];
     }
+
+    // public function crearContrato($data)
+    // {
+    //     $fichaAlcaldia = $data['numeroActa'] ?? null; // preguntar aca
+    //     $fechaInicio = $data['fechaInicio'] ?? null;
+    //     $fechaVencimiento = $data['fechaVencimiento'] ?? null;
+    //     $estadoContrato = $data['estado'] ?? null;
+
+    //     $idRuta = $data['ruta'];
+    //     if (
+    //         $idRuta === '' ||
+    //         $idRuta === 'null' ||
+    //         $idRuta === '-1' ||
+    //         $idRuta === null
+    //     ) {
+    //         $idRuta = null;
+    //     }
+
+    //     $idMedidor = $data['medidor'];
+    //     if (
+    //         $idMedidor === '' ||
+    //         $idMedidor === 'null' ||
+    //         $idMedidor === '-1' ||
+    //         $idMedidor === null
+    //     ) {
+    //         $idMedidor = null;
+    //     }
+
+
+    //     $direccionMedidor = $data['direccionMedidor'] ?? null;
+
+    //     $idTarifa = $data['tarifa'];
+    //     if (
+    //         $idTarifa === '' ||
+    //         $idTarifa === 'null' ||
+    //         $idTarifa === '-1' ||
+    //         $idTarifa === null
+    //     ) {
+    //         $idTarifa = null;
+    //     }
+
+    //     $contado = filter_var($data['contado'] ?? false, FILTER_VALIDATE_BOOLEAN);
+    //     $otro = $data['otro'] ?? null;
+    //     $monto = $data['monto'] ?? null;
+    //     $idPlanDePago = null;
+    //     $saldoPendiente = $monto;
+
+    //     return [
+    //         'valido' => true,
+    //         'data' => [
+    //             'fichaAlcaldia' => $fichaAlcaldia,
+    //             'fechaInicio' => $fechaInicio,
+    //             'fechaVencimiento' => $fechaVencimiento,
+    //             'estadoContrato' => $estadoContrato,
+    //             'idRuta' => $idRuta,
+    //             'idMedidor' => $idMedidor,
+    //             'direccionMedidor' => $direccionMedidor,
+    //             'idTarifa' => $idTarifa,
+    //             'contado' => $contado,
+    //             'otro' => $otro,
+    //             'monto' => $monto,
+    //             'idPlanDePago' => $idPlanDePago,
+    //             'saldoPendiente' => $saldoPendiente,
+    //         ]
+    //     ];
+    // }
 
     public function crearPlanDePago($data)
     {
-        $cantidadDePagos = $data['cantidadDePagos'] ?? null;
-        $totalCuota = $data['totalCuota'] ?? null;
+        $idPlanDePago = $data['idPlanPago'] ?? null;
 
-        return [
-            'valido' => true,
-            'data' => [
-                'cantidadDePagos' => $cantidadDePagos,
-                'totalCuota' => $totalCuota,
-            ]
-        ];
-    }
+        $contado = filter_var($data['contado'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $monto = isset($data['monto']) ? (float)$data['monto'] : 0;
 
-    public function crearCobros($data)
-    {
-        $cantidadDePagos = (int)$data['cantidadDePagos'] ?? null;
-        $totalCuota = (int)$data['totalCuota'] ?? null;
-        $fechaBase = $data['fecha'] ?? null;
+        $cantidadDePagos = $contado ? 0 : (isset($data['cantidadDePagos']) ? (int)$data['cantidadDePagos'] : 0);
+        $totalCuota = $contado ? 0 : (isset($data['totalCuota']) ? (float)$data['totalCuota'] : 0);
 
-        return [
-            'valido' => true,
-            'data' => [
-                'cantidadDePagos' => $cantidadDePagos,
-                'totalCuota' => $totalCuota,
-                'fechaBase' => $fechaBase
-            ]
-        ];
-    }
+        // VALIDACIÓN SOLO SI NO ES CONTADO
+        if (!$contado) {
 
-    public function validarMedidor($data)
-    {
-        $medidor = $data['medidor'] ?? null;
+            $total = $cantidadDePagos * $totalCuota;
 
+            // Redondeo igual que en JS (2 decimales)
+            $total = round($total, 2);
+            $monto = round($monto, 2);
 
-        // // VALIDACIONES (una por una)
-        if (empty($medidor)) {
-            return [
-                'valido' => false,
-                'error' => 'Seleccionar un medidor es necesario'
-            ];
+            if ($total !== $monto) {
+                return [
+                    'valido' => false,
+                    'error' => "Al sumar el total de las cuotas ($total) no coincide con el monto ($monto)"
+                ];
+            }
         }
 
-
         return [
             'valido' => true,
             'data' => [
-                'medidor' => $medidor,
+                'idPlanDePago' => $idPlanDePago,
+                'cantidadDePagos' => $cantidadDePagos,
+                'totalCuota' => $totalCuota,
             ]
         ];
     }
 
-    public function nuevaSolicitudContrato()
+
+    private function valorComparable($valor)
+    {
+        if ($valor === null) {
+            return null;
+        }
+
+        return trim((string)$valor);
+    }
+
+    private function hayCambios(array $actual, array $nuevo)
+    {
+        foreach ($nuevo as $campo => $valorNuevo) {
+            $valorActual = $actual[$campo] ?? null;
+
+            if ($this->valorComparable($valorActual) !== $this->valorComparable($valorNuevo)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // public function crearCobros($data)
+    // {
+    //     $cantidadDePagos = (int)$data['cantidadDePagos'] ?? null;
+    //     $totalCuota = (int)$data['totalCuota'] ?? null;
+    //     $fechaBase = $data['fecha'] ?? null;
+
+    //     return [
+    //         'valido' => true,
+    //         'data' => [
+    //             'cantidadDePagos' => $cantidadDePagos,
+    //             'totalCuota' => $totalCuota,
+    //             'fechaBase' => $fechaBase
+    //         ]
+    //     ];
+    // }
+
+    // public function validarMedidor($data)
+    // {
+    //     $medidor = $data['medidor'] ?? null;
+
+
+    //     // // VALIDACIONES (una por una)
+    //     if (empty($medidor)) {
+    //         return [
+    //             'valido' => false,
+    //             'error' => 'Seleccionar un medidor es necesario'
+    //         ];
+    //     }
+
+
+    //     return [
+    //         'valido' => true,
+    //         'data' => [
+    //             'medidor' => $medidor,
+    //         ]
+    //     ];
+    // }
+
+    public function nuevaSolicitud()
     {
         $db = \Config\Database::connect();
         $db->transBegin();
 
         try {
 
-            log_message('debug', 'POST: ' . print_r($this->request->getPost(), true));
+            log_message('debug', 'POST CREAR SOLICITUD: ' . print_r($this->request->getPost(), true));
             $data = $this->request->getPost();
             $idCliente = $data['idCliente'] ?? null;
 
@@ -319,30 +476,12 @@ class Solicitudes extends BaseController
 
             $idUsuario = $_SESSION['id_usuario'];
             $fechaCreacion = date('Y-m-d H:i:s');
+            $idBeneficiario = null;
+            $idPlan = null;
+            $idFirmantes = null;
 
             // =========================
-            // 1. BENEFICIARIO
-            // =========================
-            $beneficiario = $this->crearBeneficiario($data);
-
-            if (!$beneficiario['valido']) {
-                throw new \Exception($beneficiario['error']);
-            }
-
-            $idBeneficiario = $this->beneficiariosModel->insertarBeneficiario(
-                $beneficiario['data']['nombre'],
-                $beneficiario['data']['edad'],
-                $beneficiario['data']['parentesco'],
-                $beneficiario['data']['direccion'],
-                $idCliente
-            );
-
-            if (!$idBeneficiario) {
-                throw new \Exception('Error al insertar beneficiario');
-            }
-
-            // =========================
-            // 2. SOLICITUD
+            // 1. CREAR SOLICITUD
             // =========================
             $solicitud = $this->crearSolicitud($data);
 
@@ -355,9 +494,8 @@ class Solicitudes extends BaseController
 
             $idSolicitud = $this->solicitudesModel->insertarSolicitud(
                 $codigoFormateado,
-                $fechaCreacion,
+                $solicitud['data']['fechaCreacion'],
                 $idCliente,
-                $idBeneficiario,
                 $solicitud['data']['direccionInmueble'],
                 $solicitud['data']['propietario'],
                 $solicitud['data']['inquilino'],
@@ -369,52 +507,50 @@ class Solicitudes extends BaseController
                 $solicitud['data']['otroBaño'],
                 $solicitud['data']['aceptaContruccionLetrina'],
                 $solicitud['data']['tiempo'],
+                $solicitud['data']['contado'],
+                $solicitud['data']['otroTipoPago'],
+                $solicitud['data']['costoInstalacion'],
+                $solicitud['data']['acuerdo'],
+                $solicitud['data']['fechaSession'],
+                $solicitud['data']['numeroActa'],
+                $solicitud['data']['estado'],
                 $idUsuario,
                 $fechaCreacion
             );
+            log_message('info', 'id de solicitud ' . print_r($idSolicitud, true));
 
             if (!$idSolicitud) {
                 throw new \Exception('Error al insertar solicitud');
             }
 
             // =========================
-            // 3. CONTRATO
+            // 2. BENEFICIARIO
             // =========================
-            $contrato = $this->crearContrato($data);
+            $beneficiario = $this->crearBeneficiario($data);
 
-            if (!$contrato['valido']) {
-                throw new \Exception($contrato['error']);
+            if (!$beneficiario['valido']) {
+                throw new \Exception($beneficiario['error']);
             }
 
-            $numeroContrato = 'C-' . $codigoFormateado;
+            if (!$beneficiario['data']['idBeneficiario']) {
+                $idBeneficiario = $this->beneficiariosModel->insertarBeneficiario(
+                    $beneficiario['data']['nombre'],
+                    $beneficiario['data']['edad'],
+                    $beneficiario['data']['parentesco'],
+                    $beneficiario['data']['direccion'],
+                    $idCliente
+                );
+                log_message('info', 'id beneficiario ' . print_r($idBeneficiario, true));
 
-            $idContrato = $this->contratosModel->insertarContrato(
-                $idSolicitud,
-                $numeroContrato,
-                $contrato['data']['fichaAlcaldia'],
-                $idCliente,
-                $contrato['data']['fechaInicio'],
-                $contrato['data']['fechaVencimiento'],
-                $contrato['data']['estadoContrato'],
-                $contrato['data']['idRuta'],
-                $contrato['data']['idMedidor'],
-                $contrato['data']['direccionMedidor'],
-                $contrato['data']['idTarifa'],
-                $contrato['data']['contado'],
-                $contrato['data']['otro'],
-                $contrato['data']['monto'],
-                $contrato['data']['idPlanDePago'],
-                $contrato['data']['saldoPendiente'],
-                $fechaCreacion,
-                $idUsuario
-            );
-
-            if (!$idContrato) {
-                throw new \Exception('Error al insertar contrato');
+                if (!$idBeneficiario) {
+                    throw new \Exception('Error al insertar beneficiario');
+                }
+            } else {
+                $idBeneficiario = $beneficiario['data']['idBeneficiario'];
             }
 
             // =========================
-            // 4. PLAN DE PAGO
+            // 3. PLAN DE PAGO
             // =========================
             $plan = $this->crearPlanDePago($data);
 
@@ -424,76 +560,45 @@ class Solicitudes extends BaseController
 
             $idPlan = $this->planDePagosModel->guardarPlanDePago(
                 $plan['data']['cantidadDePagos'],
-                $plan['data']['totalCuota'],
-                $idContrato
+                $plan['data']['totalCuota']
             );
+            log_message('info', 'id plan de pago ' . print_r($idPlan, true));
 
             if (!$idPlan) {
                 throw new \Exception('Error al insertar plan de pago');
             }
 
             // =========================
-            // 5. CUOTAS
+            // 4. FIRMANTES
             // =========================
-            $cobros = $this->crearCobros($data);
+            $firmantes = $this->crearFirmantes($data);
 
-            if (!$cobros['valido']) {
-                throw new \Exception($cobros['error']);
+            if (!$firmantes['valido']) {
+                throw new \Exception($firmantes['error']);
             }
 
-            $fechaBase = new \DateTimeImmutable($cobros['data']['fechaBase']);
+            $idFirmantes = $this->firmantesModel->insertarFirmantes(
+                $firmantes['data']['nombreFirmante1'],
+                $firmantes['data']['puestoFirmante1']
+            );
+            log_message('info', 'id firmantes ' . print_r($idFirmantes, true));
 
-            for ($i = 1; $i <= $cobros['data']['cantidadDePagos']; $i++) {
-
-                $fechaCalculada = $fechaBase->modify("+{$i} month")->format('Y-m-d');
-
-                $cuota = [
-                    'id_contrato' => $idContrato,
-                    'numero_cuota' => $i,
-                    'monto_cuota' => $cobros['data']['totalCuota'],
-                    'descripcion' => "Cuota $i",
-                    'estado' => 'PENDIENTE',
-                    'fecha_vencimiento' => $fechaCalculada,
-                    'fecha_pago' => $fechaCalculada,
-                    'id_usuario' => $idUsuario,
-                    'fecha_creacion' => $fechaCreacion
-                ];
-
-                $insert = $this->contratosCobrosModel->insert($cuota);
-
-                if (!$insert) {
-                    throw new \Exception('Error al insertar cuotas');
-                }
+            if (!$idFirmantes) {
+                throw new \Exception('Error al insertar los firmantes');
             }
 
             // =========================
-            // 6. MEDIDOR
+            // 5. ACTUALIZAR SOLICITUD CON SUS RELACIONES
             // =========================
-            $medidores = $this->validarMedidor($data);
-
-            if (!$medidores['valido']) {
-                throw new \Exception($medidores['error']);
-            }
-
-            $idMedidor = $medidores['data']['medidor'];
-
-            $this->medidoresModel->update($idMedidor, [
-                'id_contrato' => $idContrato
+            $solicitudActualizada = $this->solicitudesModel->update($idSolicitud, [
+                'id_beneficiario' => $idBeneficiario,
+                'id_plan_de_pago' => $idPlan,
+                'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
+                'id_firmante' => $idFirmantes
             ]);
 
-            if ($this->medidoresModel->db->affectedRows() === 0) {
-                throw new \Exception('No se actualizó el medidor');
-            }
-
-            // =========================
-            // 7. ACTUALIZAR EN CONTRATO EL NUEVO PLAN DE PAGO
-            // =========================
-            $this->contratosModel->update($idContrato, [
-                'id_plan_de_pago' => $idPlan
-            ]);
-
-            if ($this->contratosModel->db->affectedRows() === 0) {
-                throw new \Exception('No se actualizó el contrato con su nuevo plan de pago');
+            if (!$solicitudActualizada) {
+                throw new \Exception('No se actualizaron las relaciones de la solicitud');
             }
 
             // =========================
@@ -503,13 +608,12 @@ class Solicitudes extends BaseController
 
             log_message('info', 'Datos creado correctamente: ' . json_encode([
                 'id_solicitud' => $idSolicitud,
-                'id_contrato' => $idContrato,
                 'id_plan_pago' => $idPlan,
                 'id_beneficiario' => $idBeneficiario,
-                'id_medidor' => $idMedidor
+                'id_firmante' => $idFirmantes,
             ]));
 
-            return $this->respondOk('Proceso completado correctamente');
+            return $this->respondOk('Solicitud creada correctamente');
         } catch (\Throwable $e) {
 
             $db->transRollback();
@@ -520,186 +624,341 @@ class Solicitudes extends BaseController
         }
     }
 
-    // public function nuevaSolicitudContrato()
-    // {
-    //     $db = \Config\Database::connect();
+    public function aceptarSolicitud()
+    {
+        $db = \Config\Database::connect();
+        $db->transBegin();
 
-    //     try {
-    //         log_message('debug', 'POST: ' . print_r($this->request->getPost(), true));
-    //         $data = $this->request->getPost();
+        try {
 
-    //         $db->transBegin();
+            log_message('debug', 'POST EDITAR SOLICITUD: ' . print_r($this->request->getPost(), true));
+            exit;
+            $data = $this->request->getPost();
+            $idSolicitud = $data['idSolicitud'] ?? null;
+            $idCliente = $data['idCliente'] ?? null;
 
-    //         $idCliente = $this->request->getPost('idCliente') ?: null;
-    //         $idUsuario = $_SESSION['id_usuario'];
-    //         $fechaCreacion = date('Y-m-d H:i:s');
+            if (!$idSolicitud) {
+                throw new \Exception('Debe seleccionar una solicitud');
+            }
 
-    //         // =========================
-    //         // 1. BENEFICIARIO
-    //         // =========================
-    //         $beneficiario = $this->crearBeneficiario($data);
-    //         if (!$beneficiario['valido']) {
-    //             $db->transRollback();
-    //             log_message('error', 'Error beneficiario: ' . $beneficiario['error']);
-    //             return $this->respondError($beneficiario['error']);
-    //         }
-    //         $idBeneficiario = $this->beneficiariosModel->insertarBeneficiario(
-    //             $beneficiario['data']['nombre'],
-    //             $beneficiario['data']['edad'],
-    //             $beneficiario['data']['parentesco'],
-    //             $beneficiario['data']['direccion'],
-    //             $idCliente
-    //         );
-    //         log_message('debug', 'id_beneficiario: ' . print_r($idBeneficiario, true));
-    //         if (!$idBeneficiario) {
-    //             throw new \Exception('Error al insertar beneficiario');
-    //         }
+            if (!$idCliente) {
+                throw new \Exception('Debe seleccionar cliente');
+            }
 
-    //         // =========================
-    //         // 2. SOLICITUD
-    //         // =========================
-    //         $numero = $this->solicitudesModel->correlativoSolicitud($db);
-    //         $codigoFormateado = str_pad($numero, 5, '0', STR_PAD_LEFT);
-    //         log_message('debug', 'codigo de solicitud: ' . print_r($codigoFormateado, true));
-    //         $solicitud = $this->crearSolicitud($data);
-    //         if (!$solicitud['valido']) {
-    //             $db->transRollback();
-    //             log_message('error', 'Error solicitud: ' . $solicitud['error']);
-    //             return $this->respondError($solicitud['error']);
-    //         }
-    //         $idSolicitud = $this->solicitudesModel->insertarSolicitud(
-    //             $codigoFormateado,
-    //             $fechaCreacion,
-    //             $idCliente,
-    //             $idBeneficiario,
-    //             $solicitud['data']['direccionInmueble'],
-    //             $solicitud['data']['propietario'],
-    //             $solicitud['data']['inquilino'],
-    //             $solicitud['data']['representante'],
-    //             $solicitud['data']['otroCheck'],
-    //             $solicitud['data']['abonera'],
-    //             $solicitud['data']['hoyoSeco'],
-    //             $solicitud['data']['lavable'],
-    //             $solicitud['data']['otroBaño'],
-    //             $solicitud['data']['aceptaContruccionLetrina'],
-    //             $solicitud['data']['tiempo'],
-    //             $idUsuario,
-    //             $fechaCreacion
-    //         );
-    //         log_message('debug', 'id_solicitud: ' . print_r($idSolicitud, true));
-    //         if (!$idSolicitud) {
-    //             throw new \Exception('Error al insertar solicitud');
-    //         }
+            $solicitudExistente = $this->solicitudesModel->find($idSolicitud);
 
-    //         // =========================
-    //         // 3. CONTRATO            actualizar en tabla de medidores se necesita el id de contrato
-    //         // =========================
-    //         $numeroContrato = 'C-' . $codigoFormateado;
-    //         log_message('debug', 'codigo de contrato: ' . print_r($numeroContrato, true));
-    //         $contrato = $this->crearContrato($data);
-    //         if (!$contrato['valido']) {
-    //             $db->transRollback();
-    //             log_message('error', 'Error contrato: ' . $contrato['error']);
-    //             return $this->respondError($contrato['error']);
-    //         }
-    //         $idContrato = $this->contratosModel->insertarContrato(
-    //             $idSolicitud,
-    //             $numeroContrato,
-    //             $contrato['data']['fichaAlcaldia'],
-    //             $idCliente,
-    //             $contrato['data']['fechaInicio'],
-    //             $contrato['data']['fechaVencimiento'],
-    //             $contrato['data']['estadoContrato'],
-    //             $contrato['data']['idRuta'],
-    //             $contrato['data']['idMedidor'],
-    //             $contrato['data']['direccionMedidor'],
-    //             $contrato['data']['idTarifa'],
-    //             $contrato['data']['contado'],
-    //             $contrato['data']['otro'],
-    //             $contrato['data']['monto'],
-    //             $contrato['data']['idPlanDePago'],
-    //             $contrato['data']['saldoPendiente'],
-    //             $fechaCreacion,
-    //             $idUsuario
-    //         );
-    //         log_message('debug', 'id_contrato: ' . print_r($idContrato, true));
-    //         if (!$idContrato) {
-    //             throw new \Exception('Error al insertar contrato');
-    //         }
+            if (!$solicitudExistente) {
+                throw new \Exception('La solicitud no existe');
+            }
 
-    //         // =========================
-    //         // 4. PLAN DE PAGO
-    //         // =========================
-    //         $planDePago = $this->crearPlanDePago($data);
-    //         if (!$planDePago['valido']) {
-    //             $db->transRollback();
-    //             log_message('error', 'Error plan de pago: ' . $planDePago['error']);
-    //             return $this->respondError($planDePago['error']);
-    //         }
-    //         $idPlanDePago = $this->planDePagosModel->guardarPlanDePago(
-    //             $planDePago['data']['cantidadDePagos'],
-    //             $planDePago['data']['montoCuotas'],
-    //             $idContrato
-    //         );
-    //         log_message('debug', 'id_plan_de_pago: ' . print_r($idPlanDePago, true));
-    //         if (!$idPlanDePago) {
-    //             throw new \Exception('Error al insertar el plan de pago');
-    //         }
+            $idBeneficiario = $solicitudExistente['id_beneficiario'] ?? null;
+            $idPlan = $solicitudExistente['id_plan_de_pago'] ?? null;
+            $idFirmantes = $solicitudExistente['id_firmante'] ?? null;
 
-    //         // =========================
-    //         // 4. CUOTAS
-    //         // =========================
-    //         $cobros = $this->crearCobros($data);
-    //         if (!$cobros['valido']) {
-    //             $db->transRollback();
-    //             log_message('error', 'Error en cobros: ' . $cobros['error']);
-    //             return $this->respondError($cobros['error']);
-    //         }
-    //         $fecha = $cobros['data']['fechaBase'];
+            // =========================
+            // 1. ACTUALIZAR SOLICITUD
+            // =========================
+            $solicitud = $this->crearSolicitud($data);
 
-    //         for ($i = 1; $i <= $cobros['data']['cantidadDePagos']; $i++) {
+            if (!$solicitud['valido']) {
+                throw new \Exception($solicitud['error']);
+            }
 
-    //             $fechaCalculada = date('Y-m-d', strtotime("$fecha +$i month"));
+            $solicitudActualizada = $this->solicitudesModel->actualizarSolicitud(
+                $idSolicitud,
+                $solicitud['data']['fechaCreacion'],
+                $idCliente,
+                $solicitud['data']['direccionInmueble'],
+                $solicitud['data']['propietario'],
+                $solicitud['data']['inquilino'],
+                $solicitud['data']['representante'],
+                $solicitud['data']['otroCheck'],
+                $solicitud['data']['abonera'],
+                $solicitud['data']['hoyoSeco'],
+                $solicitud['data']['lavable'],
+                $solicitud['data']['otroBaño'],
+                $solicitud['data']['aceptaContruccionLetrina'],
+                $solicitud['data']['tiempo'],
+                $solicitud['data']['contado'],
+                $solicitud['data']['otroTipoPago'],
+                $solicitud['data']['costoInstalacion'],
+                $solicitud['data']['acuerdo'],
+                $solicitud['data']['fechaSession'],
+                $solicitud['data']['numeroActa'],
+                $solicitud['data']['estado']
+            );
+            log_message('info', 'solicitud actualizada ' . print_r($idSolicitud, true));
 
-    //             $cuota = [
-    //                 'id_contrato' => $idContrato,
-    //                 'numero_cuota' => $i,
-    //                 'monto_cuota' => $cobros['data']['totalCuota'],
-    //                 'descripcion' => 'Cuota numero ' . $i,
-    //                 'estado' => 'PENDIENTE',
-    //                 'fecha_vencimiento' => $fechaCalculada,
-    //                 'fecha_pago' => $fechaCalculada,
-    //                 'cantidad_abonada' => null,
-    //                 'id_usuario' => $idUsuario,
-    //                 'fecha_creacion' => $fechaCreacion
-    //             ];
+            if (!$solicitudActualizada) {
+                throw new \Exception('Error al actualizar solicitud');
+            }
 
-    //             $this->contratosCobrosModel->insert($cuota);
+            // =========================
+            // 2. BENEFICIARIO
+            // =========================
+            $beneficiario = $this->crearBeneficiario($data);
 
-    //             log_message('debug', 'datos insertados en cuotas: ' . print_r($cuota, true));
-    //             $insert = $this->contratosCobrosModel->insert($cuota);
-    //             if (!$insert) {
-    //                 throw new \Exception('Error al insertar cuotas');
-    //             }
-    //         }
+            if (!$beneficiario['valido']) {
+                throw new \Exception($beneficiario['error']);
+            }
 
-    //         // =========================
-    //         // FINAL
-    //         // =========================
-    //         if ($db->transStatus() === false) {
-    //             throw new \Exception('Error en la transacción');
-    //         }
+            if ($beneficiario['data']['idBeneficiario']) {
+                $idBeneficiario = $beneficiario['data']['idBeneficiario'];
+                $beneficiarioActual = $this->beneficiariosModel->find($idBeneficiario);
 
-    //         $db->transCommit();
+                if (!$beneficiarioActual) {
+                    throw new \Exception('El beneficiario seleccionado no existe');
+                }
 
-    //         return $this->respondOk('Solicitud y contrato generados correctamente');
-    //     } catch (\Throwable $th) {
+                $dataBeneficiario = [
+                    'nombre' => $beneficiario['data']['nombre'],
+                    'edad' => $beneficiario['data']['edad'],
+                    'parentesco' => $beneficiario['data']['parentesco'],
+                    'direccion' => $beneficiario['data']['direccion'],
+                ];
 
-    //         $db->transRollback();
+                if ($this->hayCambios($beneficiarioActual, $dataBeneficiario)) {
+                    $beneficiarioActualizado = $this->beneficiariosModel->update($idBeneficiario, $dataBeneficiario);
 
-    //         log_message('error', $th->getMessage());
+                    if (!$beneficiarioActualizado) {
+                        throw new \Exception('Error al actualizar beneficiario');
+                    }
+                }
+            } elseif ($this->tieneDatosBeneficiario($beneficiario['data'])) {
+                $idBeneficiario = $this->beneficiariosModel->insertarBeneficiario(
+                    $beneficiario['data']['nombre'],
+                    $beneficiario['data']['edad'],
+                    $beneficiario['data']['parentesco'],
+                    $beneficiario['data']['direccion'],
+                    $idCliente
+                );
+                log_message('info', 'id beneficiario ' . print_r($idBeneficiario, true));
 
-    //         return $this->respondError('Error al generar solicitud completa');
-    //     }
-    // }
+                if (!$idBeneficiario) {
+                    throw new \Exception('Error al insertar beneficiario');
+                }
+            } else {
+                $idBeneficiario = $solicitudExistente['id_beneficiario'] ?? null;
+            }
+
+            // =========================
+            // 3. PLAN DE PAGO
+            // =========================
+            $plan = $this->crearPlanDePago($data);
+
+            if (!$plan['valido']) {
+                throw new \Exception($plan['error']);
+            }
+
+            $idPlan = $plan['data']['idPlanDePago'] ?: $idPlan;
+
+            if (!$idPlan) {
+                throw new \Exception('La solicitud no tiene plan de pago para actualizar');
+            }
+
+            $planActual = $this->planDePagosModel->find($idPlan);
+
+            if (!$planActual) {
+                throw new \Exception('El plan de pago no existe');
+            }
+
+            $dataPlan = [
+                'cantidad_cuotas' => $plan['data']['cantidadDePagos'],
+                'monto_cuotas' => $plan['data']['totalCuota'],
+            ];
+
+            if ($this->hayCambios($planActual, $dataPlan)) {
+                $planActualizado = $this->planDePagosModel->actualizarPlanDePago(
+                    $idPlan,
+                    $plan['data']['cantidadDePagos'],
+                    $plan['data']['totalCuota']
+                );
+
+                if (!$planActualizado) {
+                    throw new \Exception('Error al actualizar plan de pago');
+                }
+            }
+
+            log_message('info', 'id plan de pago ' . print_r($idPlan, true));
+
+            // =========================
+            // 4. FIRMANTES
+            // =========================
+            $firmantes = $this->crearFirmantes($data);
+
+            if (!$firmantes['valido']) {
+                throw new \Exception($firmantes['error']);
+            }
+
+            $idFirmantes = $firmantes['data']['idFirmante'] ?: $idFirmantes;
+
+            if (!$idFirmantes) {
+                throw new \Exception('La solicitud no tiene firmante para actualizar');
+            }
+
+            $firmanteActual = $this->firmantesModel->find($idFirmantes);
+
+            if (!$firmanteActual) {
+                throw new \Exception('El firmante no existe');
+            }
+
+            $dataFirmante = [
+                'nombre' => $firmantes['data']['nombreFirmante1'],
+                'ocupacion' => $firmantes['data']['puestoFirmante1']
+            ];
+
+            if ($this->hayCambios($firmanteActual, $dataFirmante)) {
+                $firmanteActualizado = $this->firmantesModel->actualizarFirmante(
+                    $idFirmantes,
+                    $firmantes['data']['nombreFirmante1'],
+                    $firmantes['data']['puestoFirmante1']
+                );
+
+                if (!$firmanteActualizado) {
+                    throw new \Exception('Error al actualizar los firmantes');
+                }
+            }
+
+            log_message('info', 'id firmantes ' . print_r($idFirmantes, true));
+
+            // =========================
+            // 5. ACTUALIZAR SOLICITUD CON SUS RELACIONES
+            // =========================
+            $relacionesActualizadas = $this->solicitudesModel->update($idSolicitud, [
+                'id_beneficiario' => $idBeneficiario,
+                'id_plan_de_pago' => $idPlan,
+                'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
+                'id_firmante' => $idFirmantes
+            ]);
+
+            if (!$relacionesActualizadas) {
+                throw new \Exception('No se actualizaron las relaciones de la solicitud');
+            }
+
+            // =========================
+            // FINAL
+            // =========================
+            $db->transCommit();
+
+            log_message('info', 'Datos creado correctamente: ' . json_encode([
+                'id_solicitud' => $idSolicitud,
+                'id_plan_pago' => $idPlan,
+                'id_beneficiario' => $idBeneficiario,
+                'id_firmante' => $idFirmantes,
+            ]));
+
+            return $this->respondOk('Solicitud aceptada correctamente');
+        } catch (\Throwable $e) {
+
+            $db->transRollback();
+
+            log_message('error', $e->getMessage());
+
+            return $this->respondError($e->getMessage());
+        }
+    }
+
+    public function metodos()
+    {
+        // =========================
+        // 3. CONTRATO
+        // =========================
+        // $contrato = $this->crearContrato($data);
+
+        // if (!$contrato['valido']) {
+        //     throw new \Exception($contrato['error']);
+        // }
+
+        // $numeroContrato = 'C-' . $codigoFormateado;
+
+        // $idContrato = $this->contratosModel->insertarContrato(
+        //     $idSolicitud,
+        //     $numeroContrato,
+        //     $contrato['data']['fichaAlcaldia'],
+        //     $idCliente,
+        //     $contrato['data']['fechaInicio'],
+        //     $contrato['data']['fechaVencimiento'],
+        //     $contrato['data']['estadoContrato'],
+        //     $contrato['data']['idRuta'],
+        //     $contrato['data']['idMedidor'],
+        //     $contrato['data']['direccionMedidor'],
+        //     $contrato['data']['idTarifa'],
+        //     $contrato['data']['contado'],
+        //     $contrato['data']['otro'],
+        //     $contrato['data']['monto'],
+        //     $contrato['data']['idPlanDePago'],
+        //     $contrato['data']['saldoPendiente'],
+        //     $fechaCreacion,
+        //     $idUsuario
+        // );
+
+        // if (!$idContrato) {
+        //     throw new \Exception('Error al insertar contrato');
+        // }
+
+        // =========================
+        // 5. CUOTAS
+        // =========================
+        // $cobros = $this->crearCobros($data);
+
+        // if (!$cobros['valido']) {
+        //     throw new \Exception($cobros['error']);
+        // }
+
+        // $fechaBase = new \DateTimeImmutable($cobros['data']['fechaBase']);
+
+        // for ($i = 1; $i <= $cobros['data']['cantidadDePagos']; $i++) {
+
+        //     $fechaCalculada = $fechaBase->modify("+{$i} month")->format('Y-m-d');
+
+        //     $cuota = [
+        //         'id_contrato' => $idContrato,
+        //         'numero_cuota' => $i,
+        //         'monto_cuota' => $cobros['data']['totalCuota'],
+        //         'descripcion' => "Cuota $i",
+        //         'estado' => 'PENDIENTE',
+        //         'fecha_vencimiento' => $fechaCalculada,
+        //         'fecha_pago' => $fechaCalculada,
+        //         'id_usuario' => $idUsuario,
+        //         'fecha_creacion' => $fechaCreacion
+        //     ];
+
+        //     $insert = $this->contratosCobrosModel->insert($cuota);
+
+        //     if (!$insert) {
+        //         throw new \Exception('Error al insertar cuotas');
+        //     }
+        // }
+
+        // =========================
+        // 6. MEDIDOR
+        // =========================
+        // $medidores = $this->validarMedidor($data);
+
+        // if (!$medidores['valido']) {
+        //     throw new \Exception($medidores['error']);
+        // }
+
+        // $idMedidor = $medidores['data']['medidor'];
+
+        // $this->medidoresModel->update($idMedidor, [
+        //     'id_contrato' => $idContrato
+        // ]);
+
+        // if ($this->medidoresModel->db->affectedRows() === 0) {
+        //     throw new \Exception('No se actualizó el medidor');
+        // }
+
+        // =========================
+        // 7. ACTUALIZAR EN CONTRATO EL NUEVO PLAN DE PAGO
+        // =========================
+        // $this->contratosModel->update($idContrato, [
+        //     'id_plan_de_pago' => $idPlan
+        // ]);
+
+        // if ($this->contratosModel->db->affectedRows() === 0) {
+        //     throw new \Exception('No se actualizó el contrato con su nuevo plan de pago');
+        // }
+
+    }
 }

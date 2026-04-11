@@ -11,15 +11,21 @@ class PlanDePagoModel extends Model
     protected $allowedFields = [
         'cantidad_cuotas',
         'monto_cuotas',
-        'id_contrato'
     ];
 
-    public function guardarPlanDePago($cantidadCuotas, $montoCuotas, $idContrato)
+    public function guardarPlanDePago($cantidadCuotas, $montoCuotas)
     {
         return $this->insert([
             'cantidad_cuotas' => $cantidadCuotas,
             'monto_cuotas' => $montoCuotas,
-            'id_contrato' => $idContrato
+        ]);
+    }
+
+    public function actualizarPlanDePago($idPlanDePago, $cantidadCuotas, $montoCuotas)
+    {
+        return $this->update($idPlanDePago, [
+            'cantidad_cuotas' => $cantidadCuotas,
+            'monto_cuotas' => $montoCuotas,
         ]);
     }
 }

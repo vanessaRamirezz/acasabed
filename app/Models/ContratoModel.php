@@ -80,64 +80,64 @@ class ContratoModel extends Model
         ]);
     }
 
-    public function getTodosContratos($start, $length, $searchValue = '')
-    {
-        $builder = $this->db->table('contratos');
+    // public function getTodosContratos($start, $length, $searchValue = '')
+    // {
+    //     $builder = $this->db->table('contratos');
 
-        // JOIN desde el inicio
-        $builder->join(
-            'solicitudes',
-            'contratos.id_solicitud = solicitudes.id_solicitud',
-            'left'
-        );
+    //     // JOIN desde el inicio
+    //     $builder->join(
+    //         'solicitudes',
+    //         'contratos.id_solicitud = solicitudes.id_solicitud',
+    //         'left'
+    //     );
 
-        // JOIN desde el inicio
-        $builder->join(
-            'clientes',
-            'contratos.id_cliente = clientes.id_cliente',
-            'left'
-        );
+    //     // JOIN desde el inicio
+    //     $builder->join(
+    //         'clientes',
+    //         'contratos.id_cliente = clientes.id_cliente',
+    //         'left'
+    //     );
 
-        // =============================
-        // TOTAL SIN FILTRO
-        // =============================
-        $total = $builder->countAllResults(false);
+    //     // =============================
+    //     // TOTAL SIN FILTRO
+    //     // =============================
+    //     $total = $builder->countAllResults(false);
 
-        // =============================
-        // FILTRO
-        // =============================
-        if (!empty($searchValue)) {
-            $builder->groupStart()
-                ->like('contratos.numero_contrato', $searchValue)
-                ->orLike('clientes.nombre_completo', $searchValue)
-                ->groupEnd();
-        }
+    //     // =============================
+    //     // FILTRO
+    //     // =============================
+    //     if (!empty($searchValue)) {
+    //         $builder->groupStart()
+    //             ->like('contratos.numero_contrato', $searchValue)
+    //             ->orLike('clientes.nombre_completo', $searchValue)
+    //             ->groupEnd();
+    //     }
 
-        // =============================
-        // TOTAL FILTRADO
-        // =============================
-        $filtered = $builder->countAllResults(false);
+    //     // =============================
+    //     // TOTAL FILTRADO
+    //     // =============================
+    //     $filtered = $builder->countAllResults(false);
 
-        // =============================
-        // DATA
-        // =============================
-        $data = $builder
-            ->select('
-                contratos.id_contrato,
-                contratos.numero_contrato AS cod_contrato,
-                solicitudes.codigo_solicitud AS cod_solicitud,
-                clientes.nombre_completo AS nombre,
-                contratos.estado_contrato AS estado
-        ')
-            ->orderBy('contratos.id_contrato', 'DESC')
-            ->limit($length, $start)
-            ->get()
-            ->getResultArray();
+    //     // =============================
+    //     // DATA
+    //     // =============================
+    //     $data = $builder
+    //         ->select('
+    //             contratos.id_contrato,
+    //             contratos.numero_contrato AS cod_contrato,
+    //             solicitudes.codigo_solicitud AS cod_solicitud,
+    //             clientes.nombre_completo AS nombre,
+    //             contratos.estado_contrato AS estado
+    //     ')
+    //         ->orderBy('contratos.id_contrato', 'DESC')
+    //         ->limit($length, $start)
+    //         ->get()
+    //         ->getResultArray();
 
-        return [
-            'data' => $data,
-            'total' => $total,
-            'filtered' => $filtered
-        ];
-    }
+    //     return [
+    //         'data' => $data,
+    //         'total' => $total,
+    //         'filtered' => $filtered
+    //     ];
+    // }
 }

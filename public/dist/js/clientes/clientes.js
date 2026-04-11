@@ -6,13 +6,13 @@ const inputs = {
     fotoCliente: $("#foto-cliente-input"),
     codigo: $("#codigo"),
     nombre: $("#nombre"),
-    edad: $("#edad"),
     sexo: $("#sexo"),
     ocupacion: $("#ocupacion"),
     estadoFamiliar: $("#estado-familiar"),
     numeroGrupoFamiliar: $("#numero-grupo-familiar"),
     lugarDeNacimiento: $("#lugar-de-nacimiento"),
     fechaDeNacimiento: $("#fecha-de-nacimiento"),
+    edad: $("#edad"),
     lugarDeTrabajo: $("#lugar-de-trabajo"),
     telefonos: $("#telefono"),
     correo: $("#correo"),
@@ -89,6 +89,7 @@ function getData() {
 
     return formData;
 }
+
 function validarCampoDui() {
     $(inputs.dui).mask('00000000-0');
     $(inputs.contactoDui).mask('00000000-0');
@@ -614,6 +615,26 @@ function guardarOeditarCliente(tipoProceso) {
     });
 }
 
+function calcularEdad() {
+    const fechaDeNacimiento = $("#fecha-de-nacimiento");
+    const edad = $("#edad")
+
+    fechaDeNacimiento.on("change", function () {
+        const fechaNac = new Date($(this).val());
+        const hoy = new Date();
+
+        let edadCalculada = hoy.getFullYear() - fechaNac.getFullYear();
+
+        const mes = hoy.getMonth() - fechaNac.getMonth();
+
+        // Si aún no ha cumplido años este año, restamos 1
+        if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+            edadCalculada--;
+        }
+
+        edad.val(edadCalculada);
+    });
+}
 
 function eventosUsuarios() {
 
@@ -667,6 +688,7 @@ function iniciarTodo() {
     cargarActividadesEconomicas();
     cargarDepartamentos();
     cargarClientes();
+    calcularEdad();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

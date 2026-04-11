@@ -53,30 +53,5 @@ class Contratos extends BaseController
         $dompdf->stream("contrato.pdf", ["Attachment" => false]);
     }
 
-    public function getContratosTabla()
-    {
-        try {
-            $start = (int)$this->request->getGet('start');
-            $length = (int)$this->request->getGet('length');
-            $draw = (int)$this->request->getGet('draw');
-            $searchValue = $this->request->getGet('searchValue') ?? '';
-
-            $result = $this->contratosModel->getTodosContratos($start, $length, $searchValue);
-
-            return $this->response->setJSON([
-                "draw" => $draw,
-                "recordsTotal" => $result['total'],
-                "recordsFiltered" => $result['filtered'],
-                "data" => $result['data']
-            ]);
-        } catch (\Throwable $th) {
-            log_message('error', $th->getMessage());
-            return $this->response->setJSON([
-                "draw" => 0,
-                "recordsTotal" => 0,
-                "recordsFiltered" => 0,
-                "data" => []
-            ]);
-        }
-    }
+    
 }

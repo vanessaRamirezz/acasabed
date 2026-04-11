@@ -92,10 +92,12 @@
             </div>
         </div>
 
+        <input type="hidden" id="id-solicitud">
+
 
         <div id="accordion">
 
-            <!-- SECCIÓN 1 -->
+            <!-- SECCIÓN 1  DATOS PERSONALES DEL CLIENTE-->
             <div class="card">
                 <div class="card-header" id="headingOne">
                     <button class="btn btn-link" data-toggle="collapse" data-target="#seccion1">
@@ -114,7 +116,6 @@
                                     </select>
                                 </div>
                             </div>
-
                         </div>
                         <input type="hidden" id="id-cliente">
                         <div class="row">
@@ -146,6 +147,12 @@
                                 <div class="form-group">
                                     <label for="fecha">Fecha</label>
                                     <input type="date" class="form-control" id="fecha" name="fecha">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="nit">NIT</label>
+                                    <input type="text" class="form-control" id="nit" name="nit">
                                 </div>
                             </div>
                             <div class="col-md-8">
@@ -206,12 +213,12 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 2 -->
+            <!-- SECCIÓN 2 BENEFICIARIO/A-->
             <div class="card">
                 <div class="card-header" id="headingTwo">
                     <h5 class="mb-0">
                         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#seccion2">
-                            Beneficiarios /as
+                            Beneficiarios /a
                         </button>
                     </h5>
                 </div>
@@ -220,6 +227,14 @@
                     <div class="card-body">
                         <input type="hidden" id="id-beneficiario">
                         <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="beneficiarios-registratos">Beneficiarios en la base</label>
+                                    <select id="beneficiarios-registratos" class="form-control" name="beneficiarios-registratos">
+                                        <option value="">Seleccione...</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-md-8">
                                 <div class="form-group">
                                     <label for="nombre-beneficiario">Nombre</label>
@@ -246,9 +261,18 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <button class="btn btn-secondary  btn-anterior" data-target="#seccion1">
+                            <button class="btn btn-secondary btn-anterior" data-target="#seccion1">
                                 Anterior →
                             </button>
+
+                            <button id="btn-editar" class="btn btn-info" style="display:none;">
+                                Editar
+                            </button>
+
+                            <button id="btn-limpiar" class="btn btn-warning" style="display:none;">
+                                Limpiar
+                            </button>
+
                             <button class="btn btn-primary btn-siguiente" data-target="#seccion3">
                                 Siguiente →
                             </button>
@@ -257,7 +281,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 3 -->
+            <!-- SECCIÓN 3 DATOS DEL INMUEBLE-->
             <div class="card">
                 <div class="card-header" id="headingTwo">
                     <h5 class="mb-0">
@@ -317,30 +341,38 @@
                         <br>
                         <hr>
 
-                        <h6 class="mt-">Tiene letrina</h6>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="abonera">Abonera</label>
-                                    <input type="text" class="form-control" id="abonera" name="abonera">
+                        <h6 class="mt-3">Tiene letrina</h6>
+                        <div class="row mt-2">
+                            <div class="col-md-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="abonera" name="abonera">
+                                    <label class="form-check-label" for="abonera">
+                                        Abonera
+                                    </label>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="hoyo-seco">Hoyo Seco</label>
-                                    <input type="text" class="form-control" id="hoyo-seco" name="hoyo-seco">
+                            <div class="col-md-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="hoyo-seco" name="hoyo-seco">
+                                    <label class="form-check-label" for="hoyo-seco">
+                                        Hoyo Seco
+                                    </label>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="lavable">Lavable</label>
-                                    <input type="text" class="form-control" id="lavable" name="lavable">
+                            <div class="col-md-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="lavable" name="lavable">
+                                    <label class="form-check-label" for="lavable">
+                                        Lavable
+                                    </label>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="otro-baño">Otro</label>
-                                    <input type="text" class="form-control" id="otro-baño" name="otro-baño">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <label class="form-check-label d-flex align-items-center" for="otro-baño">
+                                        <span class="mr-2">Otro</span>
+                                        <input type="text" class="form-control form-control-sm" style="width: 150px;" id="otro-baño" name="otro-baño">
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -357,7 +389,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 4 -->
+            <!-- SECCIÓN 4 DATOS DE ENTREVISTA DIRIGIDA-->
             <div class="card">
                 <div class="card-header" id="headingTwo">
                     <h5 class="mb-0">
@@ -369,6 +401,7 @@
 
                 <div id="seccion4" class="collapse" data-parent="#accordion">
                     <div class="card-body">
+                        <input type="hidden" id="id-plan-pago">
                         <div class="row">
                             <div class="col-md-7">
                                 <div class="form-group">
@@ -403,7 +436,7 @@
                                     <label>Forma de pago</label>
 
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="pago" id="contado">
+                                        <input class="form-check-input" type="checkbox" name="pago" id="contado">
                                         <label class="form-check-label" for="contado">Contado</label>
                                     </div>
                                 </div>
@@ -416,7 +449,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="cantidad-pagos">Cantidad de pagos</label>
                                     <input type="number" class="form-control" min="0" id="cantidad-pagos" name="cantidad-pagos">
@@ -426,6 +459,12 @@
                                 <div class="form-group">
                                     <label for="total-cuota"> de $ </label>
                                     <input type="number" class="form-control" min="0" id="total-cuota" name="total-cuota">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="interes">Interés que cancelara por retraso</label>
+                                    <input type="text" class="form-control" id="interes" name="interes">
                                 </div>
                             </div>
                         </div>
@@ -441,7 +480,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 5 -->
+            <!-- SECCIÓN 5 DATOS COMISION MUNICIPAL-->
             <div class="card">
                 <div class="card-header" id="headingTwo">
                     <h5 class="mb-0">
@@ -453,7 +492,6 @@
 
                 <div id="seccion5" class="collapse" data-parent="#accordion">
                     <div class="card-body">
-                        <input type="hidden" id="id-beneficiario">
                         <div class="row">
                             <div class="col-md-9">
                                 <div class="form-group">
@@ -478,10 +516,103 @@
                             <button class="btn btn-secondary  btn-anterior" data-target="#seccion4">
                                 Anterior →
                             </button>
-                            <!-- <button class="btn btn-primary btn-siguiente" data-target="#seccion3">
+                            <button class="btn btn-primary btn-siguiente" data-target="#seccion6">
                                 Siguiente →
-                            </button> -->
+                            </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 6 DATOS DE LOS QUE FIRMAN-->
+            <div class="card">
+                <div class="card-header" id="headingTwo">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#seccion6">
+                            Nombre de Firmantes Solicitud
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="seccion6" class="collapse" data-parent="#accordion">
+                    <div class="card-body">
+                        <!-- Firmante 1 -->
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-header bg-light">
+                                <strong>Firmante 1</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <input type="hidden" id="id-firmante">
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="nombre-firmante-1">Nombre</label>
+                                            <input type="text" class="form-control" id="nombre-firmante-1" name="nombre-firmante-1">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="puesto-firmante-1">Puesto</label>
+                                            <input type="text" class="form-control" id="puesto-firmante-1" name="puesto-firmante-1" placeholder="Administrador">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Firmante 2 -->
+                        <!-- <div class="card mb-3 shadow-sm">
+                            <div class="card-header bg-light">
+                                <strong>Firmante 2</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="nombre-firmante-2">Nombre</label>
+                                            <input type="text" class="form-control" id="nombre-firmante-2" name="nombre-firmante-2">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="puesto-firmante-2">Puesto</label>
+                                            <input type="text" class="form-control" id="puesto-firmante-2" name="puesto-firmante-2">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+
+                        <!-- Firmante 3 -->
+                        <!-- <div class="card mb-3 shadow-sm">
+                            <div class="card-header bg-light">
+                                <strong>Firmante 3</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="form-group">
+                                            <label for="nombre-firmante-3">Nombre</label>
+                                            <input type="text" class="form-control" id="nombre-firmante-3" name="nombre-firmante-3">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="puesto-firmante-3">Puesto</label>
+                                            <input type="text" class="form-control" id="puesto-firmante-3" name="puesto-firmante-3">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-secondary btn-anterior" data-target="#seccion5">
+                                Anterior →
+                            </button>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -489,7 +620,7 @@
             <br>
             <br>
             <!-- SECCIÓN 6 -->
-            <div class="card">
+            <!-- <div class="card">
                 <div class="card-header" id="headingTwo">
                     <h5 class="mb-0">
                         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#seccion6">
@@ -555,13 +686,10 @@
                             <button class="btn btn-secondary  btn-anterior" data-target="#seccion4">
                                 Anterior →
                             </button>
-                            <!-- <button class="btn btn-primary btn-siguiente" data-target="#seccion3">
-                                Siguiente →
-                            </button> -->
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
 
         <br>
@@ -569,12 +697,12 @@
             <button type="button" class="btn btn-warning btn-vista-previa">
                 Vista Previa solicitud
             </button>
-            <button type="button" class="btn btn-danger btn-vista-previa-pdf">
+            <button type="button" class="btn btn-danger btn-vista-previa-contrato">
                 Vista Previa Contrato
             </button>
 
-            <button type="button" class="btn btn-primary modal-guardar" id="guardar-registro">Generar Solicitud y contrato</button>
-            <!-- <button type="button" class="btn btn-warning modal-editar" id="actualizar-registro">Guardar registro</button> -->
+            <button type="button" class="btn btn-primary modal-guardar" id="guardar-registro">Crear Solicitud</button>
+            <button type="button" class="btn btn-success modal-editar" id="actualizar-registro">Aceptar Solicitud</button>
         </div>
         <br>
     </div>

@@ -10,7 +10,8 @@ class BeneficiarioModel extends Model
     protected $primaryKey = 'id_beneficiario';
     protected $allowedFields = ['nombre', 'edad', 'parentesco', 'direccion', 'id_cliente'];
 
-    public function insertarBeneficiario($nombreBeneficiario, $edadBeneficiario, $parentescoBeneficiario, $direccionBeneficiario, $idCliente) {
+    public function insertarBeneficiario($nombreBeneficiario, $edadBeneficiario, $parentescoBeneficiario, $direccionBeneficiario, $idCliente)
+    {
         return $this->insert([
             'nombre' => $nombreBeneficiario,
             'edad' => $edadBeneficiario,
@@ -18,5 +19,12 @@ class BeneficiarioModel extends Model
             'direccion' => $direccionBeneficiario,
             'id_cliente' => $idCliente
         ]);
+    }
+
+    public function getBeneficiarios($idCliente)
+    {
+        return $this->select('id_beneficiario, nombre, edad, parentesco, direccion, id_cliente')
+            ->where('id_cliente', $idCliente)
+            ->findAll();
     }
 }

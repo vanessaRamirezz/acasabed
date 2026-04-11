@@ -1,5 +1,5 @@
 <?= $this->extend('layouts/main') ?>
-<?= $this->section('title') ?> Contratos <?= $this->endSection() ?>
+<?= $this->section('title') ?> Solicitudes <?= $this->endSection() ?>
 <?= $this->section('styles') ?>
 <style>
     /* label {
@@ -7,6 +7,10 @@
         font-size: 0.9rem;
         color: #495057;
     } */
+    .dropdown-item-custom {
+        font-size: 13px;
+        /* ajusta a tu gusto */
+    }
 </style>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
@@ -16,7 +20,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0 text-dark texto">Contratos</h1>
+                <!-- <h1 class="m-0 text-dark texto">Contratos</h1> -->
             </div><!-- /.col -->
         </div><!-- /.row -->
     </div><!-- /.container-fluid -->
@@ -29,31 +33,31 @@
 
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <a href="<?php echo base_url('nueva_solicitud'); ?>" class="btn btn-primary" id="btn-nueva-solicitud">Crear Contrato</a>
+                <a href="<?php echo base_url('nueva_solicitud'); ?>" class="btn btn-primary" id="btn-nueva-solicitud">Crear Nueva Solicitud</a>
             </div>
             <div class="card-body">
 
                 <div class="d-flex justify-content-end mb-4">
                     <div class="input-group col-md-6">
-                        <input type="text" id="customSearchContratos" placeholder="Buscar numero contrato o nombre de cliente" class="form-control">
+                        <input type="text" id="customSearchSolicitudes" placeholder="Buscar por numero solicitud ó nombre de cliente" class="form-control">
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" id="searchBtnContratos" type="button">
+                            <button class="btn btn-outline-secondary" id="searchBtnSolicitudes" type="button">
                                 <i class="fas fa-search"></i>
                             </button>
-                            <button class="btn btn-outline-secondary" id="clearSearchBtnContratos" type="button">
+                            <button class="btn btn-outline-secondary" id="clearSearchBtnSolicitudes" type="button">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-sm" id="tbl-contratos">
+                    <table class="table table-bordered table-sm" id="tbl-solicitudes">
                         <thead>
                             <tr>
-                                <th>Código Contrato</th>
-                                <th>Código Solicitud</th>
+                                <th>Numero Solicitud</th>
                                 <th>Nombre / Razón social</th>
                                 <th>Estado</th>
+                                <th>Fecha</th>
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -72,5 +76,5 @@
 
 <?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
-<script type="module" src="<?= base_url('dist/js/contratos/contratos.js') ?>"></script>
+<script type="module" src="<?= base_url('dist/js/solicitudes/solicitudes.js') ?>"></script>
 <?= $this->endSection() ?>

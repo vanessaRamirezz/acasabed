@@ -105,12 +105,6 @@
                                         <input type="text" class="form-control" name="nombre" id="nombre">
                                     </div>
                                 </div>
-                                <div class="col-sm-2">
-                                    <div class="form-group">
-                                        <label for="edad">Edad</label>
-                                        <input type="number" class="form-control" name="edad" id="edad" min="1">
-                                    </div>
-                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-3">
@@ -137,7 +131,7 @@
                                 </div>
                                 <div class="col-sm-2">
                                     <div class="form-group">
-                                        <label for="numero-grupo-familiar">N° personas grupo familiar</label>
+                                        <label for="numero-grupo-familiar">N° grupo familiar</label>
                                         <input type="number" min="1" class="form-control" name="numero-grupo-familiar" id="numero-grupo-familiar">
                                     </div>
                                 </div>
@@ -159,6 +153,12 @@
                                             style="max-width: 180px;"
                                             name="fecha-de-nacimiento"
                                             id="fecha-de-nacimiento">
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <label for="edad">Edad</label>
+                                        <input type="number" class="form-control" name="edad" id="edad" min="1" disabled>
                                     </div>
                                 </div>
                             </div>
