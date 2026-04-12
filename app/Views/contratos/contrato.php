@@ -10,7 +10,7 @@
 
         body {
             font-family: "Times New Roman", serif;
-            font-size: 15.3px;
+            font-size: 14.3px;
             line-height: 1.5;
             text-align: justify;
         }
@@ -39,7 +39,7 @@
             margin-top: 13px;
         }
 
-        .titulo {
+        .titulo1 {
             text-align: center;
             font-weight: bold;
             font-size: 13px;
@@ -59,21 +59,40 @@
         }
 
         .firma-container {
-            margin-top: 60px;
+            margin-top: 40px;
             width: 100%;
+            text-align: center;
+            font-size: 0;
+            /* 🔥 elimina espacios entre inline-block */
         }
 
         .firma {
             width: 35%;
             display: inline-block;
             text-align: center;
+            margin: 20px 5%;
+            vertical-align: top;
+            /* 🔥 alinea correctamente */
+            font-size: 14px;
+            /* restaura texto */
         }
 
-        .firma3 {
-            width: 95%;
-            display: inline-block;
-            text-align: center;
-            padding-top: 15px;
+        .linea {
+            border-top: 1px solid #000;
+            width: 85%;
+            margin: 0 auto 10px auto;
+        }
+
+        .nombre {
+            font-weight: normal;
+            margin-bottom: 4px;
+            min-height: 20px;
+            /* 🔥 evita que nombres cortos desalineen */
+        }
+
+        .titulo {
+            font-size: 12px;
+            font-weight: normal;
         }
     </style>
 </head>
@@ -87,7 +106,7 @@
         </span>
     </div>
 
-    <div class="titulo">
+    <div class="titulo1">
         CONTRATO DE ACOMETIDA ENTRE USUARIO/A Y LA JUNTA DIRECTIVA DE LA ASOCIACION
         COMUNAL ADMINISTRADORA DEL SISTEMA DE AGUA POTABLE DEL CASERÍO EL COYOLITO,
         CANTÓN QUITASOL, DEL MUNICIPIO DE TEJUTLA DEPARTAMENTO DE CHALATENANGO.
@@ -318,18 +337,27 @@
 
     <div class="firma-container">
         <div class="firma">
-            ___________________________<br>
-            Firma Usuario
+            <div class="linea"></div>
+            <div class="nombre"><?= $nombre ?? '' ?></div>
+            <div class="titulo">Firma Usuario</div>
         </div>
 
         <div class="firma">
-            ___________________________<br>
-            Firma Administrador ACASABED
+            <div class="linea"></div>
+            <div class="nombre"><?= $nombreAdministrador ?? '' ?></div>
+            <div class="titulo">Firma Administrador ACASABED</div>
         </div>
 
-        <div class="firma3">
-            ___________________________<br>
-            Firma Comicion Municipal Administradora
+        <div class="firma">
+            <div class="linea"></div>
+            <div class="nombre"><?= $nombreComision1 ?? '' ?></div>
+            <div class="titulo">Firma Comicion Municipal Administradora</div>
+        </div>
+
+        <div class="firma">
+            <div class="linea"></div>
+            <div class="nombre"><?= $nombreComision2 ?? '' ?></div>
+            <div class="titulo">Firma Comicion Municipal Administradora</div>
         </div>
     </div>
 

@@ -37,7 +37,10 @@ class SolicitudModel extends Model
         'estado',
         'id_usuario',
         'fecha_creacion',
-        'id_firmante'
+        'id_firmante',
+        'id_nombre_administrador',
+        'id_nombre_comision_1',
+        'id_nombre_comision_2'
     ];
 
     public function correlativoSolicitud($db)
@@ -53,6 +56,13 @@ class SolicitudModel extends Model
         $ultimo = $row->max_codigo ?? 0;
 
         return (int)$ultimo + 1;
+    }
+
+    public function getCorrelativoSolicitud($idSolicitud)
+    {
+        return $this->select('codigo_solicitud')
+            ->where('id_solicitud', $idSolicitud)
+            ->first();
     }
 
     // preguntar si la direccion seria la misma del cliente
@@ -169,7 +179,9 @@ class SolicitudModel extends Model
         // =============================
         // TOTAL SIN FILTRO
         // =============================
-        $total = $builder->countAllResults(false);
+        $total = $builder
+            ->where('solicitudes.estado', 'CREADA')
+            ->countAllResults(false);
 
         // =============================
         // FILTRO
@@ -184,7 +196,9 @@ class SolicitudModel extends Model
         // =============================
         // TOTAL FILTRADO
         // =============================
-        $filtered = $builder->countAllResults(false);
+        $filtered = $builder
+            ->where('solicitudes.estado', 'CREADA')
+            ->countAllResults(false);
 
         // =============================
         // DATA
@@ -269,19 +283,100 @@ class SolicitudModel extends Model
                 solicitudes.fecha_session AS fechaSession,
                 solicitudes.numero_acta AS numeroActa,
                 solicitudes.estado,
-                firmantes.id_firmante AS idFirmante,
-                firmantes.nombre AS nombreFirmante1,
-                firmantes.ocupacion AS puestoFirmante1
+                admin.id_firmante AS idAdministrador,
+                admin.nombre AS nombreAdministrador,
+                com1.id_firmante AS idComision1,
+                com1.nombre AS nombreComision1,
+                com2.id_firmante AS idComision2,
+                com2.nombre AS nombreComision2,
+                contratos.ficha_alcaldia AS fichaAlcaldia,
+                contratos.fecha_de_inicio AS fechaInicio,
+                contratos.fecha_de_vencimiento AS fechaVencimiento,
+                rutas.id_ruta AS idRuta,
+                rutas.nombre AS nombreRuta,
+                medidores.id_medidor AS idMedidor,
+                medidores.numero_serie AS numeroSerie,
+                contratos.direccion_medidor AS direccionMedidor,
+                tarifario.id_tarifa AS idTarifa,
+                tarifario.codigo AS codigoTarifa,
+                tarifario.desde_n_metros AS desde,
+                tarifario.hasta_n_metros AS hasta,
+                contratos.numero_contrato AS numeroContrato
             ", false)
             ->join('clientes', 'clientes.id_cliente = solicitudes.id_cliente', 'left')
             ->join('beneficiarios', 'beneficiarios.id_beneficiario = solicitudes.id_beneficiario', 'left')
             ->join('plan_de_pago', 'plan_de_pago.id_plan_de_pago = solicitudes.id_plan_de_pago', 'left')
-            ->join('firmantes', 'firmantes.id_firmante = solicitudes.id_firmante', 'left')
+            ->join('contratos', 'contratos.id_solicitud = solicitudes.id_solicitud', 'left')
+            ->join('firmantes AS admin', 'admin.id_firmante = solicitudes.id_nombre_administrador', 'left')
+            ->join('firmantes AS com1', 'com1.id_firmante = solicitudes.id_nombre_comision_1', 'left')
+            ->join('firmantes AS com2', 'com2.id_firmante = solicitudes.id_nombre_comision_2', 'left')
             ->join('departamentos', 'departamentos.id_departamento = clientes.id_departamento', 'left')
             ->join('municipios', 'municipios.id_municipio = clientes.id_municipio', 'left')
             ->join('distritos', 'distritos.id_distrito = clientes.id_distrito', 'left')
             ->join('colonias', 'colonias.id_colonia = clientes.id_colonia', 'left')
+            ->join('rutas', 'rutas.id_ruta = contratos.id_ruta', 'left')
+            ->join('medidores', 'medidores.id_medidor = contratos.id_medidor', 'left')
+            ->join('tarifario', 'tarifario.id_tarifa = contratos.id_tarifa', 'left')
             ->where('solicitudes.id_solicitud', $idSolicitud)
             ->first();
+    }
+
+    public function getSolicitudesAceptadas($start, $length, $searchValue = '')
+    {
+        $builder = $this->db->table('solicitudes');
+
+        // JOIN desde el inicio
+        $builder->join(
+            'clientes',
+            'solicitudes.id_cliente = clientes.id_cliente',
+            'left'
+        );
+
+        // =============================
+        // TOTAL SIN FILTRO
+        // =============================
+        $total = $builder
+            ->where('solicitudes.estado', 'ACEPTADA')
+            ->countAllResults(false);
+
+        // =============================
+        // FILTRO
+        // =============================
+        if (!empty($searchValue)) {
+            $builder->groupStart()
+                ->like('solicitudes.numero_solicitud', $searchValue)
+                ->orLike('clientes.nombre_completo', $searchValue)
+                ->groupEnd();
+        }
+
+        // =============================
+        // TOTAL FILTRADO
+        // =============================
+        $filtered = $builder
+            ->where('solicitudes.estado', 'ACEPTADA')
+            ->countAllResults(false);
+
+        // =============================
+        // DATA
+        // =============================
+        $data = $builder
+            ->select('
+                solicitudes.id_solicitud AS id,
+                solicitudes.codigo_solicitud AS cod_solicitud,
+                clientes.nombre_completo AS nombre,
+                solicitudes.estado AS estado,
+                solicitudes.fecha_generacion AS fechaGeneracion
+        ')
+            ->where('solicitudes.estado', 'ACEPTADA')
+            ->orderBy('solicitudes.id_solicitud', 'DESC')
+            ->limit($length, $start)
+            ->get()
+            ->getResultArray();
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'filtered' => $filtered
+        ];
     }
 }

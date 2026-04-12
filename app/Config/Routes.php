@@ -103,9 +103,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('getBeneficiariosId', 'Solicitudes::getBeneficiariosId');
     $routes->get('getSolicitudesTabla', 'Solicitudes::getSolicitudesTabla');
     $routes->get('getSolicitudById', 'Solicitudes::getSolicitudById');
+    $routes->get('getSolicitudesTablaAceptadas', 'Solicitudes::getSolicitudesTablaAceptadas');
 
 
     // CONTRATOS
     $routes->get('contratos', 'Contratos::index');
     $routes->post('contratos/pdf', 'Contratos::pdf');
+    $routes->get('contratos/contrato', 'Contratos::contrato');
 });

@@ -8,21 +8,19 @@ class FirmanteModel extends Model
 {
     protected $table = 'firmantes';
     protected $primaryKey = 'id_firmante';
-    protected $allowedFields = ['nombre', 'ocupacion'];
+    protected $allowedFields = ['nombre'];
 
-    public function insertarFirmantes($nombre, $ocupacion)
+    public function insertarFirmantes($nombre)
     {
         return $this->insert([
             'nombre' => $nombre,
-            'ocupacion' => $ocupacion
         ]);
     }
 
-    public function actualizarFirmante($idFirmante, $nombre, $ocupacion)
+    public function actualizarFirmante($idFirmante, $nombre)
     {
         return $this->update($idFirmante, [
             'nombre' => $nombre,
-            'ocupacion' => $ocupacion
         ]);
     }
 }

@@ -1,6 +1,7 @@
 import { alertaError, alertaInfo, alertaOk, alertEnSweet, colorEnInputConFocus, colorEnInputConFocusSelect, eliminarColorYfocus, eliminarColorYfocusSelect, validarCampo } from "../metodos/metodos.js";
 
 let tablaSolicitudes;
+let tablaSolicitudesAceptadas;
 
 let modo = 'crear';
 let idSolicitud = null;
@@ -64,24 +65,23 @@ const inputs = {
     numeroActa: $("#numero-acta"),
 
     // datos de los firmantes
-    idFirmante: $("#id-firmante"),
-    nombreFirmante1: $("#nombre-firmante-1"),
-    puestoFirmante1: $("#puesto-firmante-1"),
+    idFirmanteAdministrador: $("#id-firmante-administrador"),
+    nombreAdministrador: $("#nombre-administrador"),
+    idFirmanteComision1: $("#id-firmante-comision-1"),
+    nombreComision1: $("#nombre-comision-1"),
+    idFirmanteComision2: $("#id-firmante-comision-2"),
+    nombreComision2: $("#nombre-comision-2"),
 
-    // nombreFirmante2: $("#nombre-firmante-2"),
-    // puestoFirmante2: $("#puesto-firmante-2"),
-
-    // nombreFirmante3: $("#nombre-firmante-3"),
-    // puestoFirmante3: $("#puesto-firmante-3"),
 
     // datos del contrato
-    // fechaInicio: $("#fecha-inicio"),
-    // fechaVencimiento: $("#fecha-vencimiento"),
+    fichaAlcaldia: $("#ficha-alcaldia"),
+    fechaInicio: $("#fecha-inicio"),
+    fechaVencimiento: $("#fecha-vencimiento"),
     // estado: $("#estado"),
-    // ruta: $("#rutas"),
-    // medidor: $("#medidores"),
-    // direccionMedidor: $("#direccion-medidor"),
-    // tarifa: $("#tarifas"),
+    ruta: $("#rutas"),
+    medidor: $("#medidores"),
+    direccionMedidor: $("#direccion-medidor"),
+    tarifa: $("#tarifas"),
 
 }
 
@@ -145,24 +145,22 @@ function getData() {
     formData.append('numeroActa', inputs.numeroActa.val().trim());
 
     // datos del firmante
-    formData.append('idFirmante', inputs.idFirmante.val().trim());
-    formData.append('nombreFirmante1', inputs.nombreFirmante1.val().trim());
-    formData.append('puestoFirmante1', inputs.puestoFirmante1.val().trim());
-
-    // formData.append('nombreFirmante2', inputs.nombreFirmante2.val().trim());
-    // formData.append('puestoFirmante2', inputs.puestoFirmante2.val().trim());
-
-    // formData.append('nombreFirmante3', inputs.nombreFirmante3.val().trim());
-    // formData.append('puestoFirmante3', inputs.puestoFirmante3.val().trim());
+    formData.append('idAdministrador', inputs.idFirmanteAdministrador.val().trim());
+    formData.append('nombreAdministrador', inputs.nombreAdministrador.val().trim());
+    formData.append('idFirmanteComision1', inputs.idFirmanteComision1.val().trim());
+    formData.append('nombreComision1', inputs.nombreComision1.val().trim());
+    formData.append('idFirmanteComision2', inputs.idFirmanteComision2.val().trim());
+    formData.append('nombreComision2', inputs.nombreComision2.val().trim());
 
     // datos del contrato
-    // formData.append('fechaInicio', inputs.fechaInicio.val().trim());
-    // formData.append('fechaVencimiento', inputs.fechaVencimiento.val().trim());
+    formData.append('fichaAlcaldia', inputs.fichaAlcaldia.val().trim());
+    formData.append('fechaInicio', inputs.fechaInicio.val().trim());
+    formData.append('fechaVencimiento', inputs.fechaVencimiento.val().trim());
     // formData.append('estado', inputs.estado.val().trim());
-    // formData.append('ruta', inputs.ruta.val().trim());
-    // formData.append('medidor', inputs.medidor.val().trim());
-    // formData.append('direccionMedidor', inputs.direccionMedidor.val().trim());
-    // formData.append('tarifa', inputs.tarifa.val().trim());
+    formData.append('ruta', inputs.ruta.val().trim());
+    formData.append('medidor', inputs.medidor.val().trim());
+    formData.append('direccionMedidor', inputs.direccionMedidor.val().trim());
+    formData.append('tarifa', inputs.tarifa.val().trim());
 
     return formData;
 }
@@ -969,7 +967,7 @@ function vistaPrevia(e) {
     setFont("normal", 8);
     const firmantes = [
         { nombre: data.get('nombre') || '', puesto: 'Persona Solicitante' || '' },
-        { nombre: data.get('nombreFirmante1') || '', puesto: data.get('puestoFirmante1') || '' },
+        { nombre: data.get('nombreAdministrador') || '', puesto: 'Administrador' || '' },
         // { nombre: data.get('nombreFirmante2') || '', puesto: data.get('puestoFirmante2') || '' },
         // { nombre: data.get('nombreFirmante3') || '', puesto: data.get('puestoFirmante3') || '' }
     ];
@@ -1093,9 +1091,9 @@ function cargarTarifas() {
 function validarTipoPago() {
     $('input[name="pago"]').on('change', function () {
         if ($('#contado').is(':checked')) {
-            inputs.otro.prop('disabled', true);
-            inputs.cantidadDePagos.prop('disabled', true);
-            inputs.totalCuota.prop('disabled', true);
+            inputs.otro.val('').prop('disabled', true);
+            inputs.cantidadDePagos.val('').prop('disabled', true);
+            inputs.totalCuota.val('').prop('disabled', true);
         } else {
             inputs.otro.prop('disabled', false);
             inputs.cantidadDePagos.prop('disabled', false);
@@ -1245,17 +1243,137 @@ function cargarSolicitudes() {
     });
 }
 
-function toggleBotones() {
+function cargarSolicitudesAceptadas() {
+    tablaSolicitudesAceptadas = $('#tbl-solicitudes-aceptadas').DataTable({
+        serverSide: true,
+        processing: true,
+        searching: false,
+        pageLength: 5,
+        lengthMenu: [5, 10, 15, 20],
+        ordering: false,
+        ajax: {
+            type: 'GET',
+            url: baseURL + 'getSolicitudesTablaAceptadas',
+            data: function (d) {
+                d.searchValue = $('#customSearchSolicitudesAceptadas').val();
+            }
+        },
+        columns: [
+            {
+                data: 'cod_solicitud'
+            },
+            {
+                data: 'nombre'
+            },
+            {
+                data: 'estado'
+            },
+            {
+                data: 'fechaGeneracion'
+            },
+            {
+                data: null,
+                render: function (data, type, row) {
 
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">
+                                Acciones
+                            </button>
+                            <div class="dropdown-menu">
+
+                                <a class="dropdown-item dropdown-item-custom btn-ver-solicitud-solo-ver" href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-eye"></i> Ver Solicitud
+                                </a>
+
+                                <a class="dropdown-item dropdown-item-custom btn-ver-contrato-pdf"  href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-file-contract"></i> Contrato pdf
+                                </a>
+
+                            </div>
+                        </div>
+                        `;
+                }
+            }
+        ],
+        language: {
+            url: baseURL + "plugins/datatables/es-ES.json"
+        },
+        stateSave: false,
+        responsive: true,
+        autoWidth: false,
+        initComplete: function () {
+            let searchInput = $('.dataTables_filter input');
+            searchInput.val('').trigger('input');
+        }
+    });
+
+    //Buscar al presionar Enter en tu input
+    $('#customSearchSolicitudesAceptadas').on('keypress', function (e) {
+        if (e.which == 13) { // Enter
+            tablaSolicitudesAceptadas.draw(); // ahora sí funciona
+        }
+    });
+
+    $('#searchBtSolicitudesAceptadas').off('click').on('click', function () {
+        tablaSolicitudesAceptadas.draw();
+    });
+
+    $('#clearSearchBtnSolicitudesAceptadas').on('click', function (e) {
+        $('#customSearchSolicitudesAceptadas').val('');
+        tablaSolicitudesAceptadas.draw();
+    });
+}
+
+function toggleBotones() {
     if (modo === 'crear') {
         $("#guardar-registro").show();
         $("#actualizar-registro").hide();
-    } else {
+
+        // ocultar botón siguiente final
+        $("#btn-siguiente-final").hide();
+        $(".btn-vista-previa-contrato").hide();
+        $(".vista-editar").hide();
+
+    } else if (modo == 'ver') {
+        $("#guardar-registro").hide();
+        $("#actualizar-registro").hide();
+        $(".btn-vista-previa").show();
+        $(".vista-editar").show();
+        $("#btn-editar").hide().prop("disabled", true);
+        $("#btn-limpiar").hide().prop("disabled", true);
+        $("#btn-siguiente-final").show();
+        $(".btn-vista-previa-contrato").show();
+
+
+        // DESHABILITAR TODOS LOS CAMPOS
+        $("input, select, textarea").prop("disabled", true);
+    } else if (modo == 'editar') {
+
         $(".btn-vista-contrato").toggle();
         $("#guardar-registro").hide();
         $("#actualizar-registro").show();
+
+        // 1. habilitar todo primero
+        $("input, select, textarea")
+            .prop("disabled", false)
+            .prop("readonly", false);
+
+        // 2. luego deshabilitar los específicos
         inputs.selectCliente.prop('disabled', true);
         inputs.fechaCreacion.prop('disabled', true);
+
+        $("#btn-editar").hide().prop("disabled", false);
+        $("#btn-limpiar").hide().prop("disabled", false);
+
+        // 🔥 select2 fix
+        $('select').trigger('change');
+
+        $("#btn-siguiente-final").show();
+        $(".btn-vista-previa-contrato").show();
+        $(".vista-editar").show();
     }
 }
 
@@ -1267,6 +1385,148 @@ function cargarSolicitudDesdeURL() {
         const id = atob(encoded); // decodifica
 
         modo = 'editar'; // AQUÍ defines el modo
+        idSolicitud = id;
+        // console.log(modo);
+        $.ajax({
+            url: baseURL + 'getSolicitudById',
+            type: 'GET',
+            data: { id: id },
+            dataType: 'json',
+            success: function (response) {
+                // mostrar botón correcto
+                toggleBotones();
+                // console.log(modo);
+
+                const d = response.data;
+
+                inputs.idSolicitud.val(d.id_solicitud);
+                inputs.fechaCreacion.val(d.fechaCreacion);
+
+                // SECCION DE CLIENTE
+                const cliente = {
+                    id_cliente: d.id_cliente,
+                    nombre_completo: d.nombre,
+                    edad: d.edad,
+                    dui: d.dui,
+                    nit: d.nit,
+                    extendido: d.extendido,
+                    fecha: d.fecha,
+                    lugar_nacimiento: d.lugarNacimiento,
+                    fecha_nacimiento: d.fechaNacimiento,
+                    estado_familiar: d.estadoFamiliar,
+                    numero_grupo_familiar: d.numeroGrupoFamiliar,
+                    direccion_completa: d.direccion,
+                    lugar_trabajo: d.lugarDeTrabajo,
+                    ocupacion: d.ocupacion,
+                    telefono: d.telefonos
+                };
+                llenarInputs(cliente);
+
+                // SECCION DE BENEFICIARIO
+                const beneficiario = {
+                    id_beneficiario: d.idBeneficiario,
+                    nombre: d.nombreBeneficiario,
+                    edad: d.edadBeneficiario,
+                    parentesco: d.parentescoBeneficiario,
+                    direccion: d.direccionBeneficiario
+                };
+                cargarBeneficiarios(cliente.id_cliente, function (lista) {
+                    if (beneficiario.id_beneficiario) {
+                        // seleccionar en el select
+                        $('#beneficiarios-registratos')
+                            .val(beneficiario.id_beneficiario)
+                            .trigger('change');
+                        // llenar inputs
+                        llenarInputsBeneficiarios(beneficiario);
+                        eventoSeccionBeneficarioEditar();
+                    }
+                });
+
+                // SECCION DATOS DEL INMUEBLE
+                inputs.direccionInmueble.val(d.direccionInmueble);
+                inputs.propietario.prop('checked', d.propietario === "1");
+                inputs.inquilino.prop('checked', d.inquilino === "1");
+                inputs.representante.prop('checked', d.representante === "1");
+                inputs.otroCheck.val(d.otroCheck);
+                inputs.abonera.prop('checked', d.abonera === "1");
+                inputs.hoyoSeco.prop('checked', d.hoyoSeco === "1");
+                inputs.lavable.prop('checked', d.lavable === "1");
+                inputs.otroBaño.val(d.otroBaño);
+
+                // SECCION DE ENTREVISTA DIRIGIDA
+                let tieneLetrina = d.aceptaConstruccionLetrina;
+                if (tieneLetrina == 1) {
+                    inputs.si.prop('checked', true);
+                } else {
+                    inputs.no.prop('checked', false);
+                }
+                inputs.tiempo.val(d.tiempo);
+                inputs.monto.val(d.monto);
+                inputs.contado.prop('checked', d.contado === "1");
+                if ($('#contado').is(':checked')) {
+                    inputs.otro.prop('disabled', true);
+                    inputs.cantidadDePagos.prop('disabled', true);
+                    inputs.totalCuota.prop('disabled', true);
+                } else {
+                    inputs.otro.prop('disabled', false);
+                    inputs.cantidadDePagos.prop('disabled', false);
+                    inputs.totalCuota.prop('disabled', false);
+                };
+                inputs.otro.val(d.otroTipoPago);
+                inputs.idPlanPago.val(d.idPlanDePago);
+                inputs.cantidadDePagos.val(d.cantidadDePagos);
+                inputs.totalCuota.val(d.totalCuota);
+                inputs.interes.val(d.interesACobrar);
+
+                // SECCION DE COMISION MUNICIPAL
+                inputs.acuerdo.val(d.acuerdo);
+                inputs.fechaSession.val(d.fechaSession);
+                inputs.numeroActa.val(d.numeroActa);
+
+                // SECCION DE LOS QUE FIRMAN
+                inputs.idFirmanteAdministrador.val(d.idAdministrador);
+                inputs.nombreAdministrador.val(d.nombreAdministrador);
+                inputs.idFirmanteComision1.val(d.idComision1);
+                inputs.nombreComision1.val(d.nombreComision1);
+                inputs.idFirmanteComision2.val(d.idComision2);
+                inputs.nombreComision2.val(d.nombreComision2);
+            }
+        });
+    }
+}
+
+function setRutaSeleccionada(id, texto) {
+    let select = $('#rutas');
+
+    // crear opción si no existe
+    let option = new Option(texto, id, true, true);
+    select.append(option).trigger('change');
+}
+
+function setMedidorSeleccionada(id, texto) {
+    let select = $('#medidores');
+
+    // crear opción si no existe
+    let option = new Option(texto, id, true, true);
+    select.append(option).trigger('change');
+}
+
+function setTarifasSeleccionada(id, texto) {
+    let select = $('#tarifas');
+
+    // crear opción si no existe
+    let option = new Option(texto, id, true, true);
+    select.append(option).trigger('change');
+}
+
+function cargarSolicitudDesdeURLSoloVer() {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('solicitud');
+
+    if (encoded) {
+        const id = atob(encoded); // decodifica
+
+        modo = 'ver'; // AQUÍ defines el modo
         idSolicitud = id;
 
         $.ajax({
@@ -1337,9 +1597,9 @@ function cargarSolicitudDesdeURL() {
                 // SECCION DE ENTREVISTA DIRIGIDA
                 let tieneLetrina = d.aceptaConstruccionLetrina;
                 if (tieneLetrina == 1) {
-                    inputs.si.prop('checked');
+                    inputs.si.prop('checked', true);
                 } else {
-                    inputs.no.prop('checked');
+                    inputs.no.prop('checked', false);
                 }
                 inputs.tiempo.val(d.tiempo);
                 inputs.monto.val(d.monto);
@@ -1365,9 +1625,22 @@ function cargarSolicitudDesdeURL() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmante.val(d.idFirmante);
-                inputs.nombreFirmante1.val(d.nombreFirmante1);
-                inputs.puestoFirmante1.val(d.puestoFirmante1);
+                inputs.idFirmanteAdministrador.val(d.idAdministrador);
+                inputs.nombreAdministrador.val(d.nombreAdministrador);
+                inputs.idFirmanteComision1.val(d.idComision1);
+                inputs.nombreComision1.val(d.nombreComision1);
+                inputs.idFirmanteComision2.val(d.idComision2);
+                inputs.nombreComision2.val(d.nombreComision2);
+
+                // SECCION SOLO DE CONTRATO
+                inputs.fichaAlcaldia.val(d.fichaAlcaldia)
+                inputs.fechaInicio.val(d.fechaInicio)
+                inputs.fechaVencimiento.val(d.fechaVencimiento)
+                setRutaSeleccionada(d.idRuta, d.nombreRuta);
+                setMedidorSeleccionada(d.idMedidor, d.numeroSerie);
+                inputs.direccionMedidor.val(d.direccionMedidor);
+
+                setTarifasSeleccionada(d.idTarifa, d.codigoTarifa + ' desde ' + d.desde + ' hasta ' + d.hasta)
             }
         });
     }
@@ -1468,15 +1741,14 @@ function eventosUsuarios() {
     });
 
 
-    // EVENTO CORRECTO (delegado) de ver solicitud desde la tabla
+    // evento para ver solicitud editar
     $(document).on("click", ".btn-ver-solicitud", function (e) {
         e.preventDefault();
 
         const id = $(this).data('id');
+        const encoded = btoa(id);
 
-        const encoded = btoa(id); // codifica en base64
-
-        window.location.href = baseURL + 'nueva_solicitud?solicitud=' + encoded;
+        window.location.href = baseURL + 'nueva_solicitud?solicitud=' + encoded + '&modo=editar';
     });
 
     // EVENTO CORRECTO (delegado) de ver solicitud desde la tabla
@@ -1490,12 +1762,68 @@ function eventosUsuarios() {
             false              // no usar getData()
         );
     });
+
+    $(document).on("click", ".btn-siguiente-final", function () {
+        const target = $(this).data("target");
+
+        // abrir sección destino
+        $(target).collapse('show');
+    });
+
+    // evento solo ver la solicitud ya creada
+    $(document).on("click", ".btn-ver-solicitud-solo-ver", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data('id');
+        const encoded = btoa(id);
+
+        window.location.href = baseURL + 'nueva_solicitud?solicitud=' + encoded + '&modo=ver';
+    });
+
+    $(document).on("click", ".btn-ver-contrato-pdf", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data('id');
+        const encoded = btoa(id);
+
+        window.open(baseURL + 'contratos/contrato?solicitud=' + encoded, '_blank');
+    });
+}
+
+function detectarModo() {
+    const params = new URLSearchParams(window.location.search);
+
+    const encoded = params.get('solicitud');
+    const tipoModo = params.get('modo');
+
+    if (!encoded) {
+        modo = 'crear';
+    } else if (tipoModo === 'ver') {
+        modo = 'ver';
+    } else {
+        modo = 'editar';
+    }
+
+    console.log("Modo detectado:", modo);
 }
 
 function iniciarTodo() {
-    toggleBotones();
     eventosUsuarios();
-    cargarSolicitudDesdeURL();
+
+    detectarModo(); // primero definir modo
+
+    if (modo === 'editar') {
+        cargarSolicitudDesdeURL();
+    } else if (modo === 'ver') {
+        cargarSolicitudDesdeURLSoloVer();
+    }
+
+    toggleBotones(); //después aplicar UI
+
+
+    // cargarSolicitudDesdeURL();
+    // cargarSolicitudDesdeURLSoloVer();
+    // toggleBotones();
     validarCampoDui();
     cargarClientes();
     cargarRutas();
@@ -1505,6 +1833,7 @@ function iniciarTodo() {
     eventoSeleccionBeneficiario();
     validarTipoPago();
     cargarSolicitudes();
+    cargarSolicitudesAceptadas();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);
