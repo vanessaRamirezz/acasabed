@@ -36,7 +36,7 @@ class Contratos extends BaseController
         $text = $textEntero . " con " . $textDecimal . "/100 dólares";
 
         $data = [
-            "numeroContrato" => '',
+            "numeroContrato" => $request->getPost('numeroContrato'),
             "edadRepresentante" => '43',
 
             "nombre" => $request->getPost('nombre'),
@@ -45,9 +45,14 @@ class Contratos extends BaseController
             "montoNumero" => $request->getPost('monto'),
             "montoTexto" => $text,
 
-            "nombreAdministrador" => $request->getPost('nombreAdministrador'),
-            "nombreComision1" => $request->getPost('nombreComision1'),
-            "nombreComision2" => $request->getPost('nombreComision2'),
+            "nombreFirmante1" => $request->getPost('nombreFirmante1'),
+            "rolFirmante1" => $request->getPost('puestoFirmante1'),
+
+            "nombreFirmante2" => $request->getPost('nombreFirmante2'),
+            "rolFirmante2" => $request->getPost('puestoFirmante2'),
+
+            "nombreFirmante3" => $request->getPost('nombreFirmante3'),
+            "rolFirmante3" => $request->getPost('puestoFirmante3'),
         ];
 
         $html = view('contratos/contrato', $data);
@@ -59,6 +64,7 @@ class Contratos extends BaseController
 
         $dompdf->stream("contrato.pdf", ["Attachment" => false]);
     }
+
     public function contrato()
     {
         $request = service('request');
@@ -92,9 +98,15 @@ class Contratos extends BaseController
             "dui" => $data['dui'] ?? '',
             "montoNumero" => $total,
             "montoTexto" => $text,
-            "nombreAdministrador" => $data['nombreAdministrador'] ?? '',
-            "nombreComision1" => $data['nombreComision1'] ?? '',
-            "nombreComision2" => $data['nombreComision2'] ?? '',
+
+            "nombreFirmante1" => $data['nombreFirmante1'] ?? '',
+            "rolFirmante1" => $data['rolFirmante1'] ?? '',
+
+            "nombreFirmante2" => $data['nombreFirmante2'] ?? '',
+            "rolFirmante2" => $data['rolFirmante2'] ?? '',
+
+            "nombreFirmante3" => $data['nombreFirmante3'] ?? '',
+            "rolFirmante3" => $data['rolFirmante3'] ?? '',
         ];
 
         $html = view('contratos/contrato', $data);

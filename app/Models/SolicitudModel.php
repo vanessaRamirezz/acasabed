@@ -37,10 +37,10 @@ class SolicitudModel extends Model
         'estado',
         'id_usuario',
         'fecha_creacion',
-        'id_firmante',
-        'id_nombre_administrador',
-        'id_nombre_comision_1',
-        'id_nombre_comision_2'
+        'id_firmante_1',
+        'id_firmante_2',
+        'id_firmante_3',
+        'fecha_anulada'
     ];
 
     public function correlativoSolicitud($db)
@@ -188,7 +188,7 @@ class SolicitudModel extends Model
         // =============================
         if (!empty($searchValue)) {
             $builder->groupStart()
-                ->like('solicitudes.numero_solicitud', $searchValue)
+                ->like('solicitudes.codigo_solicitud', $searchValue)
                 ->orLike('clientes.nombre_completo', $searchValue)
                 ->groupEnd();
         }
@@ -209,7 +209,7 @@ class SolicitudModel extends Model
                 solicitudes.codigo_solicitud AS cod_solicitud,
                 clientes.nombre_completo AS nombre,
                 solicitudes.estado AS estado,
-                solicitudes.fecha_generacion AS fechaGeneracion
+                DATE_FORMAT(solicitudes.fecha_generacion, "%d-%m-%Y") AS fechaGeneracion
         ')
             ->where('solicitudes.estado', 'CREADA')
             ->orderBy('solicitudes.id_solicitud', 'DESC')
@@ -283,12 +283,19 @@ class SolicitudModel extends Model
                 solicitudes.fecha_session AS fechaSession,
                 solicitudes.numero_acta AS numeroActa,
                 solicitudes.estado,
-                admin.id_firmante AS idAdministrador,
-                admin.nombre AS nombreAdministrador,
-                com1.id_firmante AS idComision1,
-                com1.nombre AS nombreComision1,
-                com2.id_firmante AS idComision2,
-                com2.nombre AS nombreComision2,
+
+                f1.id_firmante AS idFirmante1,
+                f1.nombre AS nombreFirmante1,
+                f1.rol AS rolFirmante1,
+
+                f2.id_firmante AS idFirmante2,
+                f2.nombre AS nombreFirmante2,
+                f2.rol AS rolFirmante2,
+
+                f3.id_firmante AS idFirmante3,
+                f3.nombre AS nombreFirmante3,
+                f3.rol AS rolFirmante3,
+
                 contratos.ficha_alcaldia AS fichaAlcaldia,
                 contratos.fecha_de_inicio AS fechaInicio,
                 contratos.fecha_de_vencimiento AS fechaVencimiento,
@@ -307,9 +314,9 @@ class SolicitudModel extends Model
             ->join('beneficiarios', 'beneficiarios.id_beneficiario = solicitudes.id_beneficiario', 'left')
             ->join('plan_de_pago', 'plan_de_pago.id_plan_de_pago = solicitudes.id_plan_de_pago', 'left')
             ->join('contratos', 'contratos.id_solicitud = solicitudes.id_solicitud', 'left')
-            ->join('firmantes AS admin', 'admin.id_firmante = solicitudes.id_nombre_administrador', 'left')
-            ->join('firmantes AS com1', 'com1.id_firmante = solicitudes.id_nombre_comision_1', 'left')
-            ->join('firmantes AS com2', 'com2.id_firmante = solicitudes.id_nombre_comision_2', 'left')
+            ->join('firmantes AS f1', 'f1.id_firmante = solicitudes.id_firmante_1', 'left')
+            ->join('firmantes AS f2', 'f2.id_firmante = solicitudes.id_firmante_2', 'left')
+            ->join('firmantes AS f3', 'f3.id_firmante = solicitudes.id_firmante_3', 'left')
             ->join('departamentos', 'departamentos.id_departamento = clientes.id_departamento', 'left')
             ->join('municipios', 'municipios.id_municipio = clientes.id_municipio', 'left')
             ->join('distritos', 'distritos.id_distrito = clientes.id_distrito', 'left')
@@ -321,7 +328,7 @@ class SolicitudModel extends Model
             ->first();
     }
 
-    public function getSolicitudesAceptadas($start, $length, $searchValue = '')
+    public function getSolicitudesAprobadas($start, $length, $searchValue = '')
     {
         $builder = $this->db->table('solicitudes');
 
@@ -336,7 +343,8 @@ class SolicitudModel extends Model
         // TOTAL SIN FILTRO
         // =============================
         $total = $builder
-            ->where('solicitudes.estado', 'ACEPTADA')
+            ->where('solicitudes.estado', 'APROBADA')
+            ->orWhere('solicitudes.estado', 'ANULADA')
             ->countAllResults(false);
 
         // =============================
@@ -344,7 +352,7 @@ class SolicitudModel extends Model
         // =============================
         if (!empty($searchValue)) {
             $builder->groupStart()
-                ->like('solicitudes.numero_solicitud', $searchValue)
+                ->like('solicitudes.codigo_solicitud', $searchValue)
                 ->orLike('clientes.nombre_completo', $searchValue)
                 ->groupEnd();
         }
@@ -353,7 +361,8 @@ class SolicitudModel extends Model
         // TOTAL FILTRADO
         // =============================
         $filtered = $builder
-            ->where('solicitudes.estado', 'ACEPTADA')
+            ->where('solicitudes.estado', 'APROBADA')
+            ->orWhere('solicitudes.estado', 'ANULADA')
             ->countAllResults(false);
 
         // =============================
@@ -367,7 +376,8 @@ class SolicitudModel extends Model
                 solicitudes.estado AS estado,
                 solicitudes.fecha_generacion AS fechaGeneracion
         ')
-            ->where('solicitudes.estado', 'ACEPTADA')
+            ->where('solicitudes.estado', 'APROBADA')
+            ->orWhere('solicitudes.estado', 'ANULADA')
             ->orderBy('solicitudes.id_solicitud', 'DESC')
             ->limit($length, $start)
             ->get()

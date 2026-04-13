@@ -148,7 +148,7 @@ function cargarMedidores() {
                 data: 'numeros_de_serie'
             },
             {
-                data: 'fecha_de_instalacion'
+                data: 'fecha_de_instalacion_texto'
             },
             {
                 data: 'codigo_de_contrato'

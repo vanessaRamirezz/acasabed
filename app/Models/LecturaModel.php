@@ -71,6 +71,7 @@ class LecturaModel extends Model
                 contratos.id_contrato AS id_de_contrato,
                 contratos.numero_contrato AS codigo_de_contrato,
                 lecturas.fecha AS fecha_toma_lectura,
+                DATE_FORMAT(lecturas.fecha, "%d-%m-%Y") AS fecha_toma_lectura_texto,
                 lecturas.valor AS valor_obtenido,
                 instaladores.id_instalador AS id_de_instalador,
                 instaladores.nombre_completo AS nombre_instalador

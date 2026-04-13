@@ -44,7 +44,18 @@ class PeriodoModel extends Model
         // DATA
         // =============================
         $data = $builder
-            ->select('id_periodo as id, nombre AS nombre_periodo, fecha_desde as fecha1, fecha_hasta as fecha2, estado as status')
+            ->select('
+                    id_periodo as id, 
+                    nombre AS nombre_periodo, 
+
+                    DATE_FORMAT(fecha_desde, "%Y-%m-%d") AS fecha1, 
+                    DATE_FORMAT(fecha_hasta, "%Y-%m-%d") AS fecha2,
+
+                    DATE_FORMAT(fecha_desde, "%d-%m-%Y") AS fecha1_texto, 
+                    DATE_FORMAT(fecha_hasta, "%d-%m-%Y") AS fecha2_texto,
+
+                    estado as status
+                ')
             ->orderBy('id_periodo', 'DESC')
             ->limit($length, $start)
             ->get()
@@ -93,7 +104,7 @@ class PeriodoModel extends Model
     public function buscarPeriodos($search)
     {
         return $this->select('id_periodo AS id, nombre AS periodo')
-            ->where('estado','ACTIVO')
+            ->where('estado', 'ACTIVO')
             ->like('nombre', $search)
             ->orderBy('id_periodo', 'ASC')
             ->limit(10)

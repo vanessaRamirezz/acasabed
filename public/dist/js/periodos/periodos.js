@@ -94,10 +94,10 @@ function cargarPeriodos() {
                 data: 'nombre_periodo'
             },
             {
-                data: 'fecha1'
+                data: 'fecha1_texto'
             },
             {
-                data: 'fecha2'
+                data: 'fecha2_texto'
             },
             {
                 data: 'status',

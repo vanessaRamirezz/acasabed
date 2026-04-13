@@ -336,29 +336,41 @@
     </ol>
 
     <div class="firma-container">
+
+        <!-- Usuario -->
         <div class="firma">
             <div class="linea"></div>
             <div class="nombre"><?= $nombre ?? '' ?></div>
             <div class="titulo">Firma Usuario</div>
         </div>
 
-        <div class="firma">
-            <div class="linea"></div>
-            <div class="nombre"><?= $nombreAdministrador ?? '' ?></div>
-            <div class="titulo">Firma Administrador ACASABED</div>
-        </div>
+        <!-- Firmante 1 -->
+        <?php if (!empty($nombreFirmante1) || !empty($rolFirmante1)) : ?>
+            <div class="firma">
+                <div class="linea"></div>
+                <div class="nombre"><?= $nombreFirmante1 ?></div>
+                <div class="titulo"><?= $rolFirmante1 ?></div>
+            </div>
+        <?php endif; ?>
 
-        <div class="firma">
-            <div class="linea"></div>
-            <div class="nombre"><?= $nombreComision1 ?? '' ?></div>
-            <div class="titulo">Firma Comicion Municipal Administradora</div>
-        </div>
+        <!-- Firmante 2 -->
+        <?php if (!empty($nombreFirmante2) || !empty($rolFirmante2)) : ?>
+            <div class="firma">
+                <div class="linea"></div>
+                <div class="nombre"><?= $nombreFirmante2 ?></div>
+                <div class="titulo"><?= $rolFirmante2 ?></div>
+            </div>
+        <?php endif; ?>
 
-        <div class="firma">
-            <div class="linea"></div>
-            <div class="nombre"><?= $nombreComision2 ?? '' ?></div>
-            <div class="titulo">Firma Comicion Municipal Administradora</div>
-        </div>
+        <!-- Firmante 3 -->
+        <?php if (!empty($nombreFirmante3) || !empty($rolFirmante3)) : ?>
+            <div class="firma">
+                <div class="linea"></div>
+                <div class="nombre"><?= $nombreFirmante3 ?></div>
+                <div class="titulo"><?= $rolFirmante3 ?></div>
+            </div>
+        <?php endif; ?>
+
     </div>
 
 </body>

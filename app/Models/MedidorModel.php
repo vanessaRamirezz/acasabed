@@ -61,6 +61,7 @@ class MedidorModel extends Model
                 medidores.id_medidor AS id,
                 medidores.numero_serie AS numeros_de_serie,
                 medidores.fecha_instalacion AS fecha_de_instalacion,
+                DATE_FORMAT(medidores.fecha_instalacion, "%d-%m-%Y") AS fecha_de_instalacion_texto,
                 contratos.id_contrato AS id_de_contrato,
                 contratos.numero_contrato AS codigo_de_contrato,
                 instaladores.id_instalador AS id_de_instalador,

@@ -93,21 +93,32 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('editarLectura', 'Lecturas::editarLectura');
 
     // SOLICITUDES
-    $routes->get('nueva_solicitud', 'Solicitudes::index');
+    $routes->get('solicitudes', 'Solicitudes::index');
+    $routes->get('nueva_solicitud', 'Solicitudes::formulario_solicitud');
     $routes->get('getClientesSelect', 'Solicitudes::getClientesSelect');
     $routes->post('nuevaSolicitud', 'Solicitudes::nuevaSolicitud');
-    $routes->post('aceptarSolicitud', 'Solicitudes::aceptarSolicitud');
+    $routes->post('aprobarSolicitud', 'Solicitudes::aprobarSolicitud');
+    $routes->post('anularSolicitud', 'Solicitudes::anularSolicitud');
     $routes->get('getRutasSelect', 'Solicitudes::getRutasSelect');
+    $routes->get('getFirmantesSelect', 'Solicitudes::getFirmantesSelect');
     $routes->get('getMedidoresSelect', 'Solicitudes::getMedidoresSelect');
     $routes->get('getTarifasSelect', 'Solicitudes::getTarifasSelect');
     $routes->post('getBeneficiariosId', 'Solicitudes::getBeneficiariosId');
     $routes->get('getSolicitudesTabla', 'Solicitudes::getSolicitudesTabla');
     $routes->get('getSolicitudById', 'Solicitudes::getSolicitudById');
-    $routes->get('getSolicitudesTablaAceptadas', 'Solicitudes::getSolicitudesTablaAceptadas');
+    $routes->get('getSolicitudesTablaAprobadas', 'Solicitudes::getSolicitudesTablaAprobadas');
 
 
     // CONTRATOS
     $routes->get('contratos', 'Contratos::index');
     $routes->post('contratos/pdf', 'Contratos::pdf');
-    $routes->get('contratos/contrato', 'Contratos::contrato');
+    $routes->get('contratos/contrato', 'Contratos::contrato'); 
+
+    // COBROS DE INSTALACION
+    $routes->get('cobros_instalacion', 'CobrosInstalacion::index');
+    $routes->get('getCobrosInstalacion', 'CobrosInstalacion::getCobrosRealizados');
+    $routes->get('buscarCuentasCobroInstalacion', 'CobrosInstalacion::buscarCuentas');
+    $routes->get('getDetalleCobroInstalacion', 'CobrosInstalacion::getDetalleCobro');
+    $routes->post('validarCobroInstalacion', 'CobrosInstalacion::validarCobro');
+    $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPago');
 });

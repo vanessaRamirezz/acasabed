@@ -13,14 +13,6 @@ class PlanDePagoModel extends Model
         'monto_cuotas',
     ];
 
-    public function guardarPlanDePago($cantidadCuotas, $montoCuotas)
-    {
-        return $this->insert([
-            'cantidad_cuotas' => $cantidadCuotas,
-            'monto_cuotas' => $montoCuotas,
-        ]);
-    }
-
     public function actualizarPlanDePago($idPlanDePago, $cantidadCuotas, $montoCuotas)
     {
         return $this->update($idPlanDePago, [

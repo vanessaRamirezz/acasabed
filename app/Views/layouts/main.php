@@ -139,7 +139,7 @@
         };
     </script>
     <script>
-        var baseURL = '<?= base_url() ?>/';
+        var baseURL = '<?= base_url() ?>';
     </script>
     <!-- jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

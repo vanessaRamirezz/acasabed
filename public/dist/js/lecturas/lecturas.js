@@ -137,7 +137,7 @@ function cargarLecturas() {
                 data: 'codigo_de_contrato'
             },
             {
-                data: 'fecha_toma_lectura'
+                data: 'fecha_toma_lectura_texto'
             },
             {
                 data: 'valor_obtenido'

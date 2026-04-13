@@ -1,7 +1,7 @@
 import { alertaError, alertaInfo, alertaOk, alertEnSweet, colorEnInputConFocus, colorEnInputConFocusSelect, eliminarColorYfocus, eliminarColorYfocusSelect, validarCampo } from "../metodos/metodos.js";
 
 let tablaSolicitudes;
-let tablaSolicitudesAceptadas;
+let tablaSolicitudesAprobadas;
 
 let modo = 'crear';
 let idSolicitud = null;
@@ -65,19 +65,28 @@ const inputs = {
     numeroActa: $("#numero-acta"),
 
     // datos de los firmantes
-    idFirmanteAdministrador: $("#id-firmante-administrador"),
-    nombreAdministrador: $("#nombre-administrador"),
-    idFirmanteComision1: $("#id-firmante-comision-1"),
-    nombreComision1: $("#nombre-comision-1"),
-    idFirmanteComision2: $("#id-firmante-comision-2"),
-    nombreComision2: $("#nombre-comision-2"),
+    firmante1: $("#buscar-firmante-1"),
+    idFirmante1: $("#id-firmante-1"),
+    nombreFirmante1: $("#nombre-firmante-1"),
+    puestoFirmante1: $("#puesto-firmante-1"),
+
+
+    firmante2: $("#buscar-firmante-2"),
+    idFirmante2: $("#id-firmante-2"),
+    nombreFirmante2: $("#nombre-firmante-2"),
+    puestoFirmante2: $("#puesto-firmante-2"),
+
+    firmante3: $("#buscar-firmante-3"),
+    idFirmante3: $("#id-firmante-3"),
+    nombreFirmante3: $("#nombre-firmante-3"),
+    puestoFirmante3: $("#puesto-firmante-3"),
 
 
     // datos del contrato
+    numeroContrato: $("#numero-contrato"),
     fichaAlcaldia: $("#ficha-alcaldia"),
     fechaInicio: $("#fecha-inicio"),
     fechaVencimiento: $("#fecha-vencimiento"),
-    // estado: $("#estado"),
     ruta: $("#rutas"),
     medidor: $("#medidores"),
     direccionMedidor: $("#direccion-medidor"),
@@ -145,14 +154,21 @@ function getData() {
     formData.append('numeroActa', inputs.numeroActa.val().trim());
 
     // datos del firmante
-    formData.append('idAdministrador', inputs.idFirmanteAdministrador.val().trim());
-    formData.append('nombreAdministrador', inputs.nombreAdministrador.val().trim());
-    formData.append('idFirmanteComision1', inputs.idFirmanteComision1.val().trim());
-    formData.append('nombreComision1', inputs.nombreComision1.val().trim());
-    formData.append('idFirmanteComision2', inputs.idFirmanteComision2.val().trim());
-    formData.append('nombreComision2', inputs.nombreComision2.val().trim());
+    formData.append('idFirmante1', inputs.idFirmante1.val().trim());
+    formData.append('nombreFirmante1', inputs.nombreFirmante1.val().trim());
+    formData.append('puestoFirmante1', inputs.puestoFirmante1.val().trim());
+
+
+    formData.append('idFirmante2', inputs.idFirmante2.val().trim());
+    formData.append('nombreFirmante2', inputs.nombreFirmante2.val().trim());
+    formData.append('puestoFirmante2', inputs.puestoFirmante2.val().trim());
+
+    formData.append('idFirmante3', inputs.idFirmante3.val().trim());
+    formData.append('nombreFirmante3', inputs.nombreFirmante3.val().trim());
+    formData.append('puestoFirmante3', inputs.puestoFirmante3.val().trim());
 
     // datos del contrato
+    formData.append('numeroContrato', inputs.numeroContrato.val().trim());
     formData.append('fichaAlcaldia', inputs.fichaAlcaldia.val().trim());
     formData.append('fechaInicio', inputs.fechaInicio.val().trim());
     formData.append('fechaVencimiento', inputs.fechaVencimiento.val().trim());
@@ -285,6 +301,72 @@ function eventoSeccionBeneficarioEditar() {
     $('#btn-limpiar').show();
 }
 
+function llenarInputFirmante1(firmanteUno) {
+    inputs.idFirmante1.val(firmanteUno.id_firmante);
+    inputs.nombreFirmante1.val(firmanteUno.nombre).prop('disabled', true);
+    inputs.puestoFirmante1.val(firmanteUno.rol).prop('disabled', true);
+}
+
+
+function eventoSeleccionFirmante1() {
+    $('#buscar-firmante-1').on('select2:select', function (e) {
+        const selected = e.params.data.data;
+
+        if (selected) {
+            llenarInputFirmante1(selected);
+        }
+        $('#buscar-firmante-1').on('select2:clear', function () {
+            inputs.idFirmante1.val('');
+            inputs.nombreFirmante1.val('').prop('disabled', false);
+            inputs.puestoFirmante1.val('').prop('disabled', false);
+        });
+    });
+}
+
+function llenarInputFirmante2(firmanteUno) {
+    inputs.idFirmante2.val(firmanteUno.id_firmante);
+    inputs.nombreFirmante2.val(firmanteUno.nombre).prop('disabled', true);
+    inputs.puestoFirmante2.val(firmanteUno.rol).prop('disabled', true);
+}
+
+
+function eventoSeleccionFirmante2() {
+    $('#buscar-firmante-2').on('select2:select', function (e) {
+        const selected = e.params.data.data;
+
+        if (selected) {
+            llenarInputFirmante2(selected);
+        }
+        $('#buscar-firmante-2').on('select2:clear', function () {
+            inputs.idFirmante2.val('');
+            inputs.nombreFirmante2.val('').prop('disabled', false);
+            inputs.puestoFirmante2.val('').prop('disabled', false);
+        });
+    });
+}
+
+function llenarInputFirmante3(firmanteUno) {
+    inputs.idFirmante3.val(firmanteUno.id_firmante);
+    inputs.nombreFirmante3.val(firmanteUno.nombre).prop('disabled', true);
+    inputs.puestoFirmante3.val(firmanteUno.rol).prop('disabled', true);
+}
+
+
+function eventoSeleccionFirmante3() {
+    $('#buscar-firmante-3').on('select2:select', function (e) {
+        const selected = e.params.data.data;
+
+        if (selected) {
+            llenarInputFirmante3(selected);
+        }
+        $('#buscar-firmante-3').on('select2:clear', function () {
+            inputs.idFirmante3.val('');
+            inputs.nombreFirmante3.val('').prop('disabled', false);
+            inputs.puestoFirmante3.val('').prop('disabled', false);
+        });
+    });
+}
+
 function cargarClientes() {
     $('#buscar-cliente').select2({
         placeholder: "Busque y seleccione",
@@ -414,8 +496,93 @@ function drawTableAuto(doc, startX, startY, columns, rows, options = {}) {
     return y; // devuelve la nueva posición Y
 }
 
-function vistaPrevia(e) {
-    e.preventDefault();
+function getDataForPDF() {
+    return {
+        idSolicitud: inputs.idSolicitud.val().trim(),
+
+        // datos del cliente
+        fechaCreacion: inputs.fechaCreacion.val().trim(),
+        idCliente: inputs.idCliente.val().trim(),
+        nombre: inputs.nombre.val().trim(),
+        dui: inputs.dui.val().trim(),
+        nit: inputs.nit.val().trim(),
+        extendido: inputs.extendido.val().trim(),
+        fecha: inputs.fecha.val().trim(),
+        edad: inputs.edad.val().trim(),
+        lugarNacimiento: inputs.lugarNacimiento.val().trim(),
+        fechaNacimiento: inputs.fechaNacimiento.val().trim(),
+        estadoFamiliar: inputs.estadoFamiliar.val().trim(),
+        numeroGrupoFamiliar: inputs.numeroGrupoFamiliar.val().trim(),
+        direccion: inputs.direccion.val().trim(),
+        lugarDeTrabajo: inputs.lugarDeTrabajo.val().trim(),
+        ocupacion: inputs.ocupacion.val().trim(),
+        telefonos: inputs.telefonos.val().trim(),
+
+        //datos del beneficiario
+        idBeneficiario: inputs.idBeneficiario.val().trim(),
+        nombreBeneficiario: inputs.nombreBeneficiario.val().trim(),
+        edadBeneficiario: inputs.edadBeneficiario.val().trim(),
+        parentescoBeneficiario: inputs.parentescoBeneficiario.val().trim(),
+        direccionBeneficiario: inputs.direccionBeneficiario.val().trim(),
+
+        //datos  direccion del inmueble
+        direccionInmueble: inputs.direccionInmueble.val().trim(),
+        propietario: inputs.propietario.is(":checked"),
+        inquilino: inputs.inquilino.is(":checked"),
+        representante: inputs.representante.is(":checked"),
+        otroCheck: inputs.otroCheck.val().trim(),
+
+        abonera: inputs.abonera.is(":checked"),
+        hoyoSeco: inputs.hoyoSeco.is(":checked"),
+        lavable: inputs.lavable.is(":checked"),
+        otroBaño: inputs.otroBaño.val().trim(),
+
+        // datos de la entrevista dirigida
+        idPlanPago: inputs.idPlanPago.val().trim(),
+        si: inputs.si.is(":checked"),
+        no: inputs.no.is(":checked"),
+        tiempo: inputs.tiempo.val().trim(),
+        monto: inputs.monto.val().trim(),
+        contado: inputs.contado.is(":checked"),
+        otro: inputs.otro.val().trim(),
+        cantidadDePagos: inputs.cantidadDePagos.val().trim(),
+        totalCuota: inputs.totalCuota.val().trim(),
+        interes: inputs.interes.val().trim(),
+
+        //datos de comision municipa
+        acuerdo: inputs.acuerdo.val().trim(),
+        fechaSession: inputs.fechaSession.val().trim(),
+        numeroActa: inputs.numeroActa.val().trim(),
+
+        // datos del firmante
+        idFirmante1: inputs.idFirmante1.val().trim(),
+        nombreFirmante1: inputs.nombreFirmante1.val().trim(),
+        puestoFirmante1: inputs.puestoFirmante1.val().trim(),
+
+
+        idFirmante2: inputs.idFirmante2.val().trim(),
+        nombreFirmante2: inputs.nombreFirmante2.val().trim(),
+        puestoFirmante2: inputs.puestoFirmante2.val().trim(),
+
+        idFirmante3: inputs.idFirmante3.val().trim(),
+        nombreFirmante3: inputs.nombreFirmante3.val().trim(),
+        puestoFirmante3: inputs.puestoFirmante3.val().trim(),
+
+        // datos del contrato
+        numeroContrato: inputs.numeroContrato.val().trim(),
+        fichaAlcaldia: inputs.fichaAlcaldia.val().trim(),
+        fechaInicio: inputs.fechaInicio.val().trim(),
+        fechaVencimiento: inputs.fechaVencimiento.val().trim(),
+        ruta: inputs.ruta.val().trim(),
+        medidor: inputs.medidor.val().trim(),
+        direccionMedidor: inputs.direccionMedidor.val().trim(),
+        tarifa: inputs.tarifa.val().trim(),
+    };
+}
+
+function vistaPrevia(dataObj) {
+    // e.preventDefault();
+    // console.log(dataObj);
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'pt', 'letter');
@@ -483,6 +650,9 @@ function vistaPrevia(e) {
         doc.text(label, x + size + 5, y);
     }
 
+    function toBool(value) {
+        return value === "1" || value === 1 || value === true;
+    }
     // =========================
     // TÍTULO
     // =========================
@@ -496,8 +666,9 @@ function vistaPrevia(e) {
     // =========================
     // DATA
     // =========================
-    const data = getData();
-    let fechaTexto = formatearFecha(data.get('fechaCreacion'));
+    // const data = getData();
+    // let fechaTexto = formatearFecha(data.get('fechaCreacion'));
+    let fechaTexto = formatearFecha(dataObj.fechaCreacion);
 
     // =========================
     // FECHA
@@ -550,13 +721,13 @@ function vistaPrevia(e) {
     // CAMPOS
     // =========================
 
-    const nombre = data.get('nombre') || '';
+    const nombre = dataObj.nombre || '';
     fieldLine("NOMBRE COMPLETO:", nombre, margin, yContenido, 120, pageWidth - margin - (margin + 120));
 
     yContenido += 20;
 
-    const dui = data.get('dui') || '';
-    const nit = data.get('nit') || '';
+    const dui = dataObj.dui || '';
+    const nit = dataObj.nit || '';
     if (!nit == '') {
         fieldLine("NIT NUMERO:", nit, margin, yContenido);
     } else {
@@ -566,8 +737,8 @@ function vistaPrevia(e) {
 
     yContenido += 20;
 
-    const extendido = data.get('extendido') || '';
-    const fecha = data.get('fecha') || '';
+    const extendido = dataObj.extendido || '';
+    const fecha = dataObj.fecha || '';
 
     fieldDouble(
         "EXTENDIDO EN:", extendido, margin,
@@ -578,7 +749,7 @@ function vistaPrevia(e) {
 
     yContenido += 20;
 
-    const edad = data.get('edad') || '';
+    const edad = dataObj.edad || '';
     fieldLine("EDAD:", edad, margin, yContenido);
 
     yContenido += 20;
@@ -586,8 +757,8 @@ function vistaPrevia(e) {
     // =========================
     // NACIMIENTO (caso especial)
     // =========================
-    const lugarNacimiento = data.get('lugarNacimiento') || '';
-    const fechaNacimiento = data.get('fechaNacimiento') || '';
+    const lugarNacimiento = dataObj.lugarNacimiento || '';
+    const fechaNacimiento = dataObj.fechaNacimiento || '';
 
     doc.text("LUGAR Y FECHA DE NACIMIENTO:", margin, yContenido);
 
@@ -607,8 +778,8 @@ function vistaPrevia(e) {
 
     yContenido += 20;
 
-    const estadoFamiliar = data.get('estadoFamiliar') || '';
-    const numeroGrupoFamiliar = data.get('numeroGrupoFamiliar') || '';
+    const estadoFamiliar = dataObj.estadoFamiliar || '';
+    const numeroGrupoFamiliar = dataObj.numeroGrupoFamiliar || '';
 
     fieldDouble(
         "ESTADO FAMILIAR:", estadoFamiliar, margin,
@@ -619,12 +790,12 @@ function vistaPrevia(e) {
 
     yContenido += 20;
 
-    const direccion = data.get('direccion') || '';
+    const direccion = dataObj.direccion || '';
     fieldLine("DIRECCIÓN SEGUN DUI:", direccion, margin, yContenido, 120, pageWidth - margin - (margin + 120));
 
     yContenido += 20;
 
-    const lugarDeTrabajo = data.get('lugarDeTrabajo') || '';
+    const lugarDeTrabajo = dataObj.lugarDeTrabajo || '';
     fieldLine("LUGAR DE TRABAJO:", lugarDeTrabajo, margin, yContenido);
 
     yContenido += 20;
@@ -632,8 +803,8 @@ function vistaPrevia(e) {
     // =========================
     // PROFESIÓN + TELÉFONO (especial)
     // =========================
-    const ocupacion = data.get('ocupacion') || '';
-    const telefono = data.get('telefonos') || '';
+    const ocupacion = dataObj.ocupacion || '';
+    const telefono = dataObj.telefonos || '';
 
     doc.text("PROFESION U OFICIO:", margin, yContenido);
 
@@ -670,10 +841,10 @@ function vistaPrevia(e) {
 
     const rows = [
         [
-            data.get('nombreBeneficiario') || '',
-            data.get('edadBeneficiario') || '',
-            data.get('parentescoBeneficiario') || '',
-            data.get('direccionBeneficiario') || ''
+            dataObj.nombreBeneficiario || '',
+            dataObj.edadBeneficiario || '',
+            dataObj.parentescoBeneficiario || '',
+            dataObj.direccionBeneficiario || ''
         ]
     ];
 
@@ -694,7 +865,7 @@ function vistaPrevia(e) {
     yContenido += 25;
 
     setFont("normal", 8);
-    const direccionDelInmueble = data.get('direccionInmueble') || '';
+    const direccionDelInmueble = dataObj.direccionInmueble || '';
     fieldLine("Dirección del Inmueble: ", direccionDelInmueble, margin, yContenido, 120, pageWidth - margin - (margin + 120));
 
     yContenido += 20;
@@ -705,10 +876,10 @@ function vistaPrevia(e) {
     yContenido += 20;
 
     setFont("normal", 8);
-    const propietario = data.get('propietario') === 'true';
-    const inquilino = data.get('inquilino') === 'true';
-    const representante = data.get('representante') === 'true';
-    const otroCheck = data.get('otroCheck') || '';
+    const propietario = toBool(dataObj.propietario);
+    const inquilino = toBool(dataObj.inquilino);
+    const representante = toBool(dataObj.representante);
+    const otroCheck = dataObj.otroCheck || '';
     let xStart = margin;
     const yCheck = yContenido;
     // Checkbox 1
@@ -734,10 +905,10 @@ function vistaPrevia(e) {
 
 
     setFont("normal", 8);
-    const abonera = data.get('abonera') === 'true';
-    const hoyoSeco = data.get('hoyoSeco') === 'true';
-    const lavable = data.get('lavable') === 'true';
-    const otroBaño = data.get('otroBaño') || '';
+    const abonera = toBool(dataObj.abonera) === true;
+    const hoyoSeco = toBool(dataObj.hoyoSeco) === true;
+    const lavable = toBool(dataObj.lavable) === true;
+    const otroBaño = dataObj.otroBaño || '';
     let xStar = margin;
     const yChec = yContenido;
     // Checkbox 1
@@ -793,8 +964,8 @@ function vistaPrevia(e) {
     yContenido += 25;
 
     setFont("normal", 8);
-    const si = data.get('si') === 'true';
-    const no = data.get('no') === 'true';
+    const si = toBool(dataObj.si) === true;
+    const no = toBool(dataObj.no) === true;
     let xStart1 = margin;
     const yCheck1 = yContenido;
     // Checkbox 1
@@ -805,7 +976,7 @@ function vistaPrevia(e) {
     yContenido += 25;
 
     // cuanto tiempo
-    const tiempo = data.get('tiempo') || '';
+    const tiempo = dataObj.tiempo || '';
     doc.text("En cuanto tiempo construiría su letrina:", margin, yContenido);
     // posición del valor
     const xValor = margin + 145;
@@ -817,7 +988,7 @@ function vistaPrevia(e) {
     yContenido += 25;
 
     // Monto
-    const monto = data.get('monto') || '';
+    const monto = dataObj.monto || '';
     doc.text("El monto a cancelar por el D° de conexión, según Estrato será de: $", margin, yContenido);
     // posición del valor
     const xValor1 = margin + 250;
@@ -830,10 +1001,18 @@ function vistaPrevia(e) {
     doc.text("Pagadero a: ", margin, yContenido);
     yContenido += 25;
     setFont("normal", 8);
-    const contado = data.get('contado') === 'true';
-    const otro = data.get('otro') || '';
-    const cantidadDePagos = data.get('cantidadDePagos') || '';
-    const totalCuota = data.get('totalCuota') || '';
+    const contado = toBool(dataObj.contado) === true;
+    const otro = dataObj.otro || '';
+    let cantidadDePagos;
+    let totalCuota;
+    if (contado) {
+        cantidadDePagos = '';
+        totalCuota = '';
+    } else {
+        cantidadDePagos = dataObj.cantidadDePagos || '';
+        totalCuota = dataObj.totalCuota || '';
+    }
+
 
     let x = margin;
     y = yContenido;
@@ -877,7 +1056,7 @@ function vistaPrevia(e) {
     // TEXTO
     // =========================
     const parrafo2 = 'Asi mismo, dejo constancia que se me ha explicado, sobre el reglamento y estatutos, mis derechos y obligaciones, los cuales estoy dispuesto a someterme y cumplir fielmente.';
-    const interes = data.get('interes') || '';
+    const interes = dataObj.interes || '';
     setFont("normal", 9);
     doc.text(
         "Si se atrasa en el pago el interés que usted cancelara será de " + interes + "anual ",
@@ -900,9 +1079,9 @@ function vistaPrevia(e) {
     yContenido += 25;
 
 
-    const acuerdo = data.get('acuerdo') || '';
-    const fechaSession = data.get('fechaSession') || '';
-    const numeroActa = data.get('numeroActa') || '';
+    const acuerdo = dataObj.acuerdo || '';
+    const fechaSession = dataObj.fechaSession || '';
+    const numeroActa = dataObj.numeroActa || '';
 
     x = margin;
     y = yContenido;
@@ -966,38 +1145,41 @@ function vistaPrevia(e) {
     // =========================
     setFont("normal", 8);
     const firmantes = [
-        { nombre: data.get('nombre') || '', puesto: 'Persona Solicitante' || '' },
-        { nombre: data.get('nombreAdministrador') || '', puesto: 'Administrador' || '' },
-        // { nombre: data.get('nombreFirmante2') || '', puesto: data.get('puestoFirmante2') || '' },
-        // { nombre: data.get('nombreFirmante3') || '', puesto: data.get('puestoFirmante3') || '' }
+        { nombre: dataObj.nombre || '', puesto: 'Persona Solicitante' || '' },
+        { nombre: dataObj.nombreFirmante1 || '', puesto: dataObj.puestoFirmante1 || '' },
+        { nombre: dataObj.nombreFirmante2 || '', puesto: dataObj.puestoFirmante2 || '' },
+        { nombre: dataObj.nombreFirmante3 || '', puesto: dataObj.puestoFirmante3 || '' }
     ];
 
     setFont("normal", 8);
 
     const lineWidth = 150;
-    const espacioY = 40; // espacio vertical entre filas
+    const espacioY = 70; // espacio vertical entre filas
     const inicioY = y;
 
     const mitad = pageWidth / 2;
 
     firmantes.forEach((f, index) => {
-        const fila = Math.floor(index / 2); // 0 o 1
-        const col = index % 2; // 0 izquierda, 1 derecha
+        if (!f.nombre == '' || !f.puesto == '') {
+            const fila = Math.floor(index / 2); // 0 o 1
+            const col = index % 2; // 0 izquierda, 1 derecha
 
-        let xBase = col === 0 ? margin : mitad + 20;
-        let yBase = inicioY + (fila * espacioY);
+            let xBase = col === 0 ? margin : mitad + 20;
+            let yBase = inicioY + (fila * espacioY);
 
-        // Línea
-        doc.line(xBase, yBase, xBase + lineWidth, yBase);
+            // Línea
+            doc.line(xBase, yBase, xBase + lineWidth, yBase);
 
-        // Centro de la línea
-        let centro = xBase + (lineWidth / 2);
+            // Centro de la línea
+            let centro = xBase + (lineWidth / 2);
 
-        // Nombre
-        doc.text(f.nombre, centro, yBase + 10, { align: "center" });
+            // Nombre
+            doc.text(f.nombre, centro, yBase + 10, { align: "center" });
 
-        // Puesto
-        doc.text('Firma ' + f.puesto, centro, yBase + 18, { align: "center" });
+            // Puesto
+            doc.text('Firma ' + f.puesto, centro, yBase + 18, { align: "center" });
+        }
+
     });
 
     // =========================
@@ -1006,6 +1188,11 @@ function vistaPrevia(e) {
     window.open(doc.output('bloburl'), '_blank');
 }
 
+function vistaPreviaDesdeForm(e) {
+    e.preventDefault();
+    const data = getDataForPDF();
+    vistaPrevia(data);
+}
 
 function cargarRutas() {
     $('#rutas').select2({
@@ -1088,6 +1275,90 @@ function cargarTarifas() {
     })
 }
 
+function cargarFirmantes1() {
+    $('#buscar-firmante-1').select2({
+        placeholder: "Busque y seleccione",
+        allowClear: true,
+        theme: 'bootstrap4',
+        ajax: {
+            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
+            dataType: "json",
+            delay: 250, // Espera para reducir solicitudes
+            data: function (params) {
+                return {
+                    q: params.term // El término de búsqueda
+                };
+            },
+            processResults: function (response) {
+                return {
+                    results: response.data.map(firmante => ({
+                        id: firmante.id_firmante,
+                        text: firmante.nombre + ' - ' + firmante.rol,
+                        data: firmante
+                    }))
+                };
+            },
+            cache: true
+        }
+    })
+}
+
+function cargarFirmantes2() {
+    $('#buscar-firmante-2').select2({
+        placeholder: "Busque y seleccione",
+        allowClear: true,
+        theme: 'bootstrap4',
+        ajax: {
+            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
+            dataType: "json",
+            delay: 250, // Espera para reducir solicitudes
+            data: function (params) {
+                return {
+                    q: params.term // El término de búsqueda
+                };
+            },
+            processResults: function (response) {
+                return {
+                    results: response.data.map(firmante => ({
+                        id: firmante.id_firmante,
+                        text: firmante.nombre + ' - ' + firmante.rol,
+                        data: firmante
+                    }))
+                };
+            },
+            cache: true
+        }
+    })
+}
+
+function cargarFirmantes3() {
+    $('#buscar-firmante-3').select2({
+        placeholder: "Busque y seleccione",
+        allowClear: true,
+        theme: 'bootstrap4',
+        ajax: {
+            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
+            dataType: "json",
+            delay: 250, // Espera para reducir solicitudes
+            data: function (params) {
+                return {
+                    q: params.term // El término de búsqueda
+                };
+            },
+            processResults: function (response) {
+                return {
+                    results: response.data.map(firmante => ({
+                        id: firmante.id_firmante,
+                        text: firmante.nombre + ' - ' + firmante.rol,
+                        data: firmante
+                    }))
+                };
+            },
+            cache: true
+        }
+    })
+}
+
 function validarTipoPago() {
     $('input[name="pago"]').on('change', function () {
         if ($('#contado').is(':checked')) {
@@ -1105,6 +1376,10 @@ function validarTipoPago() {
 
 function guardarOeditarSolicitudContrato(tipo_proceso) {
     const data = getData();
+
+    // console.log('baseURL:', baseURL);
+    // console.log('tipo_proceso:', tipo_proceso);
+    // console.log('URL final:', baseURL + tipo_proceso);
 
     if (!data.get('idCliente')) {
         alertaError('Debe seleccionar un cliente');
@@ -1152,7 +1427,52 @@ function guardarOeditarSolicitudContrato(tipo_proceso) {
                     title: 'Éxito',
                     text: response.mensaje
                 }).then(() => {
-                    window.location.href = baseURL + 'contratos';
+                    window.location.href = baseURL + 'solicitudes';
+                });
+            } else {
+                alertEnSweet('error', 'Uups..', response.mensaje);
+            }
+        },
+        error: function () {
+            alertEnSweet('error', 'Ups..', 'Ocurrió un error en la operacion');
+        }
+    });
+}
+
+function anularSolicitud() {
+    const data = getData();
+
+    if (!data.get('idCliente')) {
+        alertaError('Debe seleccionar un cliente');
+        colorEnInputConFocusSelect(inputs.selectCliente[0]);
+        return false;
+    } else {
+        eliminarColorYfocusSelect(inputs.selectCliente[0]);
+    }
+
+    Swal.fire({
+        title: 'Espere...',
+        html: 'Procesando...',
+        allowEscapeKey: false,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'anularSolicitud',
+        data: data,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function (response) {
+            if (response.status == 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.mensaje
+                }).then(() => {
+                    window.location.href = baseURL + 'solicitudes';
                 });
             } else {
                 alertEnSweet('error', 'Uups..', response.mensaje);
@@ -1187,7 +1507,10 @@ function cargarSolicitudes() {
                 data: 'nombre'
             },
             {
-                data: 'estado'
+                data: 'estado',
+                render: function (data, type, row) {
+                    return '<span style="color: blue;">' + data + '</span>';
+                }
             },
             {
                 data: 'fechaGeneracion'
@@ -1205,7 +1528,12 @@ function cargarSolicitudes() {
 
                                 <a class="dropdown-item dropdown-item-custom btn-ver-solicitud" href="#"
                                     data-id="${row.id}">
-                                    <i class="fas fa-eye"></i> Ver Solicitud
+                                    <i class="fas fa-eye mr-2 text-info"></i> Ver Solicitud
+                                </a>
+
+                                <a class="dropdown-item dropdown-item-custom btn-ver-solicitud-pdf" href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-file-pdf mr-2 text-danger" ></i> Solicitud PDF
                                 </a>
 
                             </div>
@@ -1243,8 +1571,8 @@ function cargarSolicitudes() {
     });
 }
 
-function cargarSolicitudesAceptadas() {
-    tablaSolicitudesAceptadas = $('#tbl-solicitudes-aceptadas').DataTable({
+function cargarSolicitudesAprobadas() {
+    tablaSolicitudesAprobadas = $('#tbl-solicitudes-aprobadas').DataTable({
         serverSide: true,
         processing: true,
         searching: false,
@@ -1253,9 +1581,9 @@ function cargarSolicitudesAceptadas() {
         ordering: false,
         ajax: {
             type: 'GET',
-            url: baseURL + 'getSolicitudesTablaAceptadas',
+            url: baseURL + 'getSolicitudesTablaAprobadas',
             data: function (d) {
-                d.searchValue = $('#customSearchSolicitudesAceptadas').val();
+                d.searchValue = $('#customSearchSolicitudesAprobadas').val();
             }
         },
         columns: [
@@ -1266,7 +1594,14 @@ function cargarSolicitudesAceptadas() {
                 data: 'nombre'
             },
             {
-                data: 'estado'
+                data: 'estado',
+                render: function (data, type, row) {
+                    if (data == 'APROBADA') {
+                        return '<span style="color: green;">' + data + '</span>';
+                    } else {
+                        return '<span style="color: red;">' + data + '</span>';
+                    }
+                }
             },
             {
                 data: 'fechaGeneracion'
@@ -1284,12 +1619,17 @@ function cargarSolicitudesAceptadas() {
 
                                 <a class="dropdown-item dropdown-item-custom btn-ver-solicitud-solo-ver" href="#"
                                     data-id="${row.id}">
-                                    <i class="fas fa-eye"></i> Ver Solicitud
+                                    <i class="fas fa-eye mr-2 text-info"></i> Ver Solicitud
                                 </a>
 
-                                <a class="dropdown-item dropdown-item-custom btn-ver-contrato-pdf"  href="#"
+                                <a class="dropdown-item dropdown-item-custom btn-ver-solicitud-pdf-aprobada" href="#"
                                     data-id="${row.id}">
-                                    <i class="fas fa-file-contract"></i> Contrato pdf
+                                    <i class="fas fa-file-pdf mr-2 text-danger" ></i> Solicitud PDF
+                                </a>
+
+                                <a class="dropdown-item dropdown-item-custom btn-anular-solicitud" href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-ban mr-2 text-danger" ></i> Anular Solicitud
                                 </a>
 
                             </div>
@@ -1311,26 +1651,32 @@ function cargarSolicitudesAceptadas() {
     });
 
     //Buscar al presionar Enter en tu input
-    $('#customSearchSolicitudesAceptadas').on('keypress', function (e) {
+    $('#customSearchSolicitudesAprobadas').on('keypress', function (e) {
         if (e.which == 13) { // Enter
-            tablaSolicitudesAceptadas.draw(); // ahora sí funciona
+            tablaSolicitudesAprobadas.draw(); // ahora sí funciona
         }
     });
 
-    $('#searchBtSolicitudesAceptadas').off('click').on('click', function () {
-        tablaSolicitudesAceptadas.draw();
+    $('#searchBtnSolicitudesAprobadas').off('click').on('click', function () {
+        tablaSolicitudesAprobadas.draw();
     });
 
-    $('#clearSearchBtnSolicitudesAceptadas').on('click', function (e) {
-        $('#customSearchSolicitudesAceptadas').val('');
-        tablaSolicitudesAceptadas.draw();
+    $('#clearSearchBtnSolicitudesAprobadas').on('click', function (e) {
+        $('#customSearchSolicitudesAprobadas').val('');
+        tablaSolicitudesAprobadas.draw();
     });
 }
+
+{/* <a class="dropdown-item dropdown-item-custom btn-ver-contrato-pdf" href="#"
+    data-id="${row.id}">
+    <i class="fas fa-file-contract"></i> Contrato pdf
+</a> */}
 
 function toggleBotones() {
     if (modo === 'crear') {
         $("#guardar-registro").show();
         $("#actualizar-registro").hide();
+        $("#anular-solicitud").hide();
 
         // ocultar botón siguiente final
         $("#btn-siguiente-final").hide();
@@ -1340,6 +1686,7 @@ function toggleBotones() {
     } else if (modo == 'ver') {
         $("#guardar-registro").hide();
         $("#actualizar-registro").hide();
+        $("#anular-solicitud").hide();
         $(".btn-vista-previa").show();
         $(".vista-editar").show();
         $("#btn-editar").hide().prop("disabled", true);
@@ -1355,6 +1702,7 @@ function toggleBotones() {
         $(".btn-vista-contrato").toggle();
         $("#guardar-registro").hide();
         $("#actualizar-registro").show();
+        $("#anular-solicitud").show();
 
         // 1. habilitar todo primero
         $("input, select, textarea")
@@ -1474,8 +1822,13 @@ function cargarSolicitudDesdeURL() {
                 };
                 inputs.otro.val(d.otroTipoPago);
                 inputs.idPlanPago.val(d.idPlanDePago);
-                inputs.cantidadDePagos.val(d.cantidadDePagos);
-                inputs.totalCuota.val(d.totalCuota);
+                if (d.contado === "1") {
+                    inputs.cantidadDePagos.val('');
+                    inputs.totalCuota.val('');
+                } else {
+                    inputs.cantidadDePagos.val(d.cantidadDePagos);
+                    inputs.totalCuota.val(d.totalCuota);
+                }
                 inputs.interes.val(d.interesACobrar);
 
                 // SECCION DE COMISION MUNICIPAL
@@ -1484,12 +1837,17 @@ function cargarSolicitudDesdeURL() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmanteAdministrador.val(d.idAdministrador);
-                inputs.nombreAdministrador.val(d.nombreAdministrador);
-                inputs.idFirmanteComision1.val(d.idComision1);
-                inputs.nombreComision1.val(d.nombreComision1);
-                inputs.idFirmanteComision2.val(d.idComision2);
-                inputs.nombreComision2.val(d.nombreComision2);
+                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', true);
+                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', true);
+                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', true);
+
+                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', true);
+                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', true);
+                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', true);
+
+                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', true);
+                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', true);
+                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', true);
             }
         });
     }
@@ -1625,14 +1983,20 @@ function cargarSolicitudDesdeURLSoloVer() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmanteAdministrador.val(d.idAdministrador);
-                inputs.nombreAdministrador.val(d.nombreAdministrador);
-                inputs.idFirmanteComision1.val(d.idComision1);
-                inputs.nombreComision1.val(d.nombreComision1);
-                inputs.idFirmanteComision2.val(d.idComision2);
-                inputs.nombreComision2.val(d.nombreComision2);
+                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', true);
+                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', true);
+                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', true);
+
+                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', true);
+                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', true);
+                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', true);
+
+                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', true);
+                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', true);
+                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', true);
 
                 // SECCION SOLO DE CONTRATO
+                inputs.numeroContrato.val(d.numeroContrato)
                 inputs.fichaAlcaldia.val(d.fichaAlcaldia)
                 inputs.fechaInicio.val(d.fechaInicio)
                 inputs.fechaVencimiento.val(d.fechaVencimiento)
@@ -1717,7 +2081,7 @@ function eventosUsuarios() {
     });
 
     $(".btn-vista-previa").on("click", function (e) {
-        vistaPrevia(e);
+        vistaPreviaDesdeForm(e);
     });
 
     $('.btn-vista-previa-contrato').on('click', function () {
@@ -1729,7 +2093,7 @@ function eventosUsuarios() {
     });
 
     $("#actualizar-registro").on("click", function () {
-        guardarOeditarSolicitudContrato('aceptarSolicitud');
+        guardarOeditarSolicitudContrato('aprobarSolicitud');
     });
 
     $('#btn-editar').on('click', function () {
@@ -1741,52 +2105,128 @@ function eventosUsuarios() {
     });
 
 
-    // evento para ver solicitud editar
+    // evento se activa cuando desde la tabla de creadas quiere ver la solicitud para aprobarla
     $(document).on("click", ".btn-ver-solicitud", function (e) {
         e.preventDefault();
-
         const id = $(this).data('id');
         const encoded = btoa(id);
-
         window.location.href = baseURL + 'nueva_solicitud?solicitud=' + encoded + '&modo=editar';
     });
 
-    // EVENTO CORRECTO (delegado) de ver solicitud desde la tabla
-    $(document).on("click", ".btn-ver-contrato", function (e) {
-        e.preventDefault();
+    // evento para ver contrato desde la tabla de creadas
+    // $(document).on("click", ".btn-ver-contrato", function (e) {
+    //     e.preventDefault();
 
-        const id = $(this).data('id');
+    //     const id = $(this).data('id');
 
-        enviarDatosContrato(
-            { solicitud: id }, // datos mínimos
-            false              // no usar getData()
-        );
-    });
+    //     enviarDatosContrato(
+    //         { solicitud: id }, // datos mínimos
+    //         false              // no usar getData()
+    //     );
+    // });
 
+    // evento para el boton de siguiente en el ultimo collapse de editar y ver solicitud
     $(document).on("click", ".btn-siguiente-final", function () {
         const target = $(this).data("target");
-
-        // abrir sección destino
         $(target).collapse('show');
     });
 
-    // evento solo ver la solicitud ya creada
+    // evento solo para ver la solicitud ya aprobada sin poder editar nada
     $(document).on("click", ".btn-ver-solicitud-solo-ver", function (e) {
         e.preventDefault();
-
         const id = $(this).data('id');
         const encoded = btoa(id);
-
         window.location.href = baseURL + 'nueva_solicitud?solicitud=' + encoded + '&modo=ver';
     });
 
-    $(document).on("click", ".btn-ver-contrato-pdf", function (e) {
+    // evento para ver el contrato desde la tabla de solicitudes aprobadas
+    // $(document).on("click", ".btn-ver-contrato-pdf", function (e) {
+    //     e.preventDefault();
+    //     const id = $(this).data('id');
+    //     const encoded = btoa(id);
+    //     window.open(baseURL + 'contratos/contrato?solicitud=' + encoded, '_blank');
+    // });
+
+    // evento para ver el df de la solicitud en estado creado
+    $(document).on('click', '.btn-ver-solicitud-pdf', function (e) {
         e.preventDefault();
 
-        const id = $(this).data('id');
-        const encoded = btoa(id);
+        let id = $(this).data('id');
 
-        window.open(baseURL + 'contratos/contrato?solicitud=' + encoded, '_blank');
+        $.ajax({
+            url: baseURL + 'getSolicitudById',
+            type: 'GET',
+            data: { id: id },
+            success: function (response) {
+                // response debe venir como objeto JSON
+                vistaPrevia(response.data);
+            },
+            error: function () {
+                alert('Error al obtener datos');
+            }
+        });
+    });
+
+    // evento para ver el df de la solicitud en estado aprobado
+    $(document).on('click', '.btn-ver-solicitud-pdf-aprobada', function (e) {
+        e.preventDefault();
+
+        let id = $(this).data('id');
+
+        $.ajax({
+            url: baseURL + 'getSolicitudById',
+            type: 'GET',
+            data: { id: id },
+            success: function (response) {
+                // response debe venir como objeto JSON
+                vistaPrevia(response.data);
+            },
+            error: function () {
+                alert('Error al obtener datos');
+            }
+        });
+    });
+
+
+    // evento para enviar a anular la solicitud
+    $("#anular-solicitud").on("click", function () {
+        anularSolicitud('anularSolicitud');
+    });
+
+    // evento para enviar a anular la solicitud desde estado de la tabla aprobada 
+    $(document).on('click', '.btn-anular-solicitud', function (e) {
+        e.preventDefault();
+
+        let id = $(this).data('id');
+        console.log("ID enviado:", id); // DEBUG
+
+        $.ajax({
+            type: 'POST',
+            url: baseURL + 'anularSolicitud',
+            data: { idSolicitud: id }, // nombre correcto
+            dataType: 'json',
+
+            success: function (response) {
+                console.log("Response:", response);
+
+                if (response.status == 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: response.mensaje
+                    }).then(() => {
+                        window.location.href = baseURL + 'solicitudes';
+                    });
+                } else {
+                    alertEnSweet('error', 'Uups..', response.mensaje);
+                }
+            },
+
+            error: function (xhr, status, error) {
+                console.log("ERROR AJAX:", xhr.responseText);
+                alert('Error al enviar solicitud');
+            }
+        });
     });
 }
 
@@ -1804,7 +2244,7 @@ function detectarModo() {
         modo = 'editar';
     }
 
-    console.log("Modo detectado:", modo);
+    // console.log("Modo detectado:", modo);
 }
 
 function iniciarTodo() {
@@ -1818,22 +2258,26 @@ function iniciarTodo() {
         cargarSolicitudDesdeURLSoloVer();
     }
 
-    toggleBotones(); //después aplicar UI
+    toggleBotones();
 
 
-    // cargarSolicitudDesdeURL();
-    // cargarSolicitudDesdeURLSoloVer();
-    // toggleBotones();
     validarCampoDui();
     cargarClientes();
     cargarRutas();
+    cargarFirmantes1();
+    cargarFirmantes2();
+    cargarFirmantes3();
     cargarMedidores();
     cargarTarifas();
     eventoSeleccionCliente();
     eventoSeleccionBeneficiario();
     validarTipoPago();
     cargarSolicitudes();
-    cargarSolicitudesAceptadas();
+    cargarSolicitudesAprobadas();
+
+    eventoSeleccionFirmante1();
+    eventoSeleccionFirmante2();
+    eventoSeleccionFirmante3();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);
