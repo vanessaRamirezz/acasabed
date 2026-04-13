@@ -9,6 +9,9 @@ let idSolicitud = null;
 const inputs = {
     idSolicitud: $("#id-solicitud"),
 
+    numeroSolicitud: $("#numero-de-solicitud"),
+    numeroDEContrato: $("#numero-de-contrato"),
+
     //datos del cliente
     selectCliente: $("#buscar-cliente"),
     fechaCreacion: $("#fecha-creacion"),
@@ -98,6 +101,9 @@ function getData() {
     let formData = new FormData();
 
     formData.append('idSolicitud', inputs.idSolicitud.val().trim());
+
+    formData.append('numeroSolicitud', inputs.numeroSolicitud.val().trim());
+    formData.append('numeroContrato', inputs.numeroContrato.val().trim());
 
     // datos del cliente
     formData.append('fechaCreacion', inputs.fechaCreacion.val().trim());
@@ -1682,6 +1688,8 @@ function toggleBotones() {
         $("#btn-siguiente-final").hide();
         $(".btn-vista-previa-contrato").hide();
         $(".vista-editar").hide();
+        $(".numero-de-solicitud").hide();
+        $(".numero-de-contrato").hide();
 
     } else if (modo == 'ver') {
         $("#guardar-registro").hide();
@@ -1697,6 +1705,9 @@ function toggleBotones() {
 
         // DESHABILITAR TODOS LOS CAMPOS
         $("input, select, textarea").prop("disabled", true);
+
+        $(".numero-de-solicitud").show();
+        $(".numero-de-contrato").show();
     } else if (modo == 'editar') {
 
         $(".btn-vista-contrato").toggle();
@@ -1722,6 +1733,9 @@ function toggleBotones() {
         $("#btn-siguiente-final").show();
         $(".btn-vista-previa-contrato").show();
         $(".vista-editar").show();
+
+        $(".numero-de-solicitud").show();
+        $(".numero-de-contrato").hide();
     }
 }
 
@@ -1749,6 +1763,8 @@ function cargarSolicitudDesdeURL() {
 
                 inputs.idSolicitud.val(d.id_solicitud);
                 inputs.fechaCreacion.val(d.fechaCreacion);
+
+                inputs.numeroSolicitud.val(d.codigoSolicitud).prop('disabled', true);
 
                 // SECCION DE CLIENTE
                 const cliente = {
@@ -1897,9 +1913,13 @@ function cargarSolicitudDesdeURLSoloVer() {
                 toggleBotones();
 
                 const d = response.data;
+                // console.log(d);
 
                 inputs.idSolicitud.val(d.id_solicitud);
                 inputs.fechaCreacion.val(d.fechaCreacion);
+
+                inputs.numeroSolicitud.val(d.codigoSolicitud);
+                inputs.numeroDEContrato.val(d.numeroContrato);
 
                 // SECCION DE CLIENTE
                 const cliente = {
@@ -2198,7 +2218,7 @@ function eventosUsuarios() {
         e.preventDefault();
 
         let id = $(this).data('id');
-        console.log("ID enviado:", id); // DEBUG
+        // console.log("ID enviado:", id); // DEBUG
 
         $.ajax({
             type: 'POST',
@@ -2207,7 +2227,7 @@ function eventosUsuarios() {
             dataType: 'json',
 
             success: function (response) {
-                console.log("Response:", response);
+                // console.log("Response:", response);
 
                 if (response.status == 'success') {
                     Swal.fire({
@@ -2223,7 +2243,7 @@ function eventosUsuarios() {
             },
 
             error: function (xhr, status, error) {
-                console.log("ERROR AJAX:", xhr.responseText);
+                // console.log("ERROR AJAX:", xhr.responseText);
                 alert('Error al enviar solicitud');
             }
         });

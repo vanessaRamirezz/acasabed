@@ -1196,6 +1196,11 @@ class Solicitudes extends BaseController
                 return $this->respondError('Solicitud no encontrada');
             }
 
+            if ($dataSolicitud['estado'] == 'ANULADA') {
+                log_message('error', 'Solicitud ya se encuentra anulada');
+                return $this->respondError('Solicitud ya se encuentra anulada');
+            }
+
             // =========================
             // Preparar datos
             // =========================

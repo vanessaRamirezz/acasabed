@@ -93,6 +93,20 @@
         </div>
 
         <input type="hidden" id="id-solicitud">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="form-group numero-de-solicitud">
+                    <label for="numero-de-solicitud" class="mb-1">Numero Solicitud</label>
+                    <input type="text" class="form-control" name="numero-de-solicitud" id="numero-de-solicitud">
+                </div>
+            </div>
+            <div class="col-md-2 numero-de-contrato">
+                <div class="form-group">
+                    <label for="numero-de-contrato" class="mb-1">Numero Contrato</label>
+                    <input type="text" class="form-control" name="numero-de-contrato" id="numero-de-contrato">
+                </div>
+            </div>
+        </div>
 
 
         <div id="accordion">

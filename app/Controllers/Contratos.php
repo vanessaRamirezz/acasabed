@@ -27,6 +27,9 @@ class Contratos extends BaseController
     {
         $request = service('request');
 
+        log_message('info', 'solicitud data para ver contrato' . print_r($request->getPost(), true));
+        // exit;
+
         $total = (float) $request->getPost('monto');
         $fmt = new NumberFormatter("es_ES", NumberFormatter::SPELLOUT);
         $montoEntero = floor($total);
@@ -68,19 +71,20 @@ class Contratos extends BaseController
     public function contrato()
     {
         $request = service('request');
-
         $encoded = $request->getGet('solicitud');
-
         if (!$encoded) {
             return "ID no recibido";
         }
 
         $id = base64_decode($encoded);
 
+        log_message('info', 'id de solicitud recibido ' . base64_decode($encoded));
+        // exit;
+
         // traer datos reales aquí
         $data = $this->solicitudesModel->getInfoSolicitudPorId($id);
         log_message('info', 'solicitud data ' . print_r($data, true));
-
+        // exit;
         $total = $data['monto'] ?? '';
 
         $fmt = new \NumberFormatter("es_ES", \NumberFormatter::SPELLOUT);
@@ -116,6 +120,36 @@ class Contratos extends BaseController
         $dompdf->setPaper('letter', 'portrait');
         $dompdf->render();
 
-        $dompdf->stream("contrato.pdf", ["Attachment" => false]);
+        $nombreArchivo = 'Contrato_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $data['nombre']) . '.pdf';
+
+        $dompdf->stream($nombreArchivo, ["Attachment" => false]);
+        // $dompdf->stream("contrato.pdf", ["Attachment" => false]);
+    }
+
+    public function getContratosTabla()
+    {
+        try {
+            $start = (int)$this->request->getGet('start');
+            $length = (int)$this->request->getGet('length');
+            $draw = (int)$this->request->getGet('draw');
+            $searchValue = $this->request->getGet('searchValue') ?? '';
+
+            $result = $this->contratosModel->getTodosContratos($start, $length, $searchValue);
+
+            return $this->response->setJSON([
+                "draw" => $draw,
+                "recordsTotal" => $result['total'],
+                "recordsFiltered" => $result['filtered'],
+                "data" => $result['data']
+            ]);
+        } catch (\Throwable $th) {
+            log_message('error', $th->getMessage());
+            return $this->response->setJSON([
+                "draw" => 0,
+                "recordsTotal" => 0,
+                "recordsFiltered" => 0,
+                "data" => []
+            ]);
+        }
     }
 }

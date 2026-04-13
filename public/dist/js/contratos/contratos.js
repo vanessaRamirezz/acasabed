@@ -22,13 +22,10 @@ function cargarContratos() {
                 data: 'cod_contrato'
             },
             {
-                data: 'cod_solicitud'
-            },
-            {
                 data: 'nombre'
             },
             {
-                data: 'estado'
+                data: 'fechaTexto'
             },
             {
                 data: null,
@@ -41,16 +38,10 @@ function cargarContratos() {
                             </button>
                             <div class="dropdown-menu">
 
-                                <a class="dropdown-item btn-ver-contrato" href="#"
-                                    data-id="${row.cod_contrato}"
-                                    data-nombre="${row.nombre}">
-                                    <i class="fas fa-copy"></i> Ver contrato
-                                </a>
-
-                                <a class="dropdown-item btn-ver-solicitud" href="#"
-                                    data-id="${row.cod_solicitud}">
-                                    <i class="fas fa-file-alt"></i> Ver solicitud
-                                </a>
+                                <a class="dropdown-item dropdown-item-custom btn-ver-contrato-pdf" href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-file-contract"></i> Contrato pdf
+                                </a> 
 
                             </div>
                         </div>
@@ -87,8 +78,29 @@ function cargarContratos() {
     });
 }
 
+
+function eventosUsuarios() {
+    $(document).on("click", ".btn-ver-contrato-pdf", function (e) {
+        e.preventDefault();
+
+        const id = $(this).data('id');
+        // console.log("ID:", id); // 👈 clave
+
+        if (!id) {
+            alert("ID no válido");
+            return;
+        }
+
+        const encoded = btoa(id);
+        window.open(baseURL + 'contratos/contrato?solicitud=' + encoded, '_blank');
+    });
+
+
+}
+
 function iniciarTodo() {
     cargarContratos();
+    eventosUsuarios();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);
