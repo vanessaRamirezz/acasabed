@@ -117,9 +117,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
     // COBROS DE INSTALACION
     $routes->get('cobros_instalacion', 'CobrosInstalacion::index');
-    $routes->get('getCobrosInstalacion', 'CobrosInstalacion::getCobrosRealizados');
-    $routes->get('buscarCuentasCobroInstalacion', 'CobrosInstalacion::buscarCuentas');
-    $routes->get('getDetalleCobroInstalacion', 'CobrosInstalacion::getDetalleCobro');
-    $routes->post('validarCobroInstalacion', 'CobrosInstalacion::validarCobro');
-    $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPago');
+    $routes->get('getDetalleCobroCliente', 'CobrosInstalacion::getDetalleCobroCliente');
+    $routes->post('validarCobroInstalacion', 'CobrosInstalacion::validarCobroInstalacion');
+    $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPagoInstalacion');
+    $routes->get('getCobrosRealizados', 'CobrosInstalacion::getCobrosRealizados');
 });

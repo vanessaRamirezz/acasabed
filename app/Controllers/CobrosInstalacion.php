@@ -4,19 +4,23 @@ namespace App\Controllers;
 
 use App\Models\CobroContratoModel;
 use App\Models\HistorialCobroInstalacionModel;
+use App\Models\PagosInstalacionModel;
 use App\Models\SolicitudModel;
+use PHPUnit\Event\Telemetry\Info;
 
 class CobrosInstalacion extends BaseController
 {
     private $cobrosContratoModel;
     private $historialCobroInstalacionModel;
     private $solicitudesModel;
+    private $pagosInstalacionModel;
 
     public function __construct()
     {
         $this->cobrosContratoModel = new CobroContratoModel();
         $this->historialCobroInstalacionModel = new HistorialCobroInstalacionModel();
         $this->solicitudesModel = new SolicitudModel();
+        $this->pagosInstalacionModel = new PagosInstalacionModel();
     }
 
     public function index()
@@ -32,11 +36,7 @@ class CobrosInstalacion extends BaseController
             $draw = (int)$this->request->getGet('draw');
             $searchValue = $this->request->getGet('searchValue') ?? '';
 
-            if ($this->tablaHistorialExiste()) {
-                $result = $this->historialCobroInstalacionModel->getHistorial($start, $length, $searchValue);
-            } else {
-                $result = $this->cobrosContratoModel->getCobrosRealizados($start, $length, $searchValue);
-            }
+            $result = $this->historialCobroInstalacionModel->getHistorial($start, $length, $searchValue);
 
             return $this->response->setJSON([
                 'draw' => $draw,
@@ -56,213 +56,300 @@ class CobrosInstalacion extends BaseController
         }
     }
 
-    public function buscarCuentas()
+
+
+
+
+
+    public function getDetalleCobroCliente()
     {
         try {
-            $search = $this->request->getVar('q') ?? '';
-            $cuentas = $this->cobrosContratoModel->buscarCuentasPendientes($search);
-            return $this->respondSuccess($cuentas);
-        } catch (\Throwable $th) {
-            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
-            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
-            log_message('error', $errorMessage);
+            $idCliente = $this->request->getVar('idCliente'); // ✅ corregido
 
-            return $this->respondError('Error al buscar cuentas de cobro');
-        }
-    }
-
-    public function getDetalleCobro()
-    {
-        try {
-            $idContrato = $this->request->getVar('idContrato');
-
-            if (!$idContrato) {
-                return $this->respondError('Debe seleccionar una cuenta');
+            if (!$idCliente) {
+                return $this->respondError('Debe seleccionar un cliente');
             }
 
-            $detalle = $this->cobrosContratoModel->getDetalleCobroPorContrato($idContrato);
+            $detalle = $this->cobrosContratoModel->getDetalleCobroPorCliente($idCliente);
 
-            if (!$detalle) {
-                return $this->respondError('No se encontró información del cobro');
+            if (empty($detalle)) {
+                return $this->respondError('No se encontró información del cliente');
             }
 
             return $this->respondSuccess($detalle);
         } catch (\Throwable $th) {
-            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
-            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
-            log_message('error', $errorMessage);
-
+            log_message('error', $th->getMessage());
             return $this->respondError('Error al obtener detalle del cobro');
         }
     }
 
-    public function validarCobro()
+    private function calcularAplicacionPago($idContrato, $montoPago, $moras)
     {
-        try {
-            $idContrato = $this->request->getPost('idContrato');
-            $montoPago = (float)($this->request->getPost('montoPago') ?? 0);
-            $cobrarMora = filter_var($this->request->getPost('cobrarMora') ?? false, FILTER_VALIDATE_BOOLEAN);
-            $mora = $cobrarMora ? (float)($this->request->getPost('mora') ?? 0) : 0;
+        if ($montoPago <= 0) {
+            throw new \Exception('El monto debe ser mayor a 0');
+        }
 
-            if (!$idContrato) {
-                throw new \Exception('Debe seleccionar una cuenta para cobrar');
+        // 🔹 Calcular mora total
+        $totalMora = 0;
+        foreach ($moras as $m) {
+            if (!isset($m['id_cobro_instalacion'], $m['mora'])) {
+                throw new \Exception('Formato de mora inválido');
             }
 
-            if ($montoPago <= 0) {
-                throw new \Exception('El monto a cancelar debe ser mayor a 0');
-            }
-
-            if ($mora < 0) {
+            if ((float)$m['mora'] < 0) {
                 throw new \Exception('La mora no puede ser negativa');
             }
 
-            $detalle = $this->cobrosContratoModel->getDetalleCobroPorContrato($idContrato);
+            $totalMora += (float)$m['mora'];
+        }
 
-            if (!$detalle) {
-                throw new \Exception('No se encontró información del cobro');
+        // 🔹 Obtener detalle
+        $detalle = $this->cobrosContratoModel->getDetalleCobroPorContrato($idContrato);
+        if (!$detalle) {
+            throw new \Exception('No se encontró información');
+        }
+
+        $cuotasPendientes = array_values(array_filter($detalle['cuotas'], function ($c) {
+            return ($c['monto_cuota'] - $c['cantidad_abonada']) > 0;
+        }));
+
+        if (empty($cuotasPendientes)) {
+            throw new \Exception('No hay cuotas pendientes');
+        }
+
+        // 🔹 Validar mínimo (primera cuota + mora)
+        $primeraCuota = (float)$cuotasPendientes[0]['saldo_cuota'];
+        $montoMinimo = $primeraCuota + $totalMora;
+
+        // ❌ caso 1: ni siquiera alcanza la primera cuota
+        if ($montoPago < $primeraCuota) {
+            throw new \Exception(
+                'El monto no alcanza para cubrir la primera cuota.'
+            );
+        }
+
+        // ❌ caso 2: mora existe pero no está incluida correctamente
+        if ($totalMora > 0 && $montoPago < ($primeraCuota + $totalMora)) {
+            throw new \Exception(
+                'El monto debe incluir la mora.'
+            );
+        }
+        // $primeraCuota = (float)$cuotasPendientes[0]['saldo_cuota'];
+        // $montoMinimo = $primeraCuota + $totalMora;
+
+        // if (round($montoPago, 2) < round($montoMinimo, 2)) {
+        //     throw new \Exception(
+        //         'El monto debe incluir la mora.'
+        //     );
+        // }
+
+        // 🔹 Separar monto
+        $montoParaCuotas = $montoPago - $totalMora;
+
+        // 🔹 Aplicar SOLO cuotas completas
+        $cuotasAplicadas = [];
+        $totalAplicable = 0;
+
+        foreach ($cuotasPendientes as $cuota) {
+            $saldoCuota = (float)$cuota['saldo_cuota'];
+
+            if ($montoParaCuotas >= ($totalAplicable + $saldoCuota)) {
+                $totalAplicable += $saldoCuota;
+                $cuotasAplicadas[] = $cuota;
+            } else {
+                break;
+            }
+        }
+
+        $totalEsperado = $totalAplicable + $totalMora;
+
+        if (round($montoPago, 2) != round($totalEsperado, 2)) {
+            throw new \Exception(
+                'El monto debe ser exacto (cuotas completas + recargo si aplica).'
+            );
+        }
+
+        return [
+            'detalle' => $detalle,
+            'cuotasAplicadas' => $cuotasAplicadas,
+            'montoCuotas' => $totalAplicable,
+            'moraTotal' => $totalMora,
+            'totalEsperado' => $totalEsperado
+        ];
+    }
+
+
+    public function validarCobroInstalacion()
+    {
+        try {
+            $idContrato = $this->request->getPost('idContrato');
+            $montoPago = (float)$this->request->getPost('montoPago');
+            $moras = json_decode($this->request->getPost('moras'), true) ?? [];
+
+            log_message('debug', 'datos recibidos para validae ' . print_r($this->request->getPost(), true));
+            // exit;
+            if (!$idContrato) {
+                throw new \Exception('Debe seleccionar una cuenta');
             }
 
-            $saldoPendiente = (float)$detalle['resumen']['saldo_pendiente'];
-
-            if ($montoPago > $saldoPendiente) {
-                throw new \Exception('El monto a cancelar no puede ser mayor al saldo pendiente');
-            }
+            $resultado = $this->calcularAplicacionPago($idContrato, $montoPago, $moras);
 
             return $this->respondSuccess([
-                'saldoPendiente' => $saldoPendiente,
                 'montoPago' => $montoPago,
-                'mora' => $mora,
-                'totalRecibido' => $montoPago + $mora,
-                'cuotasPendientes' => (int)$detalle['resumen']['cuotas_pendientes']
+                'montoCuotas' => $resultado['montoCuotas'],
+                'moraTotal' => $resultado['moraTotal'],
+                'totalEsperado' => $resultado['totalEsperado'],
+                'cuotasAplicadas' => array_column($resultado['cuotasAplicadas'], 'id_cobro_instalacion')
             ]);
         } catch (\Throwable $th) {
             return $this->respondError($th->getMessage());
         }
     }
 
-    public function registrarPago()
+    public function registrarPagoInstalacion()
     {
         $db = \Config\Database::connect();
         $db->transBegin();
 
         try {
+            log_message('info', '===== INICIO registrarPagoInstalacion =====');
+
             $idContrato = $this->request->getPost('idContrato');
-            $montoPago = (float)($this->request->getPost('montoPago') ?? 0);
-            $cobrarMora = filter_var($this->request->getPost('cobrarMora') ?? false, FILTER_VALIDATE_BOOLEAN);
-            $mora = $cobrarMora ? (float)($this->request->getPost('mora') ?? 0) : 0;
+            $montoPago  = (float)$this->request->getPost('montoPago');
+            $moras      = json_decode($this->request->getPost('moras'), true) ?? [];
+
+            log_message('info', 'POST recibido: ' . print_r([
+                'idContrato' => $idContrato,
+                'montoPago'  => $montoPago,
+                'moras'      => $moras
+            ], true));
 
             if (!$idContrato) {
-                throw new \Exception('Debe seleccionar una cuenta para cobrar');
+                throw new \Exception('Debe seleccionar una cuenta');
             }
 
-            if ($montoPago <= 0) {
-                throw new \Exception('El monto a pagar debe ser mayor a 0');
-            }
+            // 🔒 Revalidación completa
+            $resultado = $this->calcularAplicacionPago($idContrato, $montoPago, $moras);
 
-            $detalle = $this->cobrosContratoModel->getDetalleCobroPorContrato($idContrato);
+            log_message('info', 'Resultado cálculo: ' . print_r($resultado, true));
 
-            if (!$detalle) {
-                throw new \Exception('No se encontró información del contrato a cobrar');
-            }
+            $cuotasAplicadas = $resultado['cuotasAplicadas'];
+            $montoAplicado   = $resultado['montoCuotas'];
+            $detalle         = $resultado['detalle'];
 
-            $saldoPendiente = (float)$detalle['resumen']['saldo_pendiente'];
-
-            if ($saldoPendiente <= 0) {
-                throw new \Exception('Este contrato no tiene saldo pendiente');
-            }
-
-            if ($montoPago > $saldoPendiente) {
-                throw new \Exception('El monto a pagar no puede ser mayor al saldo pendiente');
-            }
-
-            $cuotasPendientes = $this->cobrosContratoModel->getCuotasPendientesPorContrato($idContrato);
-
-            if (empty($cuotasPendientes)) {
-                throw new \Exception('No hay cuotas pendientes para aplicar el pago');
-            }
-
-            $restante = $montoPago;
-            $montoAplicado = 0;
             $fechaPago = date('Y-m-d');
-            $idUsuario = $_SESSION['id_usuario'] ?? null;
 
-            foreach ($cuotasPendientes as $cuota) {
-                if ($restante <= 0) {
-                    break;
-                }
+            log_message('info', 'Cuotas a procesar: ' . print_r($cuotasAplicadas, true));
 
-                $saldoCuota = (float)$cuota['saldo_cuota'];
+            // 🔥 MAPA DE MORAS
+            $morasMap = [];
 
-                if ($saldoCuota <= 0) {
+            foreach ($moras as $m) {
+                if (!isset($m['id_cobro_instalacion'], $m['mora'])) {
+                    log_message('warning', 'Mora inválida ignorada: ' . print_r($m, true));
                     continue;
                 }
 
-                $abono = min($restante, $saldoCuota);
-                $nuevoAbonado = (float)$cuota['cantidad_abonada'] + $abono;
-                $estado = $nuevoAbonado >= (float)$cuota['monto_cuota'] ? 'PAGADO' : 'ABONO PARCIAL';
-
-                $actualizado = $this->cobrosContratoModel->update($cuota['id_cobro_instalacion'], [
-                    'cantidad_abonada' => $nuevoAbonado,
-                    'estado' => $estado,
-                    'fecha_pago' => $fechaPago,
-                    'id_usuario' => $idUsuario,
-                ]);
-
-                if (!$actualizado) {
-                    throw new \Exception('No se pudo actualizar una de las cuotas del cobro');
-                }
-
-                $restante -= $abono;
-                $montoAplicado += $abono;
+                $morasMap[(int)$m['id_cobro_instalacion']] = (float)$m['mora'];
             }
 
-            if ($montoAplicado <= 0) {
-                throw new \Exception('No se pudo aplicar el pago');
-            }
+            log_message('info', 'Mapa de moras construido: ' . print_r($morasMap, true));
 
-            $nuevoSaldoSolicitud = max(0, ((float)$detalle['resumen']['saldo_solicitud']) - $montoAplicado);
+            // 🔥 CORRELATIVO DE PAGO
+            $pagosModel = new \App\Models\pagosInstalacionModel();
+            $correlativo = $pagosModel->correlativoPago($db);
 
-            $solicitudActualizada = $this->solicitudesModel->update($detalle['resumen']['id_solicitud'], [
-                'saldo_pendiente' => $nuevoSaldoSolicitud
+            log_message('info', 'Correlativo generado: ' . $correlativo);
+
+            // 🔥 INSERT CABECERA PAGO
+            $idPago = $pagosModel->insert([
+                'correlativo'   => $correlativo,
+                'id_contrato'   => $idContrato,
+                'id_solicitud'  => $detalle['resumen']['id_solicitud'],
+                'fecha_creacion' => date('Y-m-d H:i:s')
             ]);
 
-            if (!$solicitudActualizada) {
-                throw new \Exception('No se pudo actualizar el saldo pendiente de la solicitud');
+            log_message('info', 'ID pago creado: ' . $idPago);
+
+            if (!$idPago) {
+                throw new \Exception('No se pudo crear el pago');
             }
 
-            if ($this->tablaHistorialExiste()) {
-                $historial = $this->historialCobroInstalacionModel->insert([
-                    'id_contrato' => $idContrato,
-                    'id_solicitud' => $detalle['resumen']['id_solicitud'],
-                    'id_cliente' => $detalle['resumen']['id_cliente'],
-                    'monto_cobrado' => $montoAplicado,
-                    'mora' => $mora,
-                    'total_pagado' => $montoAplicado + $mora,
-                    'id_usuario' => $idUsuario,
-                    'fecha_creacion' => date('Y-m-d H:i:s'),
-                ]);
+            // 🔥 PROCESAR CUOTAS
+            foreach ($cuotasAplicadas as $cuota) {
 
-                if (!$historial) {
-                    throw new \Exception('No se pudo guardar el historial del cobro');
+                log_message('info', 'Procesando cuota: ' . print_r($cuota, true));
+
+                $id = $cuota['id_cobro_instalacion'];
+
+                $moraCuota = $morasMap[$id] ?? 0;
+
+                log_message('info', "Cuota ID {$id} con mora: {$moraCuota}");
+
+                $dataUpdate = [
+                    'estado'            => 'CANCELADO',
+                    'cantidad_abonada'  => $cuota['saldo_cuota'],
+                    'recargo'           => $moraCuota,
+                    'fecha_pago'        => $fechaPago
+                ];
+
+                log_message('info', 'Update cuota: ' . print_r($dataUpdate, true));
+
+                $updated = $this->cobrosContratoModel->update($id, $dataUpdate);
+
+                log_message('info', 'Resultado update: ' . ($updated ? 'OK' : 'FAIL'));
+
+                if (!$updated) {
+                    throw new \Exception("No se actualizó la cuota ID {$id}");
+                }
+
+                // 🔥 HISTORIAL POR CUOTA (correcto dentro del loop)
+
+                $historialData = [
+                    'id_pago'              => $idPago,
+                    'id_contrato'         => $idContrato,
+                    'id_solicitud'        => $detalle['resumen']['id_solicitud'],
+                    'id_cobro_instalacion' => $id,
+                    'recargo_aplicado'    => $moraCuota,
+                    'monto_cuota'         => $cuota['saldo_cuota'],
+                    'total'               => $cuota['saldo_cuota'] + $moraCuota,
+                    'fecha_creacion'      => date('Y-m-d H:i:s')
+                ];
+
+                log_message('info', 'Insert historial: ' . print_r($historialData, true));
+
+                $hist = $this->historialCobroInstalacionModel->insert($historialData);
+
+                log_message('info', 'Historial insert ID: ' . $hist);
+
+                if (!$hist) {
+                    throw new \Exception('No se pudo guardar historial');
                 }
             }
 
+            // 🔥 ACTUALIZAR SALDO
+            $nuevoSaldo = max(0, (float)$detalle['resumen']['saldo_pendiente'] - $montoAplicado);
+
+            log_message('info', 'Nuevo saldo a actualizar: ' . $nuevoSaldo);
+
+            $this->solicitudesModel->update(
+                $detalle['resumen']['id_solicitud'],
+                ['saldo_pendiente' => $nuevoSaldo]
+            );
+
+            // exit;
             $db->transCommit();
+
+            log_message('info', '===== FIN OK registrarPagoInstalacion =====');
 
             return $this->respondOk('Pago aplicado correctamente');
         } catch (\Throwable $th) {
+
             $db->transRollback();
 
-            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
-            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
-            log_message('error', $errorMessage);
+            log_message('error', 'ERROR registrarPagoInstalacion: ' . $th->getMessage());
 
             return $this->respondError($th->getMessage());
         }
-    }
-
-    private function tablaHistorialExiste()
-    {
-        return $this->cobrosContratoModel->db->tableExists('historial_cobros_instalacion');
     }
 }

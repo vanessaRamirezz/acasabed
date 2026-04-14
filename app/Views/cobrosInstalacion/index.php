@@ -3,6 +3,50 @@
 
 <?= $this->section('styles') ?>
 <style>
+    #accordion-cobros-instalacion .card {
+        margin-bottom: 0;
+        border-radius: 0;
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+    }
+
+    /* Última sección con borde inferior */
+    #accordion-cobros-instalacion .card:last-child {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    /* Header más limpio */
+    #accordion-cobros-instalacion .card-header {
+        background: #f8f9fa;
+        padding: 8px 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    /* Botón ocupa todo el ancho */
+    #accordion-cobros-instalacion .card-header .btn {
+        width: 100%;
+        text-align: left;
+        padding: 5px 0;
+        font-weight: 600;
+        color: #343a40;
+    }
+
+    /* Quitar estilo link feo */
+    #accordion-cobros-instalacion .btn-link {
+        text-decoration: none;
+    }
+
+    #accordion-cobros-instalacion .btn-link:hover {
+        text-decoration: none;
+        color: #007bff;
+    }
+
+    /* Cuerpo más uniforme */
+    #accordion-cobros-instalacion .card-body {
+        padding: 20px;
+        background: #fff;
+    }
+
     .resumen-validacion {
         border: 1px solid #dee2e6;
         border-radius: 6px;
@@ -40,7 +84,9 @@
         <input type="hidden" id="id-contrato-cobro">
 
         <div id="accordion-cobros-instalacion">
-            <div class="card shadow mb-4">
+
+            <!-- SECCIÓN 1  LISTAS DE FACTURAS DE COBRO -->
+            <div class="card">
                 <div class="card-header" id="headingHistorialCobros">
                     <h5 class="mb-0">
                         <button class="btn btn-link" data-toggle="collapse" data-target="#collapseHistorialCobros" aria-expanded="true" aria-controls="collapseHistorialCobros">
@@ -53,7 +99,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-end mb-4">
                             <div class="input-group col-md-6">
-                                <input type="text" id="customSearchCobros" placeholder="Buscar por contrato, solicitud o cliente" class="form-control">
+                                <input type="text" id="customSearchCobros" placeholder="Buscar por solicitud o cliente" class="form-control">
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" id="searchBtnCobros" type="button">
                                         <i class="fas fa-search"></i>
@@ -69,12 +115,13 @@
                             <table class="table table-bordered table-sm" id="tbl-cobros-instalacion">
                                 <thead>
                                     <tr>
+                                        <th>Correlativo</th>
                                         <th>Solicitud</th>
                                         <th>Contrato</th>
                                         <th>Cliente</th>
-                                        <th>Monto cuotas</th>
+                                        <!-- <th>Monto cuotas</th>
                                         <th>Mora</th>
-                                        <th>Total pagado</th>
+                                        <th>Total pagado</th> -->
                                         <th>Fecha</th>
                                     </tr>
                                 </thead>
@@ -97,8 +144,10 @@
                 <div id="collapseAplicarCobro" class="collapse" aria-labelledby="headingAplicarCobro" data-parent="#accordion-cobros-instalacion">
                     <div class="card-body">
                         <div class="form-group">
-                            <label for="buscar-cuenta-cobro">Buscar cliente, solicitud o contrato</label>
-                            <select id="buscar-cuenta-cobro" class="form-control" style="width: 100%;"></select>
+                            <label for="buscar-cliente">Buscar por nombre de cliente</label>
+                            <select name="buscar-cuenta-cobro" id="buscar-cliente" class="form-control">
+                                <option value="">...</option>
+                            </select>
                         </div>
 
                         <div class="table-responsive mt-4">
@@ -106,10 +155,10 @@
                                 <thead>
                                     <tr>
                                         <th>Numero solicitud</th>
+                                        <th>Numero contrato</th>
                                         <th>Nombre cliente</th>
                                         <th>Fecha creacion</th>
                                         <th>Saldo</th>
-                                        <th>Cuotas pendientes</th>
                                         <th>Operacion</th>
                                     </tr>
                                 </thead>
@@ -149,6 +198,18 @@
                     </div>
                     <div class="col-md-3 mb-2">
                         <div class="resumen-validacion">
+                            <span>Contrato</span>
+                            <strong id="resumen-contrato">-</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="resumen-validacion">
+                            <span>Costo de Instalación</span>
+                            <strong id="resumen-costo-instalacion">$0.00</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="resumen-validacion">
                             <span>Saldo pendiente</span>
                             <strong id="resumen-saldo-pendiente">$0.00</strong>
                         </div>
@@ -166,12 +227,13 @@
                         <thead>
                             <tr>
                                 <th>Cuota</th>
+                                <th>Descripción</th>
+                                <th>Fecha de Vencimiento</th>
+                                <th>Fecha de Pago</th>
                                 <th>Monto</th>
                                 <th>Abonado</th>
-                                <th>Saldo</th>
+                                <th>Recargo</th>
                                 <th>Estado</th>
-                                <th>Vencimiento</th>
-                                <th>Ultimo pago</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -183,17 +245,17 @@
                         <label for="monto-pago">Monto a cancelar</label>
                         <input type="number" min="0.01" step="0.01" class="form-control" id="monto-pago" placeholder="0.00">
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="cobrar-mora">Desea cobrar mora</label>
+                    <!-- <div class="col-md-4 mb-3">
+                        <label for="cobrar-mora">Desea cobrar algun recargo</label>
                         <select class="form-control" id="cobrar-mora">
                             <option value="no" selected>No</option>
                             <option value="si">Si</option>
                         </select>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="mora-pago">Mora</label>
+                    </div> -->
+                    <!-- <div class="col-md-4 mb-3">
+                        <label for="mora-pago">________</label>
                         <input type="number" min="0" step="0.01" class="form-control" id="mora-pago" placeholder="0.00" disabled>
-                    </div>
+                    </div> -->
                 </div>
 
                 <div id="contenedor-validacion" class="alert alert-light border" style="display: none;"></div>

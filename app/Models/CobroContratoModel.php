@@ -19,6 +19,7 @@ class CobroContratoModel extends Model
         'cantidad_abonada',
         'id_usuario',
         'fecha_creacion',
+        'recargo',
     ];
 
     public function getCobrosRealizados($start, $length, $searchValue = '')
@@ -68,40 +69,6 @@ class CobroContratoModel extends Model
         ];
     }
 
-    public function buscarCuentasPendientes($search)
-    {
-        return $this->db->table('contratos')
-            ->select("
-                contratos.id_contrato,
-                contratos.numero_contrato,
-                solicitudes.id_solicitud,
-                solicitudes.codigo_solicitud,
-                solicitudes.fecha_generacion,
-                clientes.nombre_completo,
-                SUM(contratos_cobros.monto_cuota - COALESCE(contratos_cobros.cantidad_abonada, 0)) AS saldo_pendiente,
-                SUM(
-                    CASE
-                        WHEN (contratos_cobros.monto_cuota - COALESCE(contratos_cobros.cantidad_abonada, 0)) > 0
-                        THEN 1
-                        ELSE 0
-                    END
-                ) AS cuotas_pendientes
-            ", false)
-            ->join('solicitudes', 'solicitudes.id_solicitud = contratos.id_solicitud', 'left')
-            ->join('clientes', 'clientes.id_cliente = contratos.id_cliente', 'left')
-            ->join('contratos_cobros', 'contratos_cobros.id_contrato = contratos.id_contrato', 'inner')
-            ->groupStart()
-                ->like('clientes.nombre_completo', $search)
-                ->orLike('solicitudes.codigo_solicitud', $search)
-                ->orLike('contratos.numero_contrato', $search)
-            ->groupEnd()
-            ->groupBy('contratos.id_contrato, contratos.numero_contrato, solicitudes.id_solicitud, solicitudes.codigo_solicitud, solicitudes.fecha_generacion, clientes.nombre_completo')
-            ->having('saldo_pendiente >', 0)
-            ->orderBy('clientes.nombre_completo', 'ASC')
-            ->limit(20)
-            ->get()
-            ->getResultArray();
-    }
 
     public function getDetalleCobroPorContrato($idContrato)
     {
@@ -114,8 +81,8 @@ class CobroContratoModel extends Model
                 solicitudes.fecha_generacion,
                 clientes.id_cliente,
                 clientes.nombre_completo,
-                COALESCE(solicitudes.saldo_pendiente, 0) AS saldo_solicitud,
-                SUM(contratos_cobros.monto_cuota - COALESCE(contratos_cobros.cantidad_abonada, 0)) AS saldo_pendiente,
+                COALESCE(solicitudes.costo_instalacion, 0) AS costo,
+                COALESCE(solicitudes.saldo_pendiente, 0) AS saldo_pendiente,
                 SUM(
                     CASE
                         WHEN (contratos_cobros.monto_cuota - COALESCE(contratos_cobros.cantidad_abonada, 0)) > 0
@@ -142,11 +109,13 @@ class CobroContratoModel extends Model
                 id_cobro_instalacion,
                 numero_cuota,
                 monto_cuota,
+                descripcion,
                 COALESCE(cantidad_abonada, 0) AS cantidad_abonada,
                 (monto_cuota - COALESCE(cantidad_abonada, 0)) AS saldo_cuota,
                 estado,
                 fecha_vencimiento,
-                fecha_pago
+                fecha_pago,
+                recargo
             ", false)
             ->orderBy('numero_cuota', 'ASC')
             ->findAll();
@@ -157,19 +126,31 @@ class CobroContratoModel extends Model
         ];
     }
 
-    public function getCuotasPendientesPorContrato($idContrato)
+
+    public function getDetalleCobroPorCliente($idCliente)
     {
-        return $this->where('id_contrato', $idContrato)
-            ->where('(monto_cuota - COALESCE(cantidad_abonada, 0)) >', 0, false)
-            ->select("
-                id_cobro_instalacion,
-                numero_cuota,
-                monto_cuota,
-                COALESCE(cantidad_abonada, 0) AS cantidad_abonada,
-                (monto_cuota - COALESCE(cantidad_abonada, 0)) AS saldo_cuota,
-                estado
-            ", false)
-            ->orderBy('numero_cuota', 'ASC')
-            ->findAll();
+        // 1. Obtener todos los contratos del cliente
+        $contratos = $this->db->table('contratos')
+            ->select('id_contrato')
+            ->where('id_cliente', $idCliente)
+            ->get()
+            ->getResultArray();
+
+        if (empty($contratos)) {
+            return [];
+        }
+
+        $resultado = [];
+
+        // 2. Reutilizar tu lógica existente
+        foreach ($contratos as $contrato) {
+            $detalle = $this->getDetalleCobroPorContrato($contrato['id_contrato']);
+
+            if ($detalle) {
+                $resultado[] = $detalle;
+            }
+        }
+
+        return $resultado;
     }
 }
