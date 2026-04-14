@@ -131,4 +131,35 @@ class ContratoModel extends Model
             'filtered' => $filtered
         ];
     }
+
+    public function getContratosActivosLectura($idPeriodo)
+    {
+        $builder = $this->db->table('contratos');
+
+        $builder->select('
+        contratos.id_contrato,
+        contratos.numero_contrato,
+        clientes.nombre_completo,
+        solicitudes.codigo_solicitud
+    ');
+
+        $builder->join('solicitudes', 'contratos.id_solicitud = solicitudes.id_solicitud', 'left');
+        $builder->join('clientes', 'contratos.id_cliente = clientes.id_cliente', 'left');
+
+        $builder->where('solicitudes.estado', 'APROBADA');
+
+        // 🔥 subquery separado (CORRECTO)
+        $subQuery = $this->db->table('lecturas')
+            ->select('1')
+            ->where('lecturas.id_contrato = contratos.id_contrato', null, false)
+            ->where('lecturas.id_periodo', $idPeriodo)
+            ->getCompiledSelect();
+
+        $builder->where("NOT EXISTS ($subQuery)", null, false);
+
+        return $builder
+            ->orderBy('contratos.id_contrato', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 }

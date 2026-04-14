@@ -29,7 +29,10 @@
 
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Agregar Nuevo</button>
+                <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Agregar Nueva Lectura</button>
+            </div>
+            <div class="card-header py-3">
+                <button type="button" id="btn-agregar-lote" class="btn bg-gradient-primary btn-flat">Agregar Carga Masiva</button>
             </div>
             <div class="card-body">
 
@@ -72,9 +75,6 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="modal-lecturas-label">Opciones del usuario</h5>
-                        <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button> -->
                     </div>
                     <div class="modal-body">
                         <div class="user">
@@ -140,6 +140,75 @@
                         <button type="button" class="btn btn-primary modal-guardar" id="guardar-registro">Guardar registro</button>
                         <button type="button" class="btn btn-warning modal-editar" id="actualizar-registro">Guardar registro</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal por lote -->
+        <!-- Modal Lecturas Lote -->
+        <div class="modal fade" id="modal-lecturas-lote" tabindex="-1" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Registro masivo de lecturas</h5>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <!-- FILTROS SUPERIORES -->
+                        <div class="row mb-3">
+
+                            <div class="col-md-3">
+                                <label>Periodo</label>
+                                <select id="periodo-lote" class="form-control">
+                                    <option value="">Seleccione...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Instalador</label>
+                                <select id="instalador-lote" class="form-control">
+                                    <option value="">Seleccione...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Fecha de lectura</label>
+                                <input type="date" id="fecha-lote" class="form-control">
+                            </div>
+
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="btn-cargar-contratos">
+                                    Cargar contratos
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- TABLA PRINCIPAL -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" id="tbl-lecturas-lote">
+                                <thead>
+                                    <tr>
+                                        <th>Contrato</th>
+                                        <th>Cliente</th>
+                                        <th>Solicitud</th>
+                                        <th>Lectura</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button class="btn btn-success" id="btn-guardar-lecturas">Guardar todo</button>
+                    </div>
+
                 </div>
             </div>
         </div>
