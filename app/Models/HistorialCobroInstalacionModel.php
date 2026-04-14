@@ -15,7 +15,6 @@ class HistorialCobroInstalacionModel extends Model
         'id_cobro_instalacion',
         'recargo_aplicado',
         'monto_cuota',
-        'total_pagado',
         'fecha_creacion',
     ];
 
