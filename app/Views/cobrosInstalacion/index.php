@@ -123,6 +123,7 @@
                                         <th>Mora</th>
                                         <th>Total pagado</th> -->
                                         <th>Fecha</th>
+                                        <th>Opciones</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>

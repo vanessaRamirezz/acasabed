@@ -123,4 +123,5 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('validarCobroInstalacion', 'CobrosInstalacion::validarCobroInstalacion');
     $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPagoInstalacion');
     $routes->get('getCobrosRealizados', 'CobrosInstalacion::getCobrosRealizados');
+    $routes->get('facturaCobroInstalacion/(:num)', 'CobrosInstalacion::facturaCobroInstalacion/$1');
 });

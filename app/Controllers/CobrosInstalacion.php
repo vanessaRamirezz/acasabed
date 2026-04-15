@@ -57,10 +57,6 @@ class CobrosInstalacion extends BaseController
     }
 
 
-
-
-
-
     public function getDetalleCobroCliente()
     {
         try {
@@ -256,13 +252,13 @@ class CobrosInstalacion extends BaseController
             log_message('info', 'Mapa de moras construido: ' . print_r($morasMap, true));
 
             // 🔥 CORRELATIVO DE PAGO
-            $pagosModel = new \App\Models\pagosInstalacionModel();
-            $correlativo = $pagosModel->correlativoPago($db);
+            // $pagosModel = new \App\Models\pagosInstalacionModel();
+            $correlativo = $this->pagosInstalacionModel->correlativoPago($db);
 
             log_message('info', 'Correlativo generado: ' . $correlativo);
 
             // 🔥 INSERT CABECERA PAGO
-            $idPago = $pagosModel->insert([
+            $idPago = $this->pagosInstalacionModel->insert([
                 'correlativo'   => $correlativo,
                 'id_contrato'   => $idContrato,
                 'id_solicitud'  => $detalle['resumen']['id_solicitud'],
@@ -351,5 +347,296 @@ class CobrosInstalacion extends BaseController
 
             return $this->respondError($th->getMessage());
         }
+    }
+
+    function dibujarComprobante($pdf, $x, $y, $titulo, $factura, $detalle)
+    {
+        $w = 95; // aca se mide lo ancho del cuadro principal
+        $h = 150; // aca se mide lo largo del cuadro principal
+
+        // Marco
+        $pdf->SetDrawColor(0, 51, 153);
+        $pdf->Rect($x, $y, $w, $h);
+
+        //LOGO 
+        $pdf->Image(
+            FCPATH . 'dist/img/agua.png', // ruta
+            $x + 2,   // posición X (ligeramente dentro)
+            $y + 2,   // posición Y
+            14,       // ancho (pequeño)
+            14        // alto
+        );
+
+        // ENCABEZADO
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 7);
+
+        $pdf->SetXY($x + 15, $y + 7); // 👈 control exacto (NO usar solo SetX)
+
+        $pdf->MultiCell(
+            $w - 15,
+            4,
+            "Asociación Comunal Administradora del Sistema de Agua
+            Potable del Cantón El Coyolito, Tejutla, Bendición de Dios.
+            NIT: 0433-140613-101-8
+            acasabed2013@hotmail.com",
+            0,
+            'C'
+        );
+
+        // NUMERO ROJO
+        $pdf->SetTextColor(255, 0, 0);
+        $pdf->SetFont('helvetica', 'B', 12);
+        $pdf->SetXY($x + 2, $y + 18);
+        $pdf->Cell(40, 5, 'N° ' . $factura['correlativo'], 0, 0);
+        $pdf->SetTextColor(0, 0, 0);
+
+        // TITULO
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetXY($x, $y + 24);
+        $pdf->Cell($w, 5, $titulo, 0, 1, 'C');
+
+        // BLOQUE CLIENTE
+        // MARCO GENERAL
+        $pdf->Rect($x, $y + 30, 76, 22);
+
+        // punto inicial
+        $currentY = $y + 32;
+
+        // === CLIENTE ===
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 7);
+
+        $pdf->SetXY($x + 2, $currentY);
+
+        $pdf->MultiCell(60, 4, $factura['cliente'], 0, 'L');
+
+        // actualizar Y dinámicamente
+        $currentY = $pdf->GetY();
+
+        // === DIRECCIÓN ===
+        $pdf->SetXY($x + 2, $currentY);
+
+        $pdf->MultiCell(60, 4, $factura['direccion'], 0, 'L');
+
+        $currentY = $pdf->GetY();
+
+        // === MEDIDOR LABEL ===
+        $currentY += 6; // espacio extra
+        $pdf->SetXY($x + 1, $currentY);
+
+        // etiqueta (azul)
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->Cell(20, 4, 'MEDIDOR No.:', 0, 0, 'L'); // 👈 0 = no salto
+
+        // valor (negro)
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Cell(40, 4, $factura['numero_serie'], 0, 1, 'L'); // 👈 1 = salto
+
+        $leftTop = $y + 30;          // inicio del bloque cliente
+        $leftBottom = $pdf->GetY();  // donde terminó realmente
+        $leftHeight = $leftBottom - $leftTop;
+
+        // ancho del bloque izquierdo
+        $leftWidth = 76;
+
+        // bloque derecho adaptado
+        $rightX = $x + $leftWidth;
+        $rightY = $y + 30;
+        $rightW = $w - $leftWidth; // 👈 esto lo ajusta automáticamente
+
+        // alturas definidas (clave)
+        $totalRight = $leftHeight;
+
+        // dividir en 4 bloques (doc label, doc value, cuenta label, cuenta value)
+        $hLabel = $totalRight * 0.2;
+        $hValue = $totalRight * 0.2;
+
+
+        // === No. DOCUMENTO ===
+        $pdf->SetXY($rightX, $rightY);
+
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 5);
+        $pdf->Cell($rightW, $hLabel, 'No. DOCUMENTO', 1, 0, 'C');
+
+        $pdf->SetXY($rightX, $rightY + $hLabel);
+
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 5);
+        $pdf->Cell($rightW, $hValue, $factura['numero_contrato'], 1, 0, 'C');
+
+        // === No. CUENTA ===
+        $pdf->SetXY($rightX, $rightY + $hLabel + $hValue);
+
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 5);
+        $pdf->Cell($rightW, $hLabel, 'No. CUENTA', 1, 0, 'C');
+
+        $pdf->SetXY($rightX, $rightY + ($hLabel * 2) + $hValue);
+
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->Cell($rightW, $hValue, $factura['codigo_solicitud'], 1, 0, 'C');
+
+
+        // LECTURAS
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 5);
+
+        // posición inicial
+
+        $pdf->SetXY($x, $y + 52);
+
+        // ancho dinámico (mejor distribuido)
+        $colW = $w / 5;
+
+        // fila completa
+        $pdf->Cell($colW, 5, 'LEC. ACTUAL M³', 1, 0, 'C');
+        $pdf->Cell($colW, 5, 'LEC. ANTERIOR M³', 1, 0, 'C');
+        $pdf->Cell($colW, 5, 'CONSUMO M³', 1, 0, 'C');
+        $pdf->Cell($colW, 5, 'COD. TARIFA', 1, 0, 'C');
+        $pdf->Cell($colW, 5, 'FECHA LECTURA', 1, 1, 'C'); // 👈 solo aquí salto
+
+        $pdf->SetX($x);
+        $pdf->Cell($colW, 5, '', 1, 0);
+        $pdf->Cell($colW, 5, '', 1, 0);
+        $pdf->Cell($colW, 5, '', 1, 0);
+        $pdf->Cell($colW, 5, '', 1, 0);
+        $pdf->Cell($colW, 5, '', 1, 1);
+
+
+        // DETALLE
+        $pdf->SetXY($x, $y + 62);
+
+        // CÓDIGO ocupa columna 1
+        $pdf->Cell($colW, 5, 'CÓDIGO', 1, 0, 'C');
+
+        // CONCEPTO ocupa columnas 2,3,4 (3 columnas unidas)
+        $pdf->Cell($colW * 3, 5, 'CONCEPTOS FACTURADOS', 1, 0, 'C');
+
+        // VALOR ocupa columna 5
+        $pdf->Cell($colW, 5, 'VALOR', 1, 1, 'C');
+
+        // filas
+        $yDetalle = $y + 67;
+
+        $filas = count($detalle);
+
+        for ($i = $filas; $i < 10; $i++) {
+            $pdf->SetXY($x, $yDetalle);
+
+            $pdf->Cell($colW, 7, '', 'L', 0);
+            $pdf->Cell($colW * 3, 7, '', 'L', 0);
+            $pdf->Cell($colW, 7, '', 'LR', 1);
+
+            $yDetalle += 7;
+        }
+
+        // TOTALES
+        $pdf->SetXY($x, $yDetalle); // 👈 sin +19
+
+        // izquierda
+        $pdf->SetFont('helvetica', '', 6);
+        $pdf->Cell($colW * 2.5, 6, 'SI UD. NO PAGA A TIEMPO PAGARÁ', 'TB', 0, 'L');
+        $pdf->Cell($colW * 0.5, 6, '$0.00', 'TB', 0, 'R');
+
+        // derecha
+        $pdf->SetFont('helvetica', 'B', 6);
+        $pdf->Cell($colW, 6, 'TOTAL:', 'TB', 0, 'R');
+        $pdf->Cell($colW, 6, '$0.00', 'TB', 1, 'R');
+
+        // FOOTER
+        $currentY = $pdf->GetY();
+
+        // === IZQUIERDA (texto en 2 líneas controladas) ===
+        $pdf->SetXY($x, $currentY);
+
+        $pdf->SetFont('helvetica', '', 7);
+
+        $pdf->MultiCell(
+            $colW * 4,
+            3,
+            "USTED PAGA SIN MORA ENTRE EL 24 AL 3.\nPAGA CON MORA DEL 04 AL 07 DE CADA MES",
+            0,
+            'L'
+        );
+
+        $pdf->SetXY($x + ($colW * 4), $currentY);
+
+        $pdf->Cell($colW, 5, '03/02/2026', 0, 0, 'R');
+
+
+        $currentY = $pdf->GetY();
+
+        $currentY = $pdf->GetY();
+
+        // === TELÉFONO (solo lado izquierdo enmarcado) ===
+        $pdf->SetXY($x, $currentY + 10);
+
+        // ancho izquierdo (igual que totales)
+        $leftW = $colW * 3;
+        $rightW = $colW * 2;
+
+        // rectángulo SOLO del lado izquierdo
+        $pdf->RoundedRect(
+            $x,                // posición X
+            $currentY + 10,    // posición Y
+            $leftW,            // ancho
+            6,                 // alto
+            1.5,               // radio de la esquina (ajusta aquí)
+            '1111',            // esquinas (todas redondeadas)
+            ''                 // estilo (solo borde)
+        );
+
+        // texto dentro del cuadro
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->SetXY($x + 1, $currentY + 11);
+        $pdf->Cell($leftW - 2, 4, 'TELÉFONO DE EMERGENCIA: 2332-0282', 0, 0, 'L');
+
+        // === TEXTO DERECHO (sin cuadro) ===
+        $pdf->SetXY($x + $leftW, $currentY + 10);
+
+        $pdf->MultiCell(
+            $rightW,
+            3,
+            "PRESENTAR RECLAMO 3 DÍAS\nDESPUÉS DE RECIBIDO",
+            0,
+            'C'
+        );
+    }
+
+    public function facturaCobroInstalacion($id)
+    {
+
+        // 1. Traer datos del pago
+        $data = $this->historialCobroInstalacionModel->obtenerFacturaPorId($id);
+        log_message('info', ' datos recibidos para enviar a ver la factura' . print_r($data, true));
+        // exit;
+
+
+        if (!$data['factura']) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('No existe la factura');
+        }
+
+        $factura = $data['factura'];
+        $detalle = $data['detalle'];
+
+        $pdf = new \TCPDF('P', 'mm', 'A4');
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(false);
+        $pdf->AddPage();
+
+        // IZQUIERDA (CLIENTE)
+        $this->dibujarComprobante($pdf, 10, 10, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
+
+        // DERECHA (BANCO)
+        $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
+
+        return $this->response
+            ->setContentType('application/pdf')
+            ->setBody($pdf->Output('factura.pdf', 'S'));
     }
 }

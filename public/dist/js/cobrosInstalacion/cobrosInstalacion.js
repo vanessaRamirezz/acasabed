@@ -43,13 +43,30 @@ function cargarTablaCobros() {
             //     data: 'mora',
             //     render: data => formatearMonto(data)
             // },
-            // {
-            //     data: 'total_pagado',
-            //     render: data => formatearMonto(data)
-            // },
             {
                 data: 'fecha_creacion',
                 render: data => formatearFecha(data) || '-'
+            },
+            {
+                data: null,
+                render: function (data, type, row) {
+
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown">
+                                Acciones
+                            </button>
+                            <div class="dropdown-menu">
+
+                                <a class="dropdown-item dropdown-item-custom btn-ver-factura-cobro-intalacion-pdf" href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-file-pdf mr-2 text-danger" ></i> Factura
+                                </a>
+
+                            </div>
+                        </div>
+                        `;
+                }
             }
         ],
         language: {
@@ -546,7 +563,6 @@ function eventosUsuarios() {
         }
 
         // console.log(detalleSeleccionado);
-
         renderizarModal(detalleSeleccionado, true); // ✅ SOLO UNO
         $('#modal-cobro-cuotas').modal('show');
     });
@@ -555,6 +571,15 @@ function eventosUsuarios() {
 
     inputs.btnValidarCobro.on('click', validarCobro);
     inputs.btnProcesarPago.on('click', registrarPago);
+
+    $(document).on('click', '.btn-ver-factura-cobro-intalacion-pdf', function (e) {
+        e.preventDefault();
+
+        let id = $(this).data('id');
+
+        // abrir PDF en nueva pestaña
+        window.open(baseURL + 'facturaCobroInstalacion/' + id, '_blank');
+    });
 }
 
 function iniciarTodo() {

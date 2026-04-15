@@ -51,13 +51,6 @@ class HistorialCobroInstalacionModel extends Model
             cl.nombre_completo AS cliente,
             pi.fecha_creacion,
 
-            -- 🔥 totales calculados desde detalle
-            (
-                SELECT SUM(h.total)
-                FROM historial_cobros_instalacion h
-                WHERE h.id_pago = pi.id_pago
-            ) AS total_pagado,
-
             (
                 SELECT SUM(h.monto_cuota)
                 FROM historial_cobros_instalacion h
@@ -80,6 +73,64 @@ class HistorialCobroInstalacionModel extends Model
             'data' => $data,
             'total' => $total,
             'filtered' => $filtered
+        ];
+    }
+
+    public function obtenerFacturaPorId($idPago)
+    {
+        $builder = $this->db->table('pagos_instalacion pi');
+
+        $builder->join('contratos c', 'c.id_contrato = pi.id_contrato', 'left');
+        $builder->join('solicitudes s', 's.id_solicitud = pi.id_solicitud', 'left');
+        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+        $builder->join('departamentos d', 'd.id_departamento = cl.id_departamento', 'left');
+        $builder->join('municipios m', 'm.id_municipio = cl.id_municipio', 'left');
+        $builder->join('distritos ds', 'ds.id_distrito = cl.id_distrito', 'left');
+        $builder->join('medidores medi', 'medi.id_medidor = c.id_medidor', 'left');
+        $builder->join('colonias col', 'col.id_colonia = cl.id_colonia', 'left');
+
+        $factura = $builder
+            ->select("
+            pi.id_pago AS id,
+            pi.correlativo,
+            s.codigo_solicitud,
+            c.numero_contrato,
+            cl.nombre_completo AS cliente,
+            CONCAT_WS(', ',
+                    d.nombre,
+                    m.nombre,
+                    ds.nombre,
+                    col.nombre,
+                    cl.complemento_direccion
+                ) AS direccion,
+            pi.fecha_creacion,
+            medi.numero_serie,
+            s.codigo_solicitud,
+            (
+                SELECT SUM(h.monto_cuota)
+                FROM historial_cobros_instalacion h
+                WHERE h.id_pago = pi.id_pago
+            ) AS total_cuotas,
+
+            (
+                SELECT SUM(h.recargo_aplicado)
+                FROM historial_cobros_instalacion h
+                WHERE h.id_pago = pi.id_pago
+            ) AS total_mora
+        ", false)
+            ->where('pi.id_pago', $idPago)
+            ->get()
+            ->getRowArray();
+
+        // 🔥 traer detalle (IMPORTANTE para el PDF)
+        $detalle = $this->db->table('historial_cobros_instalacion')
+            ->where('id_pago', $idPago)
+            ->get()
+            ->getResultArray();
+
+        return [
+            'factura' => $factura,
+            'detalle' => $detalle
         ];
     }
 }
