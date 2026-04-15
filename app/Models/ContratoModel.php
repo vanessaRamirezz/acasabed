@@ -19,6 +19,9 @@ class ContratoModel extends Model
         'id_medidor',
         'direccion_medidor',
         'id_tarifa',
+        'estado',
+        'motivo_suspension',
+        'fecha_suspension',
         'fecha_creacion',
         'id_usuario'
     ];
@@ -43,6 +46,7 @@ class ContratoModel extends Model
         $idMedidor,
         $direccionMedidor,
         $idTarifa,
+        $estadoContrato,
         $fechaCreacion,
         $idUsuario
     ) {
@@ -57,6 +61,7 @@ class ContratoModel extends Model
             'id_medidor' => $idMedidor,
             'direccion_medidor' => $direccionMedidor,
             'id_tarifa' => $idTarifa,
+            'estado' => $estadoContrato,
             'fecha_creacion' => $fechaCreacion,
             'id_usuario' => $idUsuario,
         ]);
@@ -84,8 +89,10 @@ class ContratoModel extends Model
         // TOTAL SIN FILTRO
         // =============================
         $total = $builder
-            ->where('solicitudes.estado', 'APROBADA')
-            ->orWhere('solicitudes.estado', 'ANULADA')
+            ->groupStart()
+            ->where('contratos.estado', 'APROBADO')
+            ->orWhere('contratos.estado', 'SUSPENDIDO')
+            ->groupEnd()
             ->countAllResults(false);
 
         // =============================
@@ -102,8 +109,10 @@ class ContratoModel extends Model
         // TOTAL FILTRADO
         // =============================
         $filtered = $builder
-            ->where('solicitudes.estado', 'APROBADA')
-            ->orWhere('solicitudes.estado', 'ANULADA')
+            ->groupStart()
+            ->where('contratos.estado', 'APROBADO')
+            ->orWhere('contratos.estado', 'SUSPENDIDO')
+            ->groupEnd()
             ->countAllResults(false);
 
         // =============================
@@ -112,14 +121,19 @@ class ContratoModel extends Model
         $data = $builder
             ->select('
                 solicitudes.id_solicitud AS id,
+                contratos.id_contrato AS id_contrato,
                 contratos.numero_contrato AS cod_contrato,
                 solicitudes.codigo_solicitud AS cod_solicitud,
                 clientes.nombre_completo AS nombre,
+                contratos.estado AS estadoContrato,
+                contratos.motivo_suspension AS motivoSuspencion,
                 contratos.fecha_de_inicio AS fecha,
                 DATE_FORMAT(contratos.fecha_de_inicio, "%d-%m-%Y") AS fechaTexto
         ')
-            ->where('solicitudes.estado', 'APROBADA')
-            ->orWhere('solicitudes.estado', 'ANULADA')
+            ->groupStart()
+            ->where('contratos.estado', 'APROBADO')
+            ->orWhere('contratos.estado', 'SUSPENDIDO')
+            ->groupEnd()
             ->orderBy('solicitudes.id_solicitud', 'DESC')
             ->limit($length, $start)
             ->get()
@@ -161,5 +175,17 @@ class ContratoModel extends Model
             ->orderBy('contratos.id_contrato', 'ASC')
             ->get()
             ->getResultArray();
+    }
+
+    public function actualizarEstadoContrato($idContrato, $estado, $motivo, $fechaSuspension)
+    {
+        return $this->update(
+            $idContrato,
+            [
+                'estado' => $estado,
+                'motivo_suspension' => $motivo,
+                'fecha_suspension' => $fechaSuspension
+            ]
+        );
     }
 }

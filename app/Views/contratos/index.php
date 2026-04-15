@@ -54,6 +54,7 @@
                                 <th>Numero Contrato</th>
                                 <th>Nombre / Razón social</th>
                                 <th>Fecha Inicio</th>
+                                <th>Estado</th>
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -61,6 +62,50 @@
 
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="modal-suspender-contrato" tabindex="-1" aria-labelledby="modal-suspender-contrato-label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-suspender-contrato-label">Opciones del usuario</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="user">
+                            <div class="row">
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label for="numero-contrato">Numero de Contrato</label>
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" name="numero-contrato" id="numero-contrato">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-8">
+                                    <div class="form-group">
+                                        <label for="motivo">Motivo</label>
+                                        <div class="input-group mb-3">
+                                            <textarea class="form-control" name="motivo" id="motivo"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <input type="hidden" value="id-contrato" id="id-contrato">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <!-- <button type="button" class="btn btn-primary modal-guardar" id="guardar-registro">Guardar registro</button> -->
+                        <button type="button" class="btn btn-warning modal-editar" id="actualizar-registro">Suspender</button>
+                    </div>
                 </div>
             </div>
         </div>

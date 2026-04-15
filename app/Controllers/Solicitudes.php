@@ -1010,7 +1010,7 @@ class Solicitudes extends BaseController
             log_message('info', 'codigo de solicitud obtenido ' . print_r($numero, true));
             $numeroContrato = 'C-' . $numero['codigo_solicitud'];
             log_message('info', 'codigo de contrato ' . print_r($numeroContrato, true));
-
+            $estadoContrato = 'APROBADO';
             $idContrato = $this->contratosModel->insertarContrato(
                 $idSolicitud,
                 $numeroContrato,
@@ -1022,6 +1022,7 @@ class Solicitudes extends BaseController
                 $contrato['data']['idMedidor'],
                 $contrato['data']['direccionMedidor'],
                 $contrato['data']['idTarifa'],
+                $estadoContrato,
                 $fechaCreacion,
                 $idUsuario
             );

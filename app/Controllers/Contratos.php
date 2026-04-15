@@ -152,4 +152,65 @@ class Contratos extends BaseController
             ]);
         }
     }
+
+    public function suspenderContratoUnoaUno()
+    {
+        try {
+            log_message('debug', 'POST en suspender contrato: ' . print_r($this->request->getPost(), true));
+            // exit;
+
+            $idContrato = $this->request->getPost('idContrato');
+            $motivo = $this->request->getPost('motivo');
+            $fechaSuspencion = date('Y-m-d H:i:s');
+
+            if (!$idContrato) {
+                log_message('error', 'id de contrato viene vacio');
+                return $this->respondError('Id de contrato llego vacio');
+            }
+
+            if (!$motivo) {
+                log_message('error', 'El motivo es requerido');
+                return $this->respondError('El motivo es requerido');
+            }
+
+            // INICIAR TRANSACCIÓN
+            $db = $this->contratosModel->db;
+            $db->transBegin();
+
+            $estado = 'SUSPENDIDO';
+            $resultado = $this->contratosModel->actualizarEstadoContrato(
+                $idContrato,
+                $estado,
+                $motivo,
+                $fechaSuspencion
+            );
+
+            if (!$resultado) {
+
+                $db->transRollback();
+                log_message('error', 'Error en transacción suspender contrato');
+                return $this->respondError('No se logro suspender el contrato');
+            }
+
+            if ($db->transStatus() === false) {
+                $db->transRollback();
+                return $this->respondError('Error en la transacción');
+            }
+
+            $db->transCommit();
+
+            log_message('info', 'Contrato Suspendido correctamente');
+            return $this->respondOk('Contrato suspendido correctamente.');
+        } catch (\Throwable $th) {
+            if (isset($db)) {
+                $db->transRollback();
+            }
+
+            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
+            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
+            log_message('error', $errorMessage);
+
+            return $this->respondError('Error al suspender el contrato');
+        }
+    }
 }

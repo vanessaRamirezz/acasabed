@@ -116,6 +116,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('contratos/pdf', 'Contratos::pdf');// para ver desde el formulario
     $routes->get('contratos/contrato', 'Contratos::contrato'); 
     $routes->get('getContratosTabla', 'Contratos::getContratosTabla'); 
+    $routes->post('suspenderContratoUnoaUno', 'Contratos::suspenderContratoUnoaUno'); 
 
     // COBROS DE INSTALACION
     $routes->get('cobros_instalacion', 'CobrosInstalacion::index');
