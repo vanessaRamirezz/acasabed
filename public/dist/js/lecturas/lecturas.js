@@ -25,7 +25,7 @@ function getData() {
 }
 
 function limpiarFormulario() {
-    inputs.periodo.val(null).trigger('change');
+    // inputs.periodo.val(null).trigger('change');
     inputs.contrato.val(null).trigger('change');
     inputs.fecha.val('');
     inputs.valor.val('');
@@ -34,30 +34,32 @@ function limpiarFormulario() {
 }
 
 function cargarPeriodos() {
-    $('#periodo').select2({
-        placeholder: "Busque y seleccione",
-        allowClear: true,
-        theme: 'bootstrap4',
-        ajax: {
-            url: baseURL + 'getPeriodosSelect', // Ruta de búsqueda en tu backend
-            dataType: "json",
-            delay: 250, // Espera para reducir solicitudes
-            data: function (params) {
-                return {
-                    q: params.term // El término de búsqueda
-                };
-            },
-            processResults: function (response) {
-                return {
-                    results: response.data.map(periodo => ({
-                        id: periodo.id,
-                        text: periodo.periodo
-                    }))
-                };
-            },
-            cache: true
+
+    $.ajax({
+        url: baseURL + 'getPeriodosSelect',
+        type: 'GET',
+        dataType: 'json',
+        success: function (response) {
+
+            const periodo = response.data;
+
+            if (!periodo) return;
+
+            const $select = $('#periodo');
+
+            $select.empty();
+
+            $select.append(
+                $('<option>', {
+                    value: periodo.id,
+                    text: periodo.periodo,
+                    selected: true
+                })
+            );
+
+            $('#periodo').prop('disabled', true);
         }
-    })
+    });
 }
 
 function cargarContratos() {
@@ -192,6 +194,11 @@ function abrirModalNuevaLectura() {
 
     eliminarColorYfocusSelect(inputs.periodo[0]);
 
+    // 👉 SETEAR FECHA ACTUAL
+    const hoy = new Date();
+    const fecha = hoy.toISOString().split('T')[0];
+    $('#fecha').val(fecha);
+
     $('#modal-lecturas').modal('show');
 }
 
@@ -290,46 +297,78 @@ function guardarOeditarLectura(tipoProceso) {
 let lecturasLote = [];
 
 function cargarPeriodosLote() {
-    $('#periodo-lote').select2({
-        placeholder: "Seleccione periodo",
-        allowClear: true,
-        theme: 'bootstrap4',
-        ajax: {
-            url: baseURL + 'getPeriodosSelect',
-            dataType: "json",
-            delay: 250,
-            data: function (params) {
-                return { q: params.term };
-            },
-            processResults: function (response) {
-                return {
-                    results: response.data.map(p => ({
-                        id: p.id,
-                        text: p.periodo
-                    }))
-                };
-            }
+    $.ajax({
+        url: baseURL + 'getPeriodosSelect',
+        type: 'GET',
+        dataType: 'json',
+        success: function (response) {
+
+            const periodo = response.data;
+
+            if (!periodo) return;
+
+            const $select = $('#periodo-lote');
+
+            $select.empty();
+
+            $select.append(
+                $('<option>', {
+                    value: periodo.id,
+                    text: periodo.periodo,
+                    selected: true
+                })
+            );
+
+            $('#periodo-lote').prop('disabled', true);
         }
     });
 }
 
-function cargarInstaladoresLote() {
-    $('#instalador-lote').select2({
-        placeholder: "Seleccione instalador",
-        allowClear: true,
-        theme: 'bootstrap4',
-        ajax: {
-            url: baseURL + 'getSelectInstaladores',
-            dataType: "json",
-            delay: 250,
-            data: params => ({ q: params.term }),
-            processResults: r => ({
-                results: r.data.map(i => ({
-                    id: i.id,
-                    text: i.nombre_de_instalador
-                }))
-            })
+let cacheInstaladores = null;
+let instaladorActualLote = null;
+
+function inicializarInstaladoresLote() {
+
+    $('.instalador-lote').each(function () {
+
+        const $select = $(this);
+
+        if ($select.hasClass("select2-hidden-accessible")) {
+            $select.select2('destroy');
         }
+
+        $select.select2({
+            placeholder: "Buscar instalador",
+            allowClear: true,
+            theme: 'bootstrap4',
+            ajax: {
+                transport: function (params, success, failure) {
+
+                    if (cacheInstaladores) {
+                        success(cacheInstaladores);
+                        return;
+                    }
+
+                    $.ajax({
+                        url: baseURL + 'getSelectInstaladores',
+                        dataType: 'json',
+                        success: function (r) {
+
+                            cacheInstaladores = {
+                                results: r.data.map(i => ({
+                                    id: i.id,
+                                    text: i.nombre_de_instalador
+                                }))
+                            };
+
+                            success(cacheInstaladores);
+                        },
+                        error: failure
+                    });
+                }
+            }
+        });
+
     });
 }
 
@@ -339,7 +378,7 @@ function limpiarLoteLecturas() {
 }
 
 function cargarContratosLectura() {
-
+    instaladorActualLote = null;
     const periodo = $('#periodo-lote').val();
 
     if (!periodo) {
@@ -361,36 +400,43 @@ function cargarContratosLectura() {
 
             if (!response.data || response.data.length === 0) {
                 tbody.html(`
-                    <tr>
-                        <td colspan="4" class="text-center">
-                            No hay contratos pendientes para este periodo
-                        </td>
-                    </tr>
-                `);
+                <tr>
+                    <td colspan="4" class="text-center">
+                        No hay contratos pendientes para este periodo
+                    </td>
+                </tr>
+            `);
                 return;
             }
 
             response.data.forEach((c, index) => {
 
                 tbody.append(`
-                    <tr>
-                        <td>${c.numero_contrato}</td>
-                        <td>${c.nombre_completo}</td>
-                        <td>${c.codigo_solicitud}</td>
+                <tr data-index="${index}">
+                    
+                    <td>${c.numero_contrato}</td>
+                    <td>${c.nombre_completo}</td>
 
-                        <td>
-                            <input type="number"
-                                   class="form-control lectura-input-lote"
-                                   data-index="${index}"
-                                   data-id="${c.id_contrato}">
-                        </td>
-                    </tr>
-                `);
+                   <td>
+                        <select class="form-control instalador-lote w-100"
+                                data-index="${index}"
+                                data-id="${c.id_contrato}">
+                        </select>
+                    </td>
+
+                    <td>
+                        <input type="number"
+                                class="form-control lectura-input-lote"
+                                data-index="${index}"
+                                data-id="${c.id_contrato}">
+                    </td>
+
+                </tr>
+            `);
             });
 
-        },
-        error: function () {
-            alertaError('Error al cargar contratos');
+            // 🔥 IMPORTANTE: inicializar Select2 DESPUÉS del render
+            inicializarInstaladoresLote();
         }
     });
 }
@@ -441,11 +487,17 @@ function obtenerLecturasLote() {
 
         if (!valor || valor <= 0) return;
 
+        // 🔥 obtener fila actual
+        const row = $(this).closest('tr');
+
+        // 🔥 obtener select de esa fila
+        const instalador = row.find('.instalador-lote').val();
+
         lecturas.push({
             idContrato: idContrato,
             valor: valor,
             periodo: $('#periodo-lote').val(),
-            instalador: $('#instalador-lote').val(),
+            instalador: instalador, // ✅ correcto
             fecha: $('#fecha-lote').val()
         });
     });
@@ -466,7 +518,11 @@ function abrirModalNuevaLecturaLote() {
     $('#fecha-lote').val('');
 
     cargarPeriodosLote();
-    cargarInstaladoresLote();
+
+    // 👉 SETEAR FECHA ACTUAL
+    const hoy = new Date();
+    const fecha = hoy.toISOString().split('T')[0];
+    $('#fecha-lote').val(fecha);
 
     $('#modal-lecturas-lote').modal('show');
 }
@@ -495,6 +551,19 @@ function eventosUsuarios() {
         abrirModalNuevaLecturaLote();
     });
 
+    // evento para caturar cambio de instalador 
+    $(document).on('change', '.instalador-lote', function () {
+
+        const data = $(this).select2('data')[0];
+
+        if (!data) return;
+
+        instaladorActualLote = {
+            id: data.id,
+            text: data.text
+        };
+    });
+
     $(document).on('keydown', '.lectura-input-lote', function (e) {
 
         if (e.key !== 'Enter') return;
@@ -506,10 +575,33 @@ function eventosUsuarios() {
 
         const next = inputs.get(index + 1);
 
-        if (next) {
-            next.focus();
-            next.select(); // 🔥 mejora UX tipo Excel
+        if (!next) return;
+
+        const nextRow = $(next).closest('tr');
+        const nextSelect = nextRow.find('.instalador-lote');
+
+        if (instaladorActualLote) {
+
+            // ❌ NO loops
+            // ❌ NO cascadas
+            // ❌ NO propagate all rows
+
+            const option = new Option(
+                instaladorActualLote.text,
+                instaladorActualLote.id,
+                true,
+                true
+            );
+
+            nextSelect
+                .empty() // 🔥 evita duplicados visuales
+                .append(option)
+                .val(instaladorActualLote.id)
+                .trigger('change');
         }
+
+        next.focus();
+        next.select();
     });
 
     $('#btn-cargar-contratos').on('click', function () {

@@ -55,8 +55,7 @@ class Lecturas extends BaseController
     public function getPeriodosSelect()
     {
         try {
-            $search = $this->request->getVar('q') ?? '';
-            $periodos = $this->periodosModel->buscarPeriodos($search);
+            $periodos = $this->periodosModel->buscarPeriodos();
             return $this->respondSuccess($periodos);
         } catch (\Throwable $th) {
             $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
@@ -254,14 +253,11 @@ class Lecturas extends BaseController
         try {
 
             $lecturasJson = $this->request->getPost('lecturas');
+            $post = $this->request->getPost();
+            $lecturas = json_decode($post['lecturas'], true);
 
-            log_message(
-                'info',
-                "DATA LECTURAS MASIVAS:\n" . json_encode(
-                    json_decode($lecturasJson, true),
-                    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
-                )
-            );
+            log_message('debug', 'POST completo: ' . json_encode($post, JSON_PRETTY_PRINT));
+            log_message('debug', 'LECTURAS decodificadas: ' . json_encode($lecturas, JSON_PRETTY_PRINT));
             // exit;
             if (!$lecturasJson) {
                 throw new \Exception('No se recibieron lecturas');

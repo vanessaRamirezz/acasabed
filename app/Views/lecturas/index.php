@@ -7,6 +7,11 @@
         font-size: 0.9rem;
         color: #495057;
     } */
+
+    #tbl-lecturas-lote .select2-container {
+        min-width: 180px;
+        width: 100% !important;
+    }
 </style>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
@@ -29,10 +34,10 @@
 
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Agregar Nueva Lectura</button>
+                <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Lectura Individual</button>
             </div>
             <div class="card-header py-3">
-                <button type="button" id="btn-agregar-lote" class="btn bg-gradient-primary btn-flat">Agregar Carga Masiva</button>
+                <button type="button" id="btn-agregar-lote" class="btn bg-gradient-primary btn-flat">Lectura Completa</button>
             </div>
             <div class="card-body">
 
@@ -82,9 +87,7 @@
                                 <div class="col-sm-5">
                                     <div class="form-group">
                                         <label for="periodo">Periodo</label>
-                                        <select id="periodo" class="form-control">
-                                            <option value="">Seleccione...</option>
-                                        </select>
+                                        <select id="periodo" class="form-control"></select>
                                     </div>
                                 </div>
                                 <div class="col-sm-5">
@@ -162,14 +165,6 @@
                             <div class="col-md-3">
                                 <label>Periodo</label>
                                 <select id="periodo-lote" class="form-control">
-                                    <option value="">Seleccione...</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-3">
-                                <label>Instalador</label>
-                                <select id="instalador-lote" class="form-control">
-                                    <option value="">Seleccione...</option>
                                 </select>
                             </div>
 
@@ -193,7 +188,7 @@
                                     <tr>
                                         <th>Contrato</th>
                                         <th>Cliente</th>
-                                        <th>Solicitud</th>
+                                        <th>Instalador</th>
                                         <th>Lectura</th>
                                     </tr>
                                 </thead>
