@@ -113,10 +113,10 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
     // CONTRATOS
     $routes->get('contratos', 'Contratos::index');
-    $routes->post('contratos/pdf', 'Contratos::pdf');// para ver desde el formulario
-    $routes->get('contratos/contrato', 'Contratos::contrato'); 
-    $routes->get('getContratosTabla', 'Contratos::getContratosTabla'); 
-    $routes->post('suspenderContratoUnoaUno', 'Contratos::suspenderContratoUnoaUno'); 
+    $routes->post('contratos/pdf', 'Contratos::pdf'); // para ver desde el formulario
+    $routes->get('contratos/contrato', 'Contratos::contrato');
+    $routes->get('getContratosTabla', 'Contratos::getContratosTabla');
+    $routes->post('suspenderContratoUnoaUno', 'Contratos::suspenderContratoUnoaUno');
 
     // COBROS DE INSTALACION
     $routes->get('cobros_instalacion', 'CobrosInstalacion::index');
@@ -125,4 +125,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPagoInstalacion');
     $routes->get('getCobrosRealizados', 'CobrosInstalacion::getCobrosRealizados');
     $routes->get('facturaCobroInstalacion/(:num)', 'CobrosInstalacion::facturaCobroInstalacion/$1');
+
+    // RANGO DE FACTURAS
+    $routes->get('rango_de_facturas', 'RangoFacturas::index');
+    $routes->post('guardarRango', 'RangoFacturas::guardarRango');
+    $routes->get('getRangoFacturas', 'RangoFacturas::getRangoFacturas');
 });
