@@ -146,10 +146,10 @@ function renderizarTablaCuenta(detalles) {
             <td>
                 <button 
                     type="button" 
-                    class="btn btn-danger btn-sm btn-ver-cuotas-modal"
+                    class="btn btn-info btn-sm btn-ver-cuotas-modal"
                     data-index="${index}"
                 >
-                    <i class="fas fa-cash-register"></i>
+                    <i class="fas fa-eye"></i>
                 </button>
             </td>
         </tr>
@@ -422,8 +422,11 @@ function renderizarModal(detalle, resetFormulario) {
     }
 
     if (resetFormulario) {
-        inputs.montoPago.val('');
-        $('.input-mora').val('');
+        // inputs.montoPago.val('');
+        $('.monto-ocultar').hide();
+        $('#btn-validar-cobro').hide();
+        $('.input-mora').prop('disabled',true)
+        // $('.input-mora').val('');
         limpiarEstadoValidacion();
     }
 }
@@ -545,6 +548,13 @@ function eventosUsuarios() {
         if (idCliente) {
             cargarDetalleCobro(idCliente);
         }
+    });
+
+    // 🔥 cuando limpia con la "X" (Select2)
+    inputs.buscarCliente.on('select2:clear', function () {
+        const tbody = $('#tbl-cuentas-cobro tbody');
+
+        tbody.empty();
     });
 
     // evento para cobrar y abrir el modal con la informacion de la solicitud

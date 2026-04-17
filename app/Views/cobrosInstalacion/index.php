@@ -81,6 +81,9 @@
 
 <section class="content">
     <div class="container-fluid">
+        <div class="card-header py-3">
+            <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Generar Facturas</button>
+        </div>
         <input type="hidden" id="id-contrato-cobro">
 
         <div id="accordion-cobros-instalacion">
@@ -241,7 +244,7 @@
                     </table>
                 </div>
 
-                <div class="row">
+                <div class="row monto-ocultar">
                     <div class="col-md-4 mb-3">
                         <label for="monto-pago">Monto a cancelar</label>
                         <input type="number" min="0.01" step="0.01" class="form-control" id="monto-pago" placeholder="0.00">
