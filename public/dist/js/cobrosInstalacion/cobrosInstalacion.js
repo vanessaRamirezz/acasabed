@@ -388,8 +388,6 @@ function renderizarModal(detalle, resetFormulario) {
                 <td>${formatearFecha(cuota.fecha_vencimiento)}</td>
                 <td>${formatearFecha(cuota.fecha_pago)}</td>
                 <td>${formatearMonto(cuota.monto_cuota)}</td>
-                <td>${formatearMonto(cuota.cantidad_abonada)}</td>
-
                 <td>
                     <input 
                         type="number" 
@@ -425,7 +423,7 @@ function renderizarModal(detalle, resetFormulario) {
         // inputs.montoPago.val('');
         $('.monto-ocultar').hide();
         $('#btn-validar-cobro').hide();
-        $('.input-mora').prop('disabled',true)
+        $('.input-mora').prop('disabled', true)
         // $('.input-mora').val('');
         limpiarEstadoValidacion();
     }
@@ -476,69 +474,93 @@ function registrarPago() {
     });
 }
 
-// function renderizarModal(detalle, resetFormulario) {
-//     const resumen = detalle.resumen || {};
-//     const cuotas = detalle.cuotas || [];
+function generarFacturas() {
 
-//     inputs.idContrato.val(resumen.id_contrato || '');
-//     $('#resumen-cliente').text(resumen.nombre_completo || '-');
-//     $('#resumen-solicitud').text(resumen.codigo_solicitud || '-');
-//     $('#resumen-contrato').text(resumen.numero_contrato || '-');
-//     $('#resumen-costo-instalacion').text(formatearMonto(resumen.costo));
-//     $('#resumen-saldo-pendiente').text(formatearMonto(resumen.saldo_pendiente));
-//     $('#resumen-cuotas-pendientes').text(resumen.cuotas_pendientes || 0);
+    let interval; // 👈 lo declaras fuera
 
+    Swal.fire({
+        title: 'Generando facturas...',
+        html: 'Iniciando...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
 
-//     const mapaMoras = obtenerMapaMoras(); // 👈 GUARDAS ANTES
+            let mensajes = [
+                'Validando contratos...',
+                'Calculando cuotas...',
+                'Aplicando recargos...',
+                'Generando facturas...',
+                'Finalizando...'
+            ];
 
-//     const tbody = $('#tbl-detalle-cuotas tbody');
-//     tbody.empty();
+            let i = 0;
 
-//     if (resetFormulario) {
-//         cuotasSeleccionadas = [];
-//     }
+            interval = setInterval(() => {
+                if (i < mensajes.length) {
+                    Swal.update({ html: mensajes[i] });
+                    i++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 800);
+        }
+    });
 
-//     cuotas.forEach(cuota => {
-//         const esSeleccionada = cuotasSeleccionadas.includes(cuota.id_cobro_instalacion);
-//         const claseFila = esSeleccionada ? 'table-success' : '';
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'generarFacturasCobros',
+        dataType: 'json',
 
-//         const valorMora = mapaMoras[cuota.id_cobro_instalacion] || ''; // RESTAURAS
+        success: function (response) {
 
-//         const estadoColor = cuota.estado === 'CANCELADO' ? 'text-success' : 'text-danger';
+            clearInterval(interval); // 🔥 detener siempre
+            if (response.status === 'success') {
 
-//         tbody.append(`
-//         <tr class="${claseFila}">
-//             <td>${cuota.numero_cuota}</td>
-//             <td>${cuota.descripcion}</td>
-//             <td>${formatearFecha(cuota.fecha_vencimiento)}</td>
-//             <td>${formatearFecha(cuota.fecha_pago)}</td>
-//             <td>${formatearMonto(cuota.monto_cuota)}</td>
-//             <td>${formatearMonto(cuota.cantidad_abonada)}</td>
+                Swal.close();
 
-//             <td>
-//                 <input 
-//                     type="number" 
-//                     step="0.01" 
-//                     min="0"
-//                     class="form-control input-mora"
-//                     data-id="${cuota.id_cobro_instalacion}"
-//                     value="${valorMora}"
-//                 >
-//             </td>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.data
+                }).then(() => {
+                    location.reload(); // 🔥 recarga después de OK
+                });
 
-//             <td class="${estadoColor}">${cuota.estado || '-'}</td>
-//         </tr>
-//         `);
-//     });
+            } else {
 
-//     if (resetFormulario) {
-//         inputs.montoPago.val('');
-//         $('.input-mora').val('');
-//         limpiarEstadoValidacion();
-//     }
-// }
+                Swal.close();
 
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.mensaje || 'No se pudieron generar las facturas'
+                });
+            }
+        },
 
+        error: function () {
+
+            clearInterval(interval); // 🔥 detener en error
+
+            Swal.close();
+            alertEnSweet('error', 'Ups..', 'Ocurrió un error al generar las facturas');
+        }
+    });
+}
+
+function imprimirFacturasPeriodoActivo() {
+    const ventana = window.open(
+        baseURL + 'imprimirFacturasCobroPeriodoActivo?autoPrint=1',
+        '_blank'
+    );
+
+    if (!ventana) {
+        alertaError('El navegador bloqueó la ventana de impresión. Permite ventanas emergentes e inténtalo nuevamente.');
+        return;
+    }
+
+    ventana.focus();
+}
 
 function eventosUsuarios() {
     // evento que al seleccionar un cliente del select se listaran sus solicitudes
@@ -589,6 +611,17 @@ function eventosUsuarios() {
 
         // abrir PDF en nueva pestaña
         window.open(baseURL + 'facturaCobroInstalacion/' + id, '_blank');
+    });
+
+
+    // eventos para generar las facturas
+    $("#btn-generar-facturas").on("click", function () {
+        generarFacturas();
+    });
+
+    // eventos para imprimir las facturas
+    $("#btn-imprimir-facturas-periodo").on("click", function () {
+        imprimirFacturasPeriodoActivo();
     });
 }
 

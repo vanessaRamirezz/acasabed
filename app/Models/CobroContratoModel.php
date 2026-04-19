@@ -16,7 +16,6 @@ class CobroContratoModel extends Model
         'estado',
         'fecha_vencimiento',
         'fecha_pago',
-        'cantidad_abonada',
         'id_usuario',
         'fecha_creacion',
         'recargo',
@@ -29,7 +28,7 @@ class CobroContratoModel extends Model
         $builder->join('contratos', 'contratos.id_contrato = contratos_cobros.id_contrato', 'left');
         $builder->join('solicitudes', 'solicitudes.id_solicitud = contratos.id_solicitud', 'left');
         $builder->join('clientes', 'clientes.id_cliente = contratos.id_cliente', 'left');
-        $builder->where('COALESCE(contratos_cobros.cantidad_abonada, 0) >', 0, false);
+
 
         $total = $builder->countAllResults(false);
 
@@ -51,8 +50,6 @@ class CobroContratoModel extends Model
                 clientes.nombre_completo AS cliente,
                 contratos_cobros.numero_cuota,
                 contratos_cobros.monto_cuota,
-                COALESCE(contratos_cobros.cantidad_abonada, 0) AS cantidad_abonada,
-                (contratos_cobros.monto_cuota - COALESCE(contratos_cobros.cantidad_abonada, 0)) AS saldo_cuota,
                 contratos_cobros.estado,
                 contratos_cobros.fecha_pago
             ", false)
@@ -85,7 +82,7 @@ class CobroContratoModel extends Model
                 COALESCE(solicitudes.saldo_pendiente, 0) AS saldo_pendiente,
                 SUM(
                     CASE
-                        WHEN (contratos_cobros.monto_cuota - COALESCE(contratos_cobros.cantidad_abonada, 0)) > 0
+                        WHEN contratos_cobros.estado = 'PENDIENTE'
                         THEN 1
                         ELSE 0
                     END
@@ -110,8 +107,6 @@ class CobroContratoModel extends Model
                 numero_cuota,
                 monto_cuota,
                 descripcion,
-                COALESCE(cantidad_abonada, 0) AS cantidad_abonada,
-                (monto_cuota - COALESCE(cantidad_abonada, 0)) AS saldo_cuota,
                 estado,
                 fecha_vencimiento,
                 fecha_pago,
@@ -152,5 +147,43 @@ class CobroContratoModel extends Model
         }
 
         return $resultado;
+    }
+
+    //metodos para generar la factura 
+    public function getContratosParaFacturar()
+    {
+        return $this->db->table('contratos')
+            ->select("
+            contratos.id_contrato,
+            contratos.id_solicitud,
+            contratos.numero_contrato,
+            solicitudes.id_cliente,
+            solicitudes.codigo_solicitud,
+            solicitudes.saldo_pendiente
+        ")
+            ->join('solicitudes', 'solicitudes.id_solicitud = contratos.id_solicitud')
+            ->where('solicitudes.estado', 'APROBADA')
+            ->where('contratos.estado', 'APROBADO')
+            ->where('solicitudes.saldo_pendiente >', 0)
+            ->get()
+            ->getResult();
+    }
+
+    public function getCuotasPendientesPorContrato($idContrato)
+    {
+        return $this->db->table('contratos_cobros')
+            ->select("
+            id_cobro_instalacion,
+            id_contrato,
+            numero_cuota,
+            monto_cuota,
+            estado,
+            fecha_vencimiento,
+            recargo
+        ")
+            ->where('id_contrato', $idContrato)
+            ->orderBy('numero_cuota', 'ASC')
+            ->get()
+            ->getResult();
     }
 }

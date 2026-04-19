@@ -108,4 +108,12 @@ class PeriodoModel extends Model
             ->orderBy('id_periodo', 'ASC')
             ->first();
     }
+
+    public function getPeriodoActivo()
+    {
+        return $this->select('id_periodo')
+            ->where('estado', 'ACTIVO')
+            ->orderBy('id_periodo', 'DESC') // por si hay más de uno
+            ->first();
+    }
 }

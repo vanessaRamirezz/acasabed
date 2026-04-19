@@ -1056,7 +1056,7 @@ class Solicitudes extends BaseController
                     'descripcion' => "Pago único por la conexión",
                     'estado' => 'PENDIENTE',
                     'fecha_vencimiento' => $fechaCalculada,
-                    'fecha_pago' => $fechaCalculada,
+                    // 'fecha_pago' => $fechaCalculada,
                     'id_usuario' => $idUsuario,
                     'fecha_creacion' => $fechaCreacion
                 ];
@@ -1079,7 +1079,7 @@ class Solicitudes extends BaseController
                         'descripcion' => "Cuota numero $i de " . $cobros['data']['cantidadDePagos'],
                         'estado' => 'PENDIENTE',
                         'fecha_vencimiento' => $fechaCalculada,
-                        'fecha_pago' => $fechaCalculada,
+                        // 'fecha_pago' => $fechaCalculada,
                         'id_usuario' => $idUsuario,
                         'fecha_creacion' => $fechaCreacion
                     ];

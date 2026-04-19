@@ -75,4 +75,43 @@ class RangoFacturaModel extends Model
             'filtered' => $filtered
         ];
     }
+
+    public function obtenerCorrelativoFactura($db)
+    {
+        $query = $db->query("
+        SELECT *
+        FROM rango_factura
+        WHERE estado = 'Activo'
+        LIMIT 1
+        FOR UPDATE
+    ");
+
+        $rango = $query->getRowArray();
+
+        if (!$rango) {
+            throw new \Exception('No hay rango de facturación activo');
+        }
+
+        $actual = (int)$rango['numero_actual'];
+        $fin    = (int)$rango['numero_fin'];
+
+        if ($actual > $fin) {
+
+            $db->table('rango_factura')
+                ->where('id_rango_factura', $rango['id_rango_factura'])
+                ->update(['estado' => 'Finalizado']);
+
+            throw new \Exception('El rango de facturación ya fue consumido');
+        }
+
+        // siguiente valor
+        $siguiente = $actual + 1;
+
+        $db->table('rango_factura')
+            ->where('id_rango_factura', $rango['id_rango_factura'])
+            ->update(['numero_actual' => $siguiente]);
+
+        // 🔥 retornas el usado, no el siguiente
+        return $actual;
+    }
 }

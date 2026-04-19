@@ -12,7 +12,9 @@ class PagosInstalacionModel extends Model
         'correlativo',
         'id_contrato',
         'id_solicitud',
-        'fecha_creacion'
+        'id_periodo',
+        'fecha_creacion',
+        'estado'
     ];
 
     // public function correlativoPago($db)
@@ -46,4 +48,5 @@ class PagosInstalacionModel extends Model
 
         return str_pad($numero, 5, '0', STR_PAD_LEFT);
     }
+    
 }

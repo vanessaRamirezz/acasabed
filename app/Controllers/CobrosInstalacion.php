@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Models\CobroContratoModel;
 use App\Models\HistorialCobroInstalacionModel;
 use App\Models\PagosInstalacionModel;
+use App\Models\PeriodoModel;
+use App\Models\RangoFacturaModel;
 use App\Models\SolicitudModel;
 use PHPUnit\Event\Telemetry\Info;
 
@@ -14,6 +16,8 @@ class CobrosInstalacion extends BaseController
     private $historialCobroInstalacionModel;
     private $solicitudesModel;
     private $pagosInstalacionModel;
+    private $periodosModel;
+    private $rangoFacturasModel;
 
     public function __construct()
     {
@@ -21,6 +25,8 @@ class CobrosInstalacion extends BaseController
         $this->historialCobroInstalacionModel = new HistorialCobroInstalacionModel();
         $this->solicitudesModel = new SolicitudModel();
         $this->pagosInstalacionModel = new PagosInstalacionModel();
+        $this->periodosModel = new PeriodoModel();
+        $this->rangoFacturasModel = new RangoFacturaModel();
     }
 
     public function index()
@@ -478,7 +484,7 @@ class CobrosInstalacion extends BaseController
         $pdf->SetXY($rightX, $rightY + ($hLabel * 2) + $hValue);
 
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->SetFont('helvetica', '', 7);
+        $pdf->SetFont('helvetica', '', 5);
         $pdf->Cell($rightW, $hValue, $factura['codigo_solicitud'], 1, 0, 'C');
 
 
@@ -523,38 +529,58 @@ class CobrosInstalacion extends BaseController
         // filas
         $yDetalle = $y + 67;
 
+        // 1. Mostrar los registros reales
+        $total = 0;
+        foreach ($detalle as $item) {
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetXY($x, $yDetalle);
+
+            $pdf->Cell($colW, 7, '', 'L', 0);
+            $pdf->Cell($colW * 3, 7, $item['descripcion'] ?? 'Cobro de instalación', 'L', 0);
+            $pdf->Cell($colW, 7, number_format($item['monto_cuota'] + $item['recargo_aplicado'], 2), 'LR', 1);
+
+            $yDetalle += 7;
+            $total += $item['monto_cuota'] + $item['recargo_aplicado'];
+        }
+
+        // 2. Rellenar filas vacías hasta 10
         $filas = count($detalle);
 
         for ($i = $filas; $i < 10; $i++) {
+
             $pdf->SetXY($x, $yDetalle);
 
             $pdf->Cell($colW, 7, '', 'L', 0);
             $pdf->Cell($colW * 3, 7, '', 'L', 0);
             $pdf->Cell($colW, 7, '', 'LR', 1);
 
-            $yDetalle += 7;
+            $yDetalle += 5;
         }
 
         // TOTALES
         $pdf->SetXY($x, $yDetalle); // 👈 sin +19
 
         // izquierda
+        $pdf->SetTextColor(0, 51, 153);
         $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW * 2.5, 6, 'SI UD. NO PAGA A TIEMPO PAGARÁ', 'TB', 0, 'L');
-        $pdf->Cell($colW * 0.5, 6, '$0.00', 'TB', 0, 'R');
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Cell($colW * 0.5, 6, '$' . $total + 2, 'TB', 0, 'R');
 
         // derecha
-        $pdf->SetFont('helvetica', 'B', 6);
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW, 6, 'TOTAL:', 'TB', 0, 'R');
-        $pdf->Cell($colW, 6, '$0.00', 'TB', 1, 'R');
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Cell($colW, 6, '$ ' . $total, 'TB', 1, 'R');
 
         // FOOTER
         $currentY = $pdf->GetY();
 
         // === IZQUIERDA (texto en 2 líneas controladas) ===
         $pdf->SetXY($x, $currentY);
-
-        $pdf->SetFont('helvetica', '', 7);
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 6);
 
         $pdf->MultiCell(
             $colW * 4,
@@ -566,15 +592,15 @@ class CobrosInstalacion extends BaseController
 
         $pdf->SetXY($x + ($colW * 4), $currentY);
 
-        $pdf->Cell($colW, 5, '03/02/2026', 0, 0, 'R');
+        // $pdf->Cell($colW, 5, '03/02/2026', 0, 0, 'R');
 
 
         $currentY = $pdf->GetY();
 
-        $currentY = $pdf->GetY();
+        // $currentY = $pdf->GetY();
 
         // === TELÉFONO (solo lado izquierdo enmarcado) ===
-        $pdf->SetXY($x, $currentY + 10);
+        $pdf->SetXY($x, $currentY + 7);
 
         // ancho izquierdo (igual que totales)
         $leftW = $colW * 3;
@@ -583,7 +609,7 @@ class CobrosInstalacion extends BaseController
         // rectángulo SOLO del lado izquierdo
         $pdf->RoundedRect(
             $x,                // posición X
-            $currentY + 10,    // posición Y
+            $currentY + 6,    // posición Y
             $leftW,            // ancho
             6,                 // alto
             1.5,               // radio de la esquina (ajusta aquí)
@@ -592,12 +618,12 @@ class CobrosInstalacion extends BaseController
         );
 
         // texto dentro del cuadro
-        $pdf->SetFont('helvetica', '', 7);
-        $pdf->SetXY($x + 1, $currentY + 11);
+        $pdf->SetFont('helvetica', '', 5);
+        $pdf->SetXY($x + 1, $currentY + 7);
         $pdf->Cell($leftW - 2, 4, 'TELÉFONO DE EMERGENCIA: 2332-0282', 0, 0, 'L');
 
         // === TEXTO DERECHO (sin cuadro) ===
-        $pdf->SetXY($x + $leftW, $currentY + 10);
+        $pdf->SetXY($x + $leftW, $currentY + 6);
 
         $pdf->MultiCell(
             $rightW,
@@ -608,15 +634,43 @@ class CobrosInstalacion extends BaseController
         );
     }
 
+    private function agregarPaginaFacturaCobro($pdf, array $factura, array $detalle)
+    {
+        $pdf->AddPage();
+        $pdf->SetTitle('Factura ' . ($factura['cliente'] ?? 'Cobro'));
+
+        $this->dibujarComprobante($pdf, 10, 10, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
+        $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
+    }
+
+    private function responderVentanaImpresionConMensaje($mensaje, $statusCode = 400)
+    {
+        $html = '<!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Facturas de cobro</title>
+        </head>
+        <body>
+            <script>
+                alert(' . json_encode($mensaje) . ');
+                window.close();
+            </script>
+        </body>
+        </html>';
+
+        return $this->response
+            ->setStatusCode($statusCode)
+            ->setContentType('text/html; charset=UTF-8')
+            ->setBody($html);
+    }
+
     public function facturaCobroInstalacion($id)
     {
-
-        // 1. Traer datos del pago
         $data = $this->historialCobroInstalacionModel->obtenerFacturaPorId($id);
+
         log_message('info', ' datos recibidos para enviar a ver la factura' . print_r($data, true));
         // exit;
-
-
         if (!$data['factura']) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('No existe la factura');
         }
@@ -627,16 +681,257 @@ class CobrosInstalacion extends BaseController
         $pdf = new \TCPDF('P', 'mm', 'A4');
         $pdf->SetMargins(5, 5, 5);
         $pdf->SetAutoPageBreak(false);
-        $pdf->AddPage();
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
 
-        // IZQUIERDA (CLIENTE)
-        $this->dibujarComprobante($pdf, 10, 10, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
+        $this->agregarPaginaFacturaCobro($pdf, $factura, $detalle);
 
-        // DERECHA (BANCO)
-        $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
+        // 🔑 Nombre dinámico con cliente
+        $nombrePDF = 'Factura_' . preg_replace('/[^A-Za-z0-9]/', '_', $factura['cliente']) . '.pdf';
 
-        return $this->response
-            ->setContentType('application/pdf')
-            ->setBody($pdf->Output('factura.pdf', 'S'));
+        // 🔥 IMPORTANTE: salida directa
+        $pdf->Output($nombrePDF, 'I');
+
+        exit; // corta ejecución (clave)
+    }
+
+    public function imprimirFacturasCobroPeriodoActivo()
+    {
+        try {
+            $periodo = $this->periodosModel->getPeriodoActivo();
+
+            if (!$periodo) {
+                return $this->responderVentanaImpresionConMensaje('No hay periodo activo para imprimir facturas.', 404);
+            }
+
+            $pagos = $this->pagosInstalacionModel
+                ->where('id_periodo', $periodo['id_periodo'])
+                ->orderBy('id_pago', 'ASC')
+                ->findAll();
+
+            if (empty($pagos)) {
+                return $this->responderVentanaImpresionConMensaje('No hay facturas generadas en el periodo activo.', 404);
+            }
+
+            $pdf = new \TCPDF('P', 'mm', 'A4');
+            $pdf->SetMargins(5, 5, 5);
+            $pdf->SetAutoPageBreak(false);
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+
+            foreach ($pagos as $pago) {
+                $dataFactura = $this->historialCobroInstalacionModel->obtenerFacturaPorId($pago['id_pago']);
+
+                if (empty($dataFactura['factura'])) {
+                    continue;
+                }
+
+                $this->agregarPaginaFacturaCobro($pdf, $dataFactura['factura'], $dataFactura['detalle'] ?? []);
+            }
+
+            if ($pdf->getNumPages() === 0) {
+                return $this->responderVentanaImpresionConMensaje('No se encontraron facturas válidas para imprimir en el periodo activo.', 404);
+            }
+
+            if ($this->request->getGet('autoPrint') === '1') {
+                $pdf->IncludeJS('print(true);');
+            }
+
+            $nombrePDF = 'Facturas_cobro_periodo_' . $periodo['id_periodo'] . '_' . date('Ymd_His') . '.pdf';
+
+            $pdf->Output($nombrePDF, 'I');
+            exit;
+        } catch (\Throwable $th) {
+            log_message('error', $th->getMessage());
+
+            return $this->responderVentanaImpresionConMensaje('Ocurrió un error al preparar la impresión de facturas.', 500);
+        }
+    }
+
+    // funciones para manejar la creacion de facturas
+    public function generarFacturasCobros()
+    {
+        $db = \Config\Database::connect();
+        $db->transBegin();
+
+        try {
+            $periodo = $this->periodosModel->getPeriodoActivo();
+
+            if (!$periodo) {
+                throw new \Exception('No hay periodo activo');
+            }
+
+            log_message('info', 'Periodo activo ID: ' . $periodo['id_periodo']);
+
+            $contratos = $this->cobrosContratoModel->getContratosParaFacturar();
+            log_message('info', 'Contratos obtenidos: ' . count($contratos));
+
+            $facturasGeneradas = 0;
+
+            foreach ($contratos as $contrato) {
+
+                log_message('info', '--- Procesando contrato: ' . $contrato->id_contrato);
+
+                // 🔒 Validar si ya existe factura en el periodo
+                $existeFactura = $this->pagosInstalacionModel
+                    ->where('id_contrato', $contrato->id_contrato)
+                    ->where('id_periodo', $periodo['id_periodo'])
+                    ->first();
+
+                if ($existeFactura) {
+                    log_message('info', 'Contrato omitido: ya tiene factura en este periodo');
+                    continue;
+                }
+
+                // 📥 Obtener cuotas
+                $cuotas = $this->cobrosContratoModel->getCuotasPendientesPorContrato($contrato->id_contrato);
+
+                if (empty($cuotas)) {
+                    log_message('info', 'Sin cuotas para contrato');
+                    continue;
+                }
+
+                log_message('info', 'Cuotas encontradas: ' . count($cuotas));
+
+                $cuotasPendientes = [];
+                $cuotaNueva = null;
+
+                // =========================
+                // 🔥 PASO 1: OBTENER HASTA 3 PENDIENTES
+                // =========================
+                foreach ($cuotas as $cuota) {
+
+                    if (count($cuotasPendientes) >= 3) {
+                        break;
+                    }
+
+                    $historialPendiente = $db->table('historial_cobros_instalacion hci')
+                        ->select('hci.id_pago')
+                        ->join('pagos_instalacion pi', 'pi.id_pago = hci.id_pago')
+                        ->where('hci.id_cobro_instalacion', $cuota->id_cobro_instalacion)
+                        ->where('pi.estado', 'PENDIENTE')
+                        ->orderBy('pi.id_pago', 'DESC')
+                        ->get(1)
+                        ->getFirstRow('array');
+
+                    if ($historialPendiente) {
+                        log_message('info', 'Pendiente detectada: cuota ' . $cuota->numero_cuota);
+
+                        $cuotasPendientes[] = $cuota;
+                    }
+                }
+
+                log_message('info', 'Total pendientes encontradas: ' . count($cuotasPendientes));
+
+                if (count($cuotasPendientes) >= 3) {
+                    log_message('info', 'Contrato omitido: ya tiene 3 cuotas pendientes facturadas');
+                    continue;
+                }
+
+                // =========================
+                // 🔥 PASO 2: BUSCAR 1 NUEVA (solo si hay menos de 3 pendientes)
+                // =========================
+                foreach ($cuotas as $cuota) {
+
+                    $historial = $db->table('historial_cobros_instalacion')
+                        ->select('id_pago')
+                        ->where('id_cobro_instalacion', $cuota->id_cobro_instalacion)
+                        ->get(1)
+                        ->getFirstRow('array');
+
+                    if (!$historial) {
+                        log_message('info', 'Cuota nueva detectada: ' . $cuota->numero_cuota);
+
+                        $cuotaNueva = $cuota;
+                        break;
+                    }
+                }
+
+                // =========================
+                // 🔥 CONSTRUIR DETALLE
+                // =========================
+                $detalle = [];
+                $total = 0;
+
+                // 🔴 Agregar pendientes
+                foreach ($cuotasPendientes as $cuota) {
+
+                    $detalle[] = [
+                        'id_cobro_instalacion' => $cuota->id_cobro_instalacion,
+                        'monto_cuota' => $cuota->monto_cuota,
+                        'recargo_aplicado' => 2.00,
+                        'descripcion' => 'Cuota numero ' . $cuota->numero_cuota . ' (FACTURA ANTERIOR)'
+                    ];
+
+                    $total += ($cuota->monto_cuota + 2.00);
+                }
+
+                // 🟢 Agregar nueva
+                if ($cuotaNueva) {
+
+                    $detalle[] = [
+                        'id_cobro_instalacion' => $cuotaNueva->id_cobro_instalacion,
+                        'monto_cuota' => $cuotaNueva->monto_cuota,
+                        'recargo_aplicado' => 0,
+                        'descripcion' => ($cuotaNueva->numero_cuota == 0)
+                            ? 'Cobro por instalación'
+                            : 'Cuota numero ' . $cuotaNueva->numero_cuota
+                    ];
+
+                    $total += $cuotaNueva->monto_cuota;
+                }
+
+                log_message('info', 'Detalle final: ' . print_r($detalle, true));
+                log_message('info', 'Total calculado: ' . $total);
+
+                if (empty($detalle)) {
+                    log_message('info', 'No hay nada que facturar');
+                    continue;
+                }
+
+                // =========================
+                // 🔥 GENERAR FACTURA
+                // =========================
+                $correlativo = $this->rangoFacturasModel->obtenerCorrelativoFactura($db);
+
+                $idPago = $this->pagosInstalacionModel->insert([
+                    'correlativo'   => $correlativo,
+                    'id_contrato'   => $contrato->id_contrato,
+                    'id_solicitud'  => $contrato->id_solicitud,
+                    'id_periodo'    => $periodo['id_periodo'],
+                    'fecha_creacion' => date('Y-m-d'),
+                    'estado' => 'PENDIENTE'
+                ]);
+
+                foreach ($detalle as $item) {
+
+                    $this->historialCobroInstalacionModel->insert([
+                        'id_pago'               => $idPago,
+                        'id_contrato'           => $contrato->id_contrato,
+                        'id_solicitud'          => $contrato->id_solicitud,
+                        'id_cobro_instalacion'  => $item['id_cobro_instalacion'],
+                        'recargo_aplicado'      => $item['recargo_aplicado'],
+                        'monto_cuota'           => $item['monto_cuota'],
+                        'fecha_creacion'        => date('Y-m-d'),
+                        'descripcion'           => $item['descripcion']
+                    ]);
+                }
+
+                $facturasGeneradas++;
+
+                log_message('info', 'Factura creada correctamente para contrato ' . $contrato->id_contrato);
+            }
+
+            $db->transCommit();
+
+            return $this->respondSuccess("Se generaron {$facturasGeneradas} facturas correctamente");
+        } catch (\Throwable $e) {
+
+            $db->transRollback();
+
+            log_message('error', $e->getMessage());
+
+            return $this->respondError($e->getMessage());
+        }
     }
 }

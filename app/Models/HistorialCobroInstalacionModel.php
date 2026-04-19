@@ -16,6 +16,7 @@ class HistorialCobroInstalacionModel extends Model
         'recargo_aplicado',
         'monto_cuota',
         'fecha_creacion',
+        'descripcion'
     ];
 
     public function getHistorial($start, $length, $searchValue = '')

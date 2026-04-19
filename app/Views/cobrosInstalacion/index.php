@@ -81,8 +81,9 @@
 
 <section class="content">
     <div class="container-fluid">
-        <div class="card-header py-3">
-            <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Generar Facturas</button>
+        <div class="card-header py-3 d-flex flex-wrap align-items-center">
+            <button type="button" id="btn-generar-facturas" class="btn bg-gradient-primary btn-flat">Generar Facturas</button>
+            <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir facturas del periodo activo</button>
         </div>
         <input type="hidden" id="id-contrato-cobro">
 
@@ -235,7 +236,6 @@
                                 <th>Fecha de Vencimiento</th>
                                 <th>Fecha de Pago</th>
                                 <th>Monto</th>
-                                <th>Abonado</th>
                                 <th>Recargo</th>
                                 <th>Estado</th>
                             </tr>

@@ -125,6 +125,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPagoInstalacion');
     $routes->get('getCobrosRealizados', 'CobrosInstalacion::getCobrosRealizados');
     $routes->get('facturaCobroInstalacion/(:num)', 'CobrosInstalacion::facturaCobroInstalacion/$1');
+    $routes->get('imprimirFacturasCobroPeriodoActivo', 'CobrosInstalacion::imprimirFacturasCobroPeriodoActivo');
+    $routes->post('generarFacturasCobros', 'CobrosInstalacion::generarFacturasCobros');
 
     // RANGO DE FACTURAS
     $routes->get('rango_de_facturas', 'RangoFacturas::index');
