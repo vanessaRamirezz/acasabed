@@ -40,6 +40,8 @@ class RangoFacturas extends BaseController
                 return $this->respondError('El campo numero final es requerido');
             }
 
+            $numeroActual = 0;
+
             // INICIAR TRANSACCIÓN
             $db = $this->rangoFacturasModel->db;
             $db->transBegin();
@@ -49,7 +51,8 @@ class RangoFacturas extends BaseController
                 $numeroFinal,
                 $estado,
                 $idUsuario,
-                $fechaCreacion
+                $fechaCreacion,
+                $numeroActual
             );
 
             if (!$resultado) {

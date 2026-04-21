@@ -9,21 +9,23 @@ class RangoFacturaModel extends Model
 
     protected $table = 'rango_factura';
     protected $primaryKey = 'id_rango_factura';
-    protected $allowedFields = ['numero_inicio', 'numero_fin', 'estado', 'id_usuario', 'fecha_creacion'];
+    protected $allowedFields = ['numero_inicio', 'numero_fin', 'estado', 'id_usuario', 'fecha_creacion', 'numero_actual'];
 
     function insertarRango(
         $numeroInicio,
         $numeroFinal,
         $estado,
         $idUsuario,
-        $fechaCreacion
+        $fechaCreacion,
+        $numeroActual
     ) {
         return $this->insert([
             'numero_inicio' => $numeroInicio,
             'numero_fin' => $numeroFinal,
             'estado' => $estado,
             'id_usuario' => $idUsuario,
-            'fecha_creacion' => $fechaCreacion
+            'fecha_creacion' => $fechaCreacion,
+            'numero_actual' => $numeroActual
         ]);
     }
 
@@ -62,7 +64,8 @@ class RangoFacturaModel extends Model
                     numero_fin AS numeroFin,
                     estado,
 
-                    DATE_FORMAT(fecha_creacion, "%d-%m-%Y") AS fechaCreacion, 
+                    DATE_FORMAT(fecha_creacion, "%d-%m-%Y") AS fechaCreacion,
+                    numero_actual AS numeroActual
                 ')
             ->orderBy('id_rango_factura', 'DESC')
             ->limit($length, $start)

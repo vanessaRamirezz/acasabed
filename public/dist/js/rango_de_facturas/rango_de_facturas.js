@@ -64,6 +64,9 @@ function cargarRagoFacturas() {
             },
             {
                 data: 'fechaCreacion'
+            },
+            {
+                data: 'numeroActual'
             }
         ],
         language: {

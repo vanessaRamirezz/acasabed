@@ -53,6 +53,7 @@
                                 <th>Numero Final</th>
                                 <th>Estado</th>
                                 <th>Fecha Creación</th>
+                                <th>Numero Actual</th>
                             </tr>
                         </thead>
                         <tbody class="text-center">
