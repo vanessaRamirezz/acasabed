@@ -46,7 +46,11 @@
         .main-sidebar {
             font-family: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
             font-size: 14px;
-             color: #858796;
+            color: #858796;
+        }
+
+        .nav-sidebar .nav-treeview .nav-icon {
+            font-size: 7px !important;
         }
     </style>
     <?= $this->renderSection('styles') ?>
