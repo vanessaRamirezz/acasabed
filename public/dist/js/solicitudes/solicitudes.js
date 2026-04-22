@@ -1633,11 +1633,6 @@ function cargarSolicitudesAprobadas() {
                                     <i class="fas fa-file-pdf mr-2 text-danger" ></i> Solicitud PDF
                                 </a>
 
-                                <a class="dropdown-item dropdown-item-custom btn-anular-solicitud" href="#"
-                                    data-id="${row.id}">
-                                    <i class="fas fa-ban mr-2 text-danger" ></i> Anular Solicitud
-                                </a>
-
                             </div>
                         </div>
                         `;
