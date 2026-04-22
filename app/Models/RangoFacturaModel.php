@@ -9,7 +9,15 @@ class RangoFacturaModel extends Model
 
     protected $table = 'rango_factura';
     protected $primaryKey = 'id_rango_factura';
-    protected $allowedFields = ['numero_inicio', 'numero_fin', 'estado', 'id_usuario', 'fecha_creacion', 'numero_actual'];
+    protected $allowedFields = [
+        'tiraje',
+        'numero_inicio',
+        'numero_fin',
+        'numero_actual',
+        'estado',
+        'id_usuario',
+        'fecha_creacion',
+    ];
 
     function insertarRango(
         $numeroInicio,
