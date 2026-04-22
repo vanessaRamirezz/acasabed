@@ -151,6 +151,34 @@
     <!-- jsPDF AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            setTimeout(() => {
+
+                const activeItem = document.querySelector('.nav-treeview .nav-link.active');
+                if (!activeItem) return;
+
+                // 🔥 detectar si existe OverlayScrollbars
+                const sidebar = document.querySelector('.sidebar');
+                const osInstance = OverlayScrollbars(sidebar);
+
+                if (osInstance) {
+                    // 👉 usar API del plugin (esto es lo que te faltaba)
+                    osInstance.scroll({
+                        y: activeItem.offsetTop - 100
+                    });
+                } else {
+                    // fallback normal
+                    sidebar.scrollTo({
+                        top: activeItem.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+
+            }, 500);
+        });
+    </script>
 
     <?= $this->renderSection('scripts') ?>
 </body>
