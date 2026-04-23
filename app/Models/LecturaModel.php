@@ -10,6 +10,16 @@ class LecturaModel extends Model
     protected $primaryKey = 'id_lectura';
     protected $allowedFields = ['id_periodo', 'id_contrato', 'fecha', 'valor', 'id_instalador', 'id_usuario', 'fecha_creacion'];
 
+    public function getUltimaLecturaAnterior($idContrato, $idPeriodoActual)
+    {
+        return $this->select('id_lectura, id_periodo, fecha, valor')
+            ->where('id_contrato', $idContrato)
+            ->where('id_periodo <', $idPeriodoActual)
+            ->orderBy('id_periodo', 'DESC')
+            ->orderBy('id_lectura', 'DESC')
+            ->first();
+    }
+
     public function getTodasLecturas($start, $length, $searchValue = '')
     {
         // =============================
@@ -123,5 +133,13 @@ class LecturaModel extends Model
             'valor' => $valor,
             'id_instalador' => $idInstalador,
         ]);
+    }
+
+    public function getLecturaActual($idContrato, $idPeriodo)
+    {
+        return $this->select('id_lectura, valor')
+            ->where('id_contrato', $idContrato)
+            ->where('id_periodo', $idPeriodo)
+            ->first();
     }
 }

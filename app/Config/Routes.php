@@ -63,6 +63,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getTarifas', 'Tarifario::getTarifas');
     $routes->post('nuevaTarifa', 'Tarifario::nuevaTarifa');
     $routes->post('editarTarifa', 'Tarifario::editarTarifa');
+    $routes->get('getTarifaDetalle/(:num)', 'Tarifario::getTarifaDetalle/$1');
 
     // PERIODOS
     $routes->get('periodos', 'Periodos::index');
@@ -128,8 +129,21 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('imprimirFacturasCobroPeriodoActivo', 'CobrosInstalacion::imprimirFacturasCobroPeriodoActivo');
     $routes->post('generarFacturasCobros', 'CobrosInstalacion::generarFacturasCobros');
 
+    // FACTURACION DEL SERVICIO
+    $routes->get('facturacion_servicio', 'FacturacionServicio::index');
+    $routes->get('getFacturasServicio', 'FacturacionServicio::getFacturasServicio');
+    $routes->get('facturaCobroServicio/(:num)', 'FacturacionServicio::facturaCobroServicio/$1');
+    // $routes->get('getDetalleFacturaClienteServicio', 'FacturacionServicio::getDetalleFacturaCliente');
+    $routes->post('generarFacturasServicio', 'FacturacionServicio::generarFacturasServicio');
+    // $routes->post('validarPagoFacturaServicio', 'FacturacionServicio::validarPagoFacturaServicio');
+    $routes->post('registrarPagoFacturaServicio', 'FacturacionServicio::registrarPagoFacturaServicio');
+
     // RANGO DE FACTURAS
     $routes->get('rango_de_facturas', 'RangoFacturas::index');
     $routes->post('guardarRango', 'RangoFacturas::guardarRango');
     $routes->get('getRangoFacturas', 'RangoFacturas::getRangoFacturas');
+
+    //REPORTES
+    $routes->get('reporte_contratos', 'ReporteContratos::index');
+    $routes->get('reporte-contratos/pdf', 'ReporteContratos::generarPDF');
 });

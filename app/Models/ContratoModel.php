@@ -161,6 +161,7 @@ class ContratoModel extends Model
         $builder->join('clientes', 'contratos.id_cliente = clientes.id_cliente', 'left');
 
         $builder->where('solicitudes.estado', 'APROBADA');
+        $builder->where('contratos.estado', 'APROBADO');
 
         // 🔥 subquery separado (CORRECTO)
         $subQuery = $this->db->table('lecturas')
@@ -177,6 +178,36 @@ class ContratoModel extends Model
             ->getResultArray();
     }
 
+    public function getContratosActivosFacturacionServicio()
+    {
+        return $this->db->table('contratos')
+            ->select("
+                contratos.id_contrato,
+                contratos.numero_contrato,
+                contratos.id_cliente,
+                contratos.id_tarifa,
+                solicitudes.id_solicitud,
+                solicitudes.codigo_solicitud,
+                clientes.nombre_completo,
+                medidores.numero_serie,
+                lecturas.id_lectura,
+                lecturas.fecha AS fecha_lectura_actual,
+                lecturas.valor AS lectura_actual,
+                COALESCE(tarifario.valor_metro_cubico, 0) AS valor_metro_cubico,
+                COALESCE(tarifario.pago_minimo, 0) AS pago_minimo
+            ", false)
+            ->join('solicitudes', 'solicitudes.id_solicitud = contratos.id_solicitud', 'left')
+            ->join('clientes', 'clientes.id_cliente = contratos.id_cliente', 'left')
+            ->join('medidores', 'medidores.id_medidor = contratos.id_medidor', 'left')
+            ->join('lecturas', 'lecturas.id_contrato = contratos.id_contrato', 'left')
+            ->join('tarifario', 'tarifario.id_tarifa = contratos.id_tarifa', 'left')
+            ->where('contratos.estado', 'APROBADO')
+            ->where('solicitudes.estado', 'APROBADA')
+            ->orderBy('contratos.id_contrato', 'ASC')
+            ->get()
+            ->getResult();
+    }
+
     public function actualizarEstadoContrato($idContrato, $estado, $motivo, $fechaSuspension)
     {
         return $this->update(
@@ -187,5 +218,33 @@ class ContratoModel extends Model
                 'fecha_suspension' => $fechaSuspension
             ]
         );
+    }
+
+    public function getReporteContratos($estado = null)
+    {
+        $builder = $this->db->table('contratos c');
+        $builder->select('
+            c.numero_contrato,
+            c.direccion_medidor,
+            c.estado,
+            DATE_FORMAT(c.fecha_de_inicio, "%d-%m-%Y") AS fechaInicio,
+            cl.nombre_completo as cliente,
+            c.id_ruta,
+            c.id_medidor,
+            c.id_tarifa,
+            rutas.nombre AS ruta,
+            medidores.numero_serie AS medidor,
+            tarifario.codigo AS tarifa
+        ');
+        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente');
+        $builder->join('rutas', 'rutas.id_ruta = c.id_ruta');
+        $builder->join('medidores', 'medidores.id_medidor = c.id_medidor');
+        $builder->join('tarifario', 'tarifario.id_tarifa = c.id_tarifa');
+
+        if ($estado) {
+            $builder->where('c.estado', $estado);
+        }
+
+        return $builder->get()->getResultArray();
     }
 }
