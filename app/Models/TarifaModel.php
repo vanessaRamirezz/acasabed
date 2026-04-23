@@ -82,8 +82,9 @@ class TarifaModel extends Model
 
     public function buscarTarifas($search)
     {
-        return $this->select('id_tarifa, codigo')
-            ->like('codigo', $search)
+        return $this->select('tarifas.id_tarifa, tarifas.codigo, tipos_de_cliente.nombre')
+            ->join('tipos_de_cliente', 'tipos_de_cliente.id_tipo_cliente = tarifas.id_tipo_cliente')
+            ->like('tarifas.codigo', $search)
             ->orderBy('id_tarifa', 'ASC')
             ->limit(10)
             ->findAll();

@@ -1272,7 +1272,7 @@ function cargarTarifas() {
                 return {
                     results: response.data.map(tarifa => ({
                         id: tarifa.id_tarifa,
-                        text: tarifa.codigo + ' desde ' + tarifa.desde_n_metros + ' hasta ' + tarifa.hasta_n_metros
+                        text: tarifa.codigo + ' - ' + tarifa.nombre
                     }))
                 };
             },
