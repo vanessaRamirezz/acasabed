@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\TarifaDetalleModel;
 use App\Models\TarifaModel;
 use App\Models\TipoClienteModel;
 
@@ -9,11 +10,13 @@ class Tarifario extends BaseController
 {
     private $tiposClienteModel;
     private $tarifasModel;
+    private $tarifaDetalleModel;
 
     public function __construct()
     {
         $this->tiposClienteModel = new TipoClienteModel();
         $this->tarifasModel = new TarifaModel();
+        $this->tarifaDetalleModel = new TarifaDetalleModel();
     }
 
     public function index()
@@ -49,80 +52,98 @@ class Tarifario extends BaseController
         }
     }
 
+    public function getTarifaDetalle($idTarifa)
+    {
+        $detalles = $this->tarifaDetalleModel
+            ->where('id_tarifa', $idTarifa)
+            ->orderBy('desde_n_metros', 'ASC')
+            ->findAll();
+
+        return $this->response->setJSON($detalles);
+    }
+
     public function nuevaTarifa()
     {
+        $db = null;
+
         try {
-            $codigo = $this->request->getPost('codigo');
-            $tipoCliente = $this->request->getPost('tipoCliente');
-            $valorMetro = $this->request->getPost('valorMetro');
-            $pagoMinimo = $this->request->getPost('pagoMinimo') ?: null;
-            $desde = $this->request->getPost('desde');
-            $hasta = $this->request->getPost('hasta') ?: null;
+            $request = $this->request->getJSON(true);
+
+            log_message('info', "data JSON recibida:\n" . json_encode($request, JSON_PRETTY_PRINT));
+            // exit;
+            $codigo = $request['codigo'] ?? null;
+            $tipoCliente = $request['tipoCliente'] ?? null;
+            $detalles = $request['detalles'] ?? [];
+
             $idUsuario = $_SESSION['id_usuario'];
             $fechaCreacion = date('Y-m-d H:i:s');
 
             if (!$codigo) {
-                log_message('error', 'El código es requerido');
                 return $this->respondError('El código es requerido');
             }
 
             if (!$tipoCliente) {
-                log_message('error', 'El campo Tipo de cliente es requerido');
                 return $this->respondError('El campo Tipo de cliente es requerido');
             }
 
-            if (!$valorMetro) {
-                log_message('error', 'El campo valor de metro es requerido');
-                return $this->respondError('El campo valor de metrp es requerido');
+            if (empty($detalles) || !is_array($detalles)) {
+                return $this->respondError('Debe agregar al menos un rango de tarifa');
             }
 
-
-            // INICIAR TRANSACCIÓN
-            $db = $this->tarifasModel->db;
+            // 🔥 INICIAR TRANSACCIÓN
+            $db = \Config\Database::connect();
             $db->transBegin();
 
-            $resultado = $this->tarifasModel->insertarNuevaTarifa(
+            // 🔹 Insert cabecera
+            $idTarifa = $this->tarifasModel->insertarNuevaTarifa(
                 $codigo,
                 $tipoCliente,
-                $valorMetro,
-                $desde,
-                $hasta,
-                $pagoMinimo,
                 $idUsuario,
                 $fechaCreacion
             );
 
-            if (!$resultado) {
+            if (!$idTarifa) {
                 $errorDB = $db->error();
 
-                // Código MySQL para duplicate entry
                 if ($errorDB['code'] == 1062) {
                     $db->transRollback();
                     return $this->respondError('El Código de tarifa ya existe');
                 }
 
-                $db->transRollback();
-                log_message('error', 'Error en transacción guardar nueva tarifa');
-                return $this->respondError('No se pudieron guardar los datos de la nueva tarifa');
+                throw new \Exception('Error al insertar tarifa');
             }
 
+            // 🔹 Insert detalles (VALIDANDO)
+            foreach ($detalles as $d) {
+
+                $insert = $this->tarifaDetalleModel->insert([
+                    'id_tarifa' => $idTarifa,
+                    'valor_metro_cubico' => $d['valor_metro_cubico'] ?? 0,
+                    'desde_n_metros' => $d['desde'],
+                    'hasta_n_metros' => $d['hasta'] ?? null,
+                    'pago_minimo' => $d['pago_minimo'] ?? 0
+                ]);
+
+                if (!$insert) {
+                    throw new \Exception('Error al insertar detalle de tarifa');
+                }
+            }
+
+            // 🔥 VALIDACIÓN FINAL
             if ($db->transStatus() === false) {
-                $db->transRollback();
-                return $this->respondError('Error en la transacción');
+                throw new \Exception('Error en la transacción');
             }
 
             $db->transCommit();
 
-            log_message('info', 'Tarifa registrada correctamente');
             return $this->respondOk('Tarifa registrada correctamente.');
         } catch (\Throwable $th) {
-            if (isset($db)) {
+
+            if ($db && $db->transStatus() !== false) {
                 $db->transRollback();
             }
 
-            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
-            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
-            log_message('error', $errorMessage);
+            log_message('error', $th->getMessage());
 
             return $this->respondError('Error al guardar la tarifa');
         }
@@ -130,77 +151,142 @@ class Tarifario extends BaseController
 
     public function editarTarifa()
     {
+        $db = null;
+
         try {
-            $codigo = $this->request->getPost('codigo');
-            $tipoCliente = $this->request->getPost('tipoCliente');
-            $valorMetro = $this->request->getPost('valorMetro');
-            $pagoMinimo = $this->request->getPost('pagoMinimo') ?: null;
-            $desde = $this->request->getPost('desde');
-            $hasta = $this->request->getPost('hasta') ?: null;
-            $idTarifa = $this->request->getPost('idTarifa');
+
+            $request = $this->request->getJSON(true);
+
+            log_message('info', "EDITAR TARIFA:\n" . json_encode($request, JSON_PRETTY_PRINT));
+
+            $codigo       = $request['codigo'] ?? null;
+            $tipoCliente  = $request['tipoCliente'] ?? null;
+            $detalles     = $request['detalles'] ?? [];
+            $idTarifa     = $request['idTarifa'] ?? null;
+
+            if (!$idTarifa) {
+                return $this->respondError('ID de tarifa requerido');
+            }
 
             if (!$codigo) {
-                log_message('error', 'El código es requerido');
                 return $this->respondError('El código es requerido');
             }
 
             if (!$tipoCliente) {
-                log_message('error', 'El campo Tipo de cliente es requerido');
-                return $this->respondError('El campo Tipo de cliente es requerido');
+                return $this->respondError('El tipo de cliente es requerido');
             }
 
-            if (!$valorMetro) {
-                log_message('error', 'El campo valor de metro es requerido');
-                return $this->respondError('El campo valor de metrp es requerido');
+            if (empty($detalles) || !is_array($detalles)) {
+                return $this->respondError('Debe agregar al menos un rango');
             }
 
+            // =========================
+            // VALIDAR RANGOS (CRÍTICO)
+            // =========================
+            usort($detalles, fn($a, $b) => $a['desde'] <=> $b['desde']);
 
-            // INICIAR TRANSACCIÓN
-            $db = $this->tarifasModel->db;
-            $db->transBegin();
+            $finAnterior = null;
 
-            $resultado = $this->tarifasModel->actualizarTarifa(
-                $tipoCliente,
-                $valorMetro,
-                $desde,
-                $hasta,
-                $pagoMinimo,
-                $idTarifa
-            );
+            foreach ($detalles as $index => $d) {
 
-            if (!$resultado) {
-                $errorDB = $db->error();
-
-                // Código MySQL para duplicate entry
-                if ($errorDB['code'] == 1062) {
-                    $db->transRollback();
-                    return $this->respondError('El Código de tarifa ya existe');
+                if ($index === 0 && $d['desde'] != 0) {
+                    throw new \Exception('El primer rango debe iniciar en 0');
                 }
 
-                $db->transRollback();
-                log_message('error', 'Error en transacción editar tarifa');
-                return $this->respondError('No se pudieron actualizar los datos de la tarifa');
+                if ($finAnterior !== null && $d['desde'] != $finAnterior + 1) {
+                    throw new \Exception('Los rangos deben ser continuos');
+                }
+
+                if (!empty($d['hasta']) && $d['hasta'] <= $d['desde']) {
+                    throw new \Exception('El campo hasta debe ser mayor que desde');
+                }
+
+                $finAnterior = $d['hasta'];
             }
 
+            // =========================
+            // TRANSACCIÓN
+            // =========================
+            $db = \Config\Database::connect();
+            $db->transBegin();
+
+            // 🔹 1. ACTUALIZAR CABECERA
+            $update = $this->tarifasModel->update($idTarifa, [
+                'id_tipo_cliente' => $tipoCliente
+            ]);
+
+            if (!$update) {
+                throw new \Exception('Error al actualizar cabecera');
+            }
+
+            // =========================
+            // 🔥 LÓGICA INTELIGENTE
+            // =========================
+            $idsRecibidos = [];
+
+            foreach ($detalles as $d) {
+
+                // 🔸 UPDATE si existe ID
+                if (!empty($d['id'])) {
+
+                    $updated = $this->tarifaDetalleModel->update($d['id'], [
+                        'desde_n_metros' => $d['desde'],
+                        'hasta_n_metros' => $d['hasta'] ?? null,
+                        'valor_metro_cubico' => $d['valor_metro_cubico'] ?? 0,
+                        'pago_minimo' => $d['pago_minimo'] ?? 0
+                    ]);
+
+                    if (!$updated) {
+                        throw new \Exception('Error al actualizar detalle ID: ' . $d['id']);
+                    }
+
+                    $idsRecibidos[] = $d['id'];
+                } else {
+
+                    // 🔸 INSERT nuevo
+                    $nuevoId = $this->tarifaDetalleModel->insert([
+                        'id_tarifa' => $idTarifa,
+                        'desde_n_metros' => $d['desde'],
+                        'hasta_n_metros' => $d['hasta'] ?? null,
+                        'valor_metro_cubico' => $d['valor_metro_cubico'] ?? 0,
+                        'pago_minimo' => $d['pago_minimo'] ?? 0
+                    ]);
+
+                    if (!$nuevoId) {
+                        throw new \Exception('Error al insertar nuevo detalle');
+                    }
+
+                    $idsRecibidos[] = $nuevoId;
+                }
+            }
+
+            // 🔹 ELIMINAR LOS QUE YA NO VIENEN
+            if (!empty($idsRecibidos)) {
+                $this->tarifaDetalleModel
+                    ->where('id_tarifa', $idTarifa)
+                    ->whereNotIn('id_tarifa_detalle', $idsRecibidos)
+                    ->delete();
+            }
+
+            // =========================
+            // VALIDAR TRANSACCIÓN
+            // =========================
             if ($db->transStatus() === false) {
-                $db->transRollback();
-                return $this->respondError('Error en la transacción');
+                throw new \Exception('Error en la transacción');
             }
 
             $db->transCommit();
 
-            log_message('info', 'Tarifa actualizada correctamente');
-            return $this->respondOk('Tarifa actualizada correctamente.');
+            return $this->respondOk('Tarifa actualizada correctamente');
         } catch (\Throwable $th) {
-            if (isset($db)) {
+
+            if ($db) {
                 $db->transRollback();
             }
 
-            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
-            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
-            log_message('error', $errorMessage);
+            log_message('error', 'ERROR EDITAR TARIFA: ' . $th->getMessage());
 
-            return $this->respondError('Error al actualizar la tarifa');
+            return $this->respondError($th->getMessage());
         }
     }
 }

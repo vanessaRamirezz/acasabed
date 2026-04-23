@@ -5,37 +5,27 @@ let tablaTarifas;
 const inputs = {
     codigo: $("#codigo"),
     tipoCliente: $("#tipo-cliente"),
-    valorMetro: $("#valor-metro-cubico"),
-    pagoMinimo: $("#pago-minimo"),
-    desde: $("#desde-n-metros"),
-    hasta: $("#hasta-n-metros"),
     idTarifa: $("#id-tarifa")
 };
 
-
-function limpiarFormulario() {
-    Object.values(inputs).forEach(input => {
-        input.val('');
-        eliminarColorYfocus(input[0]);
-    });
-
-    inputs.codigo.prop('disabled', false);
-}
 
 function abrirModalNuevaTarifa() {
     $('.modal-guardar').show();
     $('.modal-editar').hide();
 
-    limpiarFormulario();
+    // 🔥 limpiar tabla
+    $("#tabla-rangos tbody").html('');
+    inputs.codigo.val('').prop('disabled', false);
+    inputs.tipoCliente.val('');
 
     eliminarColorYfocus(inputs.codigo[0]);
     eliminarColorYfocus(inputs.tipoCliente[0]);
-    eliminarColorYfocus(inputs.valorMetro[0]);
 
     $('#model-tarifario').modal('show');
 }
 
 function abrirModalEditarTarifa(elemento) {
+
     $('.modal-guardar').hide();
     $('.modal-editar').show();
 
@@ -44,31 +34,66 @@ function abrirModalEditarTarifa(elemento) {
     );
 
     $('#codigo').val(dataTarifas.codigo).prop('disabled', true);
-    var $selectTipoCliente = $('#tipo-cliente');
-    $selectTipoCliente.find('option').each(function () {
-        $(this).prop('selected', $(this).text().trim() === dataTarifas.nombre_tipo_cliente.trim());
-    });
-    $('#valor-metro-cubico').val(dataTarifas.valor_metro_cubico);
-    $('#pago-minimo').val(dataTarifas.pago_minimo);
-    $('#desde-n-metros').val(dataTarifas.desde_n_metros);
-    $('#hasta-n-metros').val(dataTarifas.hasta_n_metros);
+
+    $('#tipo-cliente').val(dataTarifas.id_tipo_cliente);
+
     $('#id-tarifa').val(dataTarifas.id_tarifa);
 
-    eliminarColorYfocus(inputs.codigo[0]);
-    eliminarColorYfocus(inputs.tipoCliente[0]);
-    eliminarColorYfocus(inputs.valorMetro[0]);
+    // 🔥 limpiar tabla
+    $("#tabla-rangos tbody").html('');
+
+    // 🔥 traer detalles desde backend
+    $.get(baseURL + 'getTarifaDetalle/' + dataTarifas.id_tarifa, function (detalles) {
+
+        detalles.forEach(d => {
+
+            let fila = `
+            <tr>
+                <td>
+                    <input type="hidden" class="id_detalle" value="${d.id_tarifa_detalle}">
+                    <input type="number" class="form-control desde" value="${d.desde_n_metros}">
+                </td>
+                <td><input type="number" class="form-control hasta" value="${d.hasta_n_metros}"></td>
+                <td><input type="number" class="form-control valor" value="${d.valor_metro_cubico}"></td>
+                <td><input type="number" class="form-control minimo" value="${d.pago_minimo}"></td>
+                <td><button class="btn btn-danger btn-sm eliminar">X</button></td>
+            </tr>
+            `;
+
+            $("#tabla-rangos tbody").append(fila);
+        });
+
+    });
 
     $('#model-tarifario').modal('show');
 }
 
 function getData() {
+
+    let detalles = [];
+
+    $("#tabla-rangos tbody tr").each(function () {
+
+        let desde = $(this).find(".desde").val();
+        let hasta = $(this).find(".hasta").val();
+        let valor = $(this).find(".valor").val();
+        let minimo = $(this).find(".minimo").val();
+
+        if (desde !== "") {
+            detalles.push({
+                id: $(this).find(".id_detalle").val() || null,
+                desde: $(this).find(".desde").val(),
+                hasta: $(this).find(".hasta").val(),
+                valor_metro_cubico: $(this).find(".valor").val(),
+                pago_minimo: $(this).find(".minimo").val()
+            });
+        }
+    });
+
     return {
         codigo: inputs.codigo.val().trim(),
         tipoCliente: inputs.tipoCliente.val(),
-        valorMetro: inputs.valorMetro.val().trim(),
-        pagoMinimo: inputs.pagoMinimo.val().trim(),
-        desde: inputs.desde.val().trim(),
-        hasta: inputs.hasta.val().trim(),
+        detalles: detalles,
         idTarifa: inputs.idTarifa.val().trim()
     };
 }
@@ -94,18 +119,6 @@ function cargarTarifas() {
             },
             {
                 data: 'nombre_tipo_cliente'
-            },
-            {
-                data: 'valor_metro_cubico'
-            },
-            {
-                data: 'desde_n_metros'
-            },
-            {
-                data: 'hasta_n_metros'
-            },
-            {
-                data: 'pago_minimo'
             },
             {
                 data: null,
@@ -146,6 +159,20 @@ function cargarTarifas() {
     });
 }
 
+function agregarFilaRango() {
+    let fila = `
+    <tr>
+        <td><input type="number" class="form-control desde"></td>
+        <td><input type="number" class="form-control hasta"></td>
+        <td><input type="number" step="0.01" class="form-control valor"></td>
+        <td><input type="number" step="0.01" class="form-control minimo"></td>
+        <td><button class="btn btn-danger btn-sm eliminar">X</button></td>
+    </tr>
+    `;
+
+    $("#tabla-rangos tbody").append(fila);
+}
+
 function guardarOeditarTarifa(tipoProceso) {
 
     const data = getData();
@@ -153,7 +180,33 @@ function guardarOeditarTarifa(tipoProceso) {
 
     if (!validarCampo(data.codigo, 'El codigo es requerido', inputs.codigo)) return;
     if (!validarCampo(data.tipoCliente, 'Seleccione un tipo de cliente', inputs.tipoCliente)) return;
-    if (!validarCampo(data.valorMetro, 'El valor por metro es requerido', inputs.valorMetro)) return;
+
+    if (data.detalles.length === 0) {
+        alertEnSweet('error', 'Error', 'Debe agregar al menos un rango');
+        return;
+    }
+
+    // 🔥 ordenar rangos
+    data.detalles.sort((a, b) => a.desde - b.desde);
+
+    // 🔥 validar rangos
+    for (let d of data.detalles) {
+
+        if (d.desde === "" || d.desde == null) {
+            alertEnSweet('error', 'Error', 'El campo "Desde" es obligatorio');
+            return;
+        }
+
+        if (d.hasta !== null && d.hasta <= d.desde) {
+            alertEnSweet('error', 'Error', 'El rango "Hasta" debe ser mayor que "Desde"');
+            return;
+        }
+
+        if (d.valor_metro_cubico == 0 && d.pago_minimo == 0) {
+            alertEnSweet('error', 'Error', 'Debe ingresar pago mínimo o valor por m³');
+            return;
+        }
+    }
 
     Swal.fire({
         title: 'Espere...',
@@ -166,7 +219,8 @@ function guardarOeditarTarifa(tipoProceso) {
     $.ajax({
         type: 'POST',
         url: baseURL + tipo_proceso,
-        data: data,
+        data: JSON.stringify(data),
+        contentType: 'application/json',
         dataType: 'json',
         success: function (response) {
             if (response.status == 'success') {
@@ -175,10 +229,12 @@ function guardarOeditarTarifa(tipoProceso) {
                 Swal.close();
                 $('#model-tarifario').modal('hide');
             } else {
+                Swal.close();
                 alertEnSweet('error', 'Uups..', response.mensaje);
             }
         },
         error: function () {
+            Swal.close();
             alertEnSweet('error', 'Ups..', 'Ocurrió un error en la operacion');
         }
     });
@@ -199,6 +255,13 @@ function eventosUsuario() {
 
     $("#tbl-tarifas tbody").on("click", '.btn-ver-opciones', function () {
         abrirModalEditarTarifa(this);
+    });
+
+    // eventos para botones de agregar rango de tarifas
+    $(document).on("click", "#btn-add-rango", agregarFilaRango);
+
+    $(document).on("click", ".eliminar", function () {
+        $(this).closest("tr").remove();
     });
 }
 

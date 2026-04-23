@@ -35,7 +35,7 @@
 
                 <div class="d-flex justify-content-end mb-4">
                     <div class="input-group col-md-6">
-                        <input type="text" id="customSearchTarifas" placeholder="Buscar por código, desde ó hasta" class="form-control">
+                        <input type="text" id="customSearchTarifas" placeholder="Buscar por código, tipo de cliente" class="form-control">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" id="searchBtnTarifas" type="button">
                                 <i class="fas fa-search"></i>
@@ -52,10 +52,10 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Tipo Cliente</th>
-                                <th>Valor por m³</th>
+                                <!-- <th>Valor por m³</th>
                                 <th>Desde (m³)</th>
                                 <th>Hasta (m³)</th>
-                                <th>Pago mínimo ($)</th>
+                                <th>Pago mínimo ($)</th> -->
                                 <th>Operaciones</th>
                             </tr>
                         </thead>
@@ -104,31 +104,27 @@
                             </div>
                         </div>
 
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="valor-metro-cubico" class="form-label">Valor por m³ ($)</label>
-                                <input type="number" step="0.0001" class="form-control" id="valor-metro-cubico">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="pago-minimo" class="form-label">Pago mínimo ($)</label>
-                                <input type="number" step="0.01" class="form-control" id="pago-minimo">
-                            </div>
-                        </div>
-
                         <hr class="my-4">
 
-                        <!-- TARIFA -->
-                        <h6 class="text-primary mb-3">Rango de Consumo (m³)</h6>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="desde-n-metros" class="form-label">Desde (m³)</label>
-                                <input type="number" step="0.01" class="form-control" id="desde-n-metros">
-                            </div>
+                        <h6 class="text-primary mb-3">Rangos de Consumo</h6>
 
-                            <div class="col-md-4">
-                                <label for="hasta-n-metros" class="form-label">Hasta (m³)</label>
-                                <input type="number" step="0.01" class="form-control" id="hasta-n-metros">
-                            </div>
+                        <button type="button" class="btn btn-success btn-sm mb-2" id="btn-add-rango">
+                            + Agregar Rango
+                        </button>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" id="tabla-rangos">
+                                <thead>
+                                    <tr>
+                                        <th>Desde</th>
+                                        <th>Hasta</th>
+                                        <th>Valor m³</th>
+                                        <th>Pago mínimo</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
 
                         <input type="hidden" id="id-tarifa">
