@@ -17,6 +17,7 @@ function abrirModalNuevaTarifa() {
     $("#tabla-rangos tbody").html('');
     inputs.codigo.val('').prop('disabled', false);
     inputs.tipoCliente.val('');
+    inputs.idTarifa.val('');
 
     eliminarColorYfocus(inputs.codigo[0]);
     eliminarColorYfocus(inputs.tipoCliente[0]);
