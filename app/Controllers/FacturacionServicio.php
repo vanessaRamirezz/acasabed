@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ContratoModel;
 use App\Models\FacturaDetalleModel;
+use App\Models\FacturaModel;
 use App\Models\FacturaServicioModel;
 use App\Models\LecturaModel;
 use App\Models\PeriodoModel;
@@ -12,20 +13,21 @@ use App\Models\RangoFacturaModel;
 class FacturacionServicio extends BaseController
 {
     private $contratosModel;
-    private $facturaServicioModel;
+
     private $periodosModel;
     private $rangoFacturasModel;
     private $lecturasModel;
     private $facturaDetalleModel;
+    private $facturaModel;
 
     public function __construct()
     {
         $this->contratosModel = new ContratoModel();
-        $this->facturaServicioModel = new FacturaServicioModel();
         $this->periodosModel = new PeriodoModel();
         $this->rangoFacturasModel = new RangoFacturaModel();
         $this->lecturasModel = new LecturaModel();
         $this->facturaDetalleModel = new FacturaDetalleModel();
+        $this->facturaModel = new FacturaModel();
     }
 
     public function index()
@@ -42,7 +44,7 @@ class FacturacionServicio extends BaseController
             $draw = (int)$this->request->getGet('draw');
             $searchValue = $this->request->getGet('searchValue') ?? '';
 
-            $result = $this->facturaServicioModel->getHistorialFacturas($start, $length, $searchValue);
+            $result = $this->facturaModel->getHistorialFacturas($start, $length, $searchValue);
 
             return $this->response->setJSON([
                 'draw' => $draw,
@@ -352,7 +354,7 @@ class FacturacionServicio extends BaseController
 
     public function facturaCobroServicio($id)
     {
-        $data = $this->facturaServicioModel->getFacturaResumenPorId($id);
+        $data = $this->facturaModel->getFacturaResumenPorId($id);
 
         log_message('info', ' datos recibidos para enviar a ver la factura' . print_r($data, true));
         // exit;
@@ -410,7 +412,7 @@ class FacturacionServicio extends BaseController
                 log_message('info', 'dato del contrato ' . print_r($contrato, true));
 
                 // validar si ya existe factura en ese periodo
-                $existeFactura = $this->facturaServicioModel
+                $existeFactura = $this->facturaModel
                     ->existeFacturaPeriodoContrato(
                         $contrato->id_contrato,
                         $periodoActivo['id_periodo']
@@ -422,7 +424,7 @@ class FacturacionServicio extends BaseController
                 }
 
                 //obtener las facturas
-                $facturasPendientes = $this->facturaServicioModel
+                $facturasPendientes = $this->facturaModel
                     ->getFacturasPendientesContrato($contrato->id_contrato);
 
                 log_message('info', 'facturas vencidas o pendientes obtenidas de este contrato ' . print_r($facturasPendientes, true));
@@ -504,8 +506,8 @@ class FacturacionServicio extends BaseController
                 ];
 
                 // 🔹 6. Insertar factura
-                $this->facturaServicioModel->insert($dataFactura);
-                $idFactura = $this->facturaServicioModel->insertID();
+                $this->facturaModel->insert($dataFactura);
+                $idFactura = $this->facturaModel->insertID();
                 log_message('info', 'Factura creada correctamente: ' . json_encode($dataFactura));
 
                 $detalles = [
@@ -536,334 +538,4 @@ class FacturacionServicio extends BaseController
             return $this->respondError($th->getMessage());
         }
     }
-
-
-    // private function obtenerCadenaFacturasPendientes(array $facturaInicial)
-    // {
-    //     $cadena = [];
-    //     $actual = $facturaInicial;
-    //     $visitadas = [];
-
-    //     while ($actual && !in_array($actual['id_factura'], $visitadas, true)) {
-    //         $visitadas[] = $actual['id_factura'];
-
-    //         $cadena[] = [
-    //             'id_factura' => $actual['id_factura'],
-    //             'correlativo' => $actual['correlativo'],
-    //             'periodo' => $actual['periodo'],
-    //             'fecha_emision' => $actual['fecha_emision'],
-    //             'fecha_vencimiento' => $actual['fecha_vencimiento'],
-    //             'consumo_mes' => (float)($actual['consumo_mes'] ?? 0),
-    //             'monto_factura' => (float)($actual['monto_factura'] ?? 0),
-    //             'saldo_anterior' => (float)($actual['saldo_anterior'] ?? 0),
-    //             'mora' => (float)($actual['mora'] ?? 0),
-    //             'saldo_pendiente' => (float)($actual['saldo_pendiente'] ?? 0),
-    //             'estado' => $actual['estado']
-    //         ];
-
-    //         if (empty($actual['id_factura_anterior'])) {
-    //             break;
-    //         }
-
-    //         $anterior = $this->facturaServicioModel->getFacturaResumenPorId($actual['id_factura_anterior']);
-
-    //         if (
-    //             !$anterior ||
-    //             !in_array($anterior['estado'], ['SALDO TRASLADADO', 'PENDIENTE', 'VENCIDA'], true)
-    //         ) {
-    //             break;
-    //         }
-
-    //         $actual = $anterior;
-    //     }
-
-    //     return $cadena;
-    // }
-
-    // private function construirDetalleFacturacion(array $factura)
-    // {
-    //     $cadena = $this->obtenerCadenaFacturasPendientes($factura);
-
-    //     return [
-    //         'resumen' => [
-    //             'id_factura' => $factura['id_factura'],
-    //             'id_contrato' => $factura['id_contrato'],
-    //             'numero_contrato' => $factura['numero_contrato'],
-    //             'codigo_solicitud' => $factura['codigo_solicitud'],
-    //             'cliente' => $factura['cliente'],
-    //             'numero_serie' => $factura['numero_serie'],
-    //             'periodo' => $factura['periodo'],
-    //             'fecha_emision' => $factura['fecha_emision'],
-    //             'fecha_vencimiento' => $factura['fecha_vencimiento'],
-    //             'saldo_pendiente' => (float)($factura['saldo_pendiente'] ?? 0),
-    //             'estado' => $factura['estado'],
-    //             'facturas_pendientes' => count($cadena)
-    //         ],
-    //         'facturas' => $cadena
-    //     ];
-    // }
-
-    // private function validarPagoFactura($idFactura, $montoPago)
-    // {
-    //     $this->actualizarFacturasVencidas();
-
-    //     if (!$idFactura) {
-    //         throw new \Exception('Debe seleccionar una factura');
-    //     }
-
-    //     $factura = $this->facturaServicioModel->getFacturaResumenPorId($idFactura);
-
-    //     if (!$factura) {
-    //         throw new \Exception('No se encontró la factura');
-    //     }
-
-    //     if (!in_array($factura['estado'], ['PENDIENTE', 'VENCIDA'], true)) {
-    //         throw new \Exception('La factura seleccionada ya no está disponible para pago');
-    //     }
-
-    //     $saldoPendiente = (float)$factura['saldo_pendiente'];
-
-    //     if ($saldoPendiente <= 0) {
-    //         throw new \Exception('La factura no tiene saldo pendiente');
-    //     }
-
-    //     if ($montoPago <= 0) {
-    //         throw new \Exception('El monto debe ser mayor a 0');
-    //     }
-
-    //     if (round($montoPago, 2) !== round($saldoPendiente, 2)) {
-    //         throw new \Exception('El monto debe ser exacto al saldo pendiente de la factura vigente');
-    //     }
-
-    //     return [
-    //         'factura' => $factura,
-    //         'montoPago' => $montoPago,
-    //         'estadoPagado' => $factura['estado'] === 'VENCIDA' ? 'PAGADA VENCIDA' : 'PAGADA'
-    //     ];
-    // }
-
-    // public function getDetalleFacturaCliente()
-    // {
-    //     try {
-    //         $this->actualizarFacturasVencidas();
-
-    //         $idCliente = $this->request->getVar('idCliente');
-
-    //         if (!$idCliente) {
-    //             return $this->respondError('Debe seleccionar un cliente');
-    //         }
-
-    //         $facturas = $this->facturaServicioModel->getFacturasPendientesCliente($idCliente);
-
-    //         if (empty($facturas)) {
-    //             return $this->respondError('No se encontró facturación pendiente para el cliente seleccionado');
-    //         }
-
-    //         $resultado = [];
-
-    //         foreach ($facturas as $factura) {
-    //             $facturaCompleta = $this->facturaServicioModel->getFacturaResumenPorId($factura['id_factura']);
-
-    //             if (!$facturaCompleta) {
-    //                 continue;
-    //             }
-
-    //             $resultado[] = $this->construirDetalleFacturacion($facturaCompleta);
-    //         }
-
-    //         return $this->respondSuccess($resultado);
-    //     } catch (\Throwable $th) {
-    //         log_message('error', $th->getMessage());
-    //         return $this->respondError('Error al obtener detalle de facturación');
-    //     }
-    // }
-
-    // public function generarFacturasServicio()
-    // {
-    //     $db = \Config\Database::connect();
-    //     $db->transBegin();
-
-    //     try {
-    //         $this->actualizarFacturasVencidas();
-
-    //         $periodoActivo = $this->periodosModel->getPeriodoActivo();
-
-    //         if (!$periodoActivo) {
-    //             throw new \Exception('No hay periodo activo');
-    //         }
-
-    //         $periodo = $this->periodosModel->find($periodoActivo['id_periodo']);
-
-    //         if (!$periodo) {
-    //             throw new \Exception('No se encontró la información del periodo activo');
-    //         }
-
-    //         $contratos = $this->contratosModel->getContratosActivosFacturacionServicio($periodo['id_periodo']);
-    //         $facturasGeneradas = 0;
-
-    //         foreach ($contratos as $contrato) {
-    //             $existeFactura = $this->facturaServicioModel
-    //                 ->existeFacturaPeriodoContrato($contrato['id_contrato'], $periodo['id_periodo']);
-
-    //             if ($existeFactura) {
-    //                 continue;
-    //             }
-
-    //             if (empty($contrato['id_lectura'])) {
-    //                 continue;
-    //             }
-
-    //             $lecturaAnterior = $this->lecturasModel
-    //                 ->getUltimaLecturaAnterior($contrato['id_contrato'], $periodo['id_periodo']);
-
-    //             $valorLecturaAnterior = (float)($lecturaAnterior['valor'] ?? 0);
-    //             $valorLecturaActual = (float)($contrato['lectura_actual'] ?? 0);
-
-    //             $consumo = $this->calcularConsumo($valorLecturaActual, $valorLecturaAnterior);
-    //             $montoServicio = $this->calcularMontoServicio($consumo, $contrato);
-
-    //             $alumbrado = 0.00;
-    //             $trenDeAseo = 0.00;
-    //             $mora = 0.00;
-
-    //             $facturaAnterior = $this->facturaServicioModel
-    //                 ->getUltimaFacturaPendienteParaTraslado($contrato['id_contrato'], $periodo['id_periodo']);
-
-    //             $saldoAnterior = (float)($facturaAnterior['saldo_pendiente'] ?? 0);
-    //             $idFacturaAnterior = $facturaAnterior['id_factura'] ?? null;
-
-    //             $montoFactura = round($montoServicio + $alumbrado + $trenDeAseo, 2);
-    //             $saldoPendiente = round($montoFactura + $saldoAnterior + $mora, 2);
-
-    //             if ($saldoPendiente <= 0) {
-    //                 continue;
-    //             }
-
-    //             if ($idFacturaAnterior) {
-    //                 $this->facturaServicioModel->update($idFacturaAnterior, [
-    //                     'estado' => 'SALDO TRASLADADO'
-    //                 ]);
-    //             }
-
-    //             $correlativo = $this->rangoFacturasModel->obtenerCorrelativoFactura($db);
-
-    //             $insert = $this->facturaServicioModel->insert([
-    //                 'correlativo' => $correlativo,
-    //                 'id_contrato' => $contrato['id_contrato'],
-    //                 'id_periodo' => $periodo['id_periodo'],
-    //                 'fecha_emision' => date('Y-m-d'),
-    //                 'fecha_vencimiento' => $periodo['fecha_hasta'],
-    //                 'alumbrado' => $alumbrado,
-    //                 'tren_de_aseo' => $trenDeAseo,
-    //                 'consumo_mes' => $consumo,
-    //                 'monto_factura' => $montoFactura,
-    //                 'saldo_anterior' => $saldoAnterior,
-    //                 'saldo_pendiente' => $saldoPendiente,
-    //                 'estado' => 'PENDIENTE',
-    //                 'mora' => $mora,
-    //                 'id_lectura' => $contrato['id_lectura'],
-    //                 'id_factura_anterior' => $idFacturaAnterior
-    //             ]);
-
-    //             if (!$insert) {
-    //                 throw new \Exception('No se pudo generar una de las facturas del servicio');
-    //             }
-
-    //             $facturasGeneradas++;
-    //         }
-
-    //         $db->transCommit();
-
-    //         return $this->respondSuccess("Se generaron {$facturasGeneradas} facturas de servicio correctamente");
-    //     } catch (\Throwable $th) {
-    //         $db->transRollback();
-    //         log_message('error', $th->getMessage());
-
-    //         return $this->respondError($th->getMessage());
-    //     }
-    // }
-
-    // public function validarPagoFacturaServicio()
-    // {
-    //     try {
-    //         $idFactura = $this->request->getPost('idFactura');
-    //         $montoPago = (float)$this->request->getPost('montoPago');
-
-    //         $resultado = $this->validarPagoFactura($idFactura, $montoPago);
-
-    //         return $this->respondSuccess([
-    //             'idFactura' => $resultado['factura']['id_factura'],
-    //             'montoPago' => $resultado['montoPago'],
-    //             'saldoPendiente' => (float)$resultado['factura']['saldo_pendiente'],
-    //             'estadoActual' => $resultado['factura']['estado']
-    //         ]);
-    //     } catch (\Throwable $th) {
-    //         return $this->respondError($th->getMessage());
-    //     }
-    // }
-
-    // public function registrarPagoFacturaServicio()
-    // {
-    //     $db = \Config\Database::connect();
-    //     $db->transBegin();
-
-    //     try {
-    //         $idFactura = $this->request->getPost('idFactura');
-    //         $montoPago = (float)$this->request->getPost('montoPago');
-
-    //         $resultado = $this->validarPagoFactura($idFactura, $montoPago);
-    //         $factura = $resultado['factura'];
-
-    //         $insertPago = $this->pagoServicioModel->insert([
-    //             'id_factura' => $factura['id_factura'],
-    //             'fecha_pago' => date('Y-m-d'),
-    //             'monto' => $montoPago,
-    //             'id_contrato' => $factura['id_contrato']
-    //         ]);
-
-    //         if (!$insertPago) {
-    //             throw new \Exception('No se pudo registrar el pago');
-    //         }
-
-    //         $this->facturaServicioModel->update($factura['id_factura'], [
-    //             'saldo_pendiente' => 0,
-    //             'estado' => $resultado['estadoPagado']
-    //         ]);
-
-    //         $facturaAnteriorId = $factura['id_factura_anterior'];
-    //         $visitadas = [];
-
-    //         while ($facturaAnteriorId && !in_array($facturaAnteriorId, $visitadas, true)) {
-    //             $visitadas[] = $facturaAnteriorId;
-
-    //             $facturaAnterior = $this->facturaServicioModel->find($facturaAnteriorId);
-
-    //             if (!$facturaAnterior) {
-    //                 break;
-    //             }
-
-    //             if (in_array($facturaAnterior['estado'], ['SALDO TRASLADADO', 'PENDIENTE', 'VENCIDA'], true)) {
-    //                 $estadoAnteriorPagado = $facturaAnterior['estado'] === 'VENCIDA'
-    //                     ? 'PAGADA VENCIDA'
-    //                     : 'PAGADA';
-
-    //                 $this->facturaServicioModel->update($facturaAnteriorId, [
-    //                     'saldo_pendiente' => 0,
-    //                     'estado' => $estadoAnteriorPagado
-    //                 ]);
-    //             }
-
-    //             $facturaAnteriorId = $facturaAnterior['id_factura_anterior'];
-    //         }
-
-    //         $db->transCommit();
-
-    //         return $this->respondOk('Pago de factura registrado correctamente');
-    //     } catch (\Throwable $th) {
-    //         $db->transRollback();
-    //         log_message('error', $th->getMessage());
-
-    //         return $this->respondError($th->getMessage());
-    //     }
-    // }
 }

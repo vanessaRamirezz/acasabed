@@ -133,10 +133,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('facturacion_servicio', 'FacturacionServicio::index');
     $routes->get('getFacturasServicio', 'FacturacionServicio::getFacturasServicio');
     $routes->get('facturaCobroServicio/(:num)', 'FacturacionServicio::facturaCobroServicio/$1');
-    // $routes->get('getDetalleFacturaClienteServicio', 'FacturacionServicio::getDetalleFacturaCliente');
     $routes->post('generarFacturasServicio', 'FacturacionServicio::generarFacturasServicio');
-    // $routes->post('validarPagoFacturaServicio', 'FacturacionServicio::validarPagoFacturaServicio');
-    $routes->post('registrarPagoFacturaServicio', 'FacturacionServicio::registrarPagoFacturaServicio');
+
 
     // RANGO DE FACTURAS
     $routes->get('rango_de_facturas', 'RangoFacturas::index');
