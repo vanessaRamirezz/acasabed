@@ -83,7 +83,7 @@
     <div class="container-fluid">
         <div class="card-header py-3 d-flex flex-wrap align-items-center">
             <button type="button" id="btn-generar-facturas" class="btn bg-gradient-primary btn-flat">Generar Facturas</button>
-            <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir facturas del periodo activo</button>
+            <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir</button>
         </div>
         <input type="hidden" id="id-contrato-cobro">
 
@@ -119,14 +119,13 @@
                             <table class="table table-bordered table-sm" id="tbl-cobros-instalacion">
                                 <thead>
                                     <tr>
+                                        <th>Periodo</th>
                                         <th>Correlativo</th>
                                         <th>Solicitud</th>
-                                        <th>Contrato</th>
+                                        <th>Estado</th>
                                         <th>Cliente</th>
-                                        <!-- <th>Monto cuotas</th>
-                                        <th>Mora</th>
-                                        <th>Total pagado</th> -->
                                         <th>Fecha Emision</th>
+                                        <th>Fecha Pago</th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>
@@ -244,30 +243,30 @@
                     </table>
                 </div>
 
-                <div class="row monto-ocultar">
+                <!-- <div class="row monto-ocultar">
                     <div class="col-md-4 mb-3">
                         <label for="monto-pago">Monto a cancelar</label>
                         <input type="number" min="0.01" step="0.01" class="form-control" id="monto-pago" placeholder="0.00">
                     </div>
-                    <!-- <div class="col-md-4 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="cobrar-mora">Desea cobrar algun recargo</label>
                         <select class="form-control" id="cobrar-mora">
                             <option value="no" selected>No</option>
                             <option value="si">Si</option>
                         </select>
-                    </div> -->
-                    <!-- <div class="col-md-4 mb-3">
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label for="mora-pago">________</label>
                         <input type="number" min="0" step="0.01" class="form-control" id="mora-pago" placeholder="0.00" disabled>
-                    </div> -->
-                </div>
+                    </div>
+                </div> -->
 
                 <div id="contenedor-validacion" class="alert alert-light border" style="display: none;"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" id="btn-validar-cobro">Validar cobro de cuotas</button>
-                <button type="button" class="btn btn-success" id="btn-procesar-pago" style="display: none;">Procesar el pago</button>
+                <!-- <button type="button" class="btn btn-primary" id="btn-validar-cobro">Validar cobro de cuotas</button> -->
+                <!-- <button type="button" class="btn btn-success" id="btn-procesar-pago" style="display: none;">Procesar el pago</button> -->
             </div>
         </div>
     </div>

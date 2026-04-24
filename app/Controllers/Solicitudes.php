@@ -1042,12 +1042,12 @@ class Solicitudes extends BaseController
                 throw new \Exception($cobros['error']);
             }
 
-            $fechaBase = new \DateTimeImmutable($cobros['data']['fechaBase']);
+            // $fechaBase = new \DateTimeImmutable($cobros['data']['fechaBase']);
 
             $sumar = 1;
             if ($solicitud['data']['contado'] == true) {
                 log_message('info', 'pago unico');
-                $fechaCalculada = $fechaBase->modify("+{$sumar} month")->format('Y-m-d');
+                // $fechaCalculada = $fechaBase->modify("+{$sumar} month")->format('Y-m-d');
 
                 $cuota = [
                     'id_contrato' => $idContrato,
@@ -1055,7 +1055,7 @@ class Solicitudes extends BaseController
                     'monto_cuota' => $solicitud['data']['costoInstalacion'],
                     'descripcion' => "Pago único por la conexión",
                     'estado' => 'PENDIENTE',
-                    'fecha_vencimiento' => $fechaCalculada,
+                    // 'fecha_vencimiento' => $fechaCalculada,
                     // 'fecha_pago' => $fechaCalculada,
                     'id_usuario' => $idUsuario,
                     'fecha_creacion' => $fechaCreacion
@@ -1070,7 +1070,7 @@ class Solicitudes extends BaseController
                 log_message('info', 'pago por cuotas');
                 for ($i = 1; $i <= $cobros['data']['cantidadDePagos']; $i++) {
 
-                    $fechaCalculada = $fechaBase->modify("+{$i} month")->format('Y-m-d');
+                    // $fechaCalculada = $fechaBase->modify("+{$i} month")->format('Y-m-d');
 
                     $cuota = [
                         'id_contrato' => $idContrato,
@@ -1078,7 +1078,7 @@ class Solicitudes extends BaseController
                         'monto_cuota' => $cobros['data']['totalCuota'],
                         'descripcion' => "Cuota numero $i de " . $cobros['data']['cantidadDePagos'],
                         'estado' => 'PENDIENTE',
-                        'fecha_vencimiento' => $fechaCalculada,
+                        // 'fecha_vencimiento' => $fechaCalculada,
                         // 'fecha_pago' => $fechaCalculada,
                         'id_usuario' => $idUsuario,
                         'fecha_creacion' => $fechaCreacion

@@ -121,13 +121,13 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
     // COBROS DE INSTALACION
     $routes->get('cobros_instalacion', 'CobrosInstalacion::index');
-    $routes->get('getDetalleCobroCliente', 'CobrosInstalacion::getDetalleCobroCliente');
-    $routes->post('validarCobroInstalacion', 'CobrosInstalacion::validarCobroInstalacion');
-    $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPagoInstalacion');
     $routes->get('getCobrosRealizados', 'CobrosInstalacion::getCobrosRealizados');
-    $routes->get('facturaCobroInstalacion/(:num)', 'CobrosInstalacion::facturaCobroInstalacion/$1');
-    $routes->get('imprimirFacturasCobroPeriodoActivo', 'CobrosInstalacion::imprimirFacturasCobroPeriodoActivo');
+    $routes->get('getDetalleCobroCliente', 'CobrosInstalacion::getDetalleCobroCliente');
     $routes->post('generarFacturasCobros', 'CobrosInstalacion::generarFacturasCobros');
+    $routes->get('imprimirFacturasCobroPeriodoActivo', 'CobrosInstalacion::imprimirFacturasCobroPeriodoActivo');
+    $routes->get('facturaCobroInstalacion/(:num)', 'CobrosInstalacion::facturaCobroInstalacion/$1');
+    // $routes->post('validarCobroInstalacion', 'CobrosInstalacion::validarCobroInstalacion');
+    // $routes->post('registrarPagoInstalacion', 'CobrosInstalacion::registrarPagoInstalacion');
 
     // FACTURACION DEL SERVICIO
     $routes->get('facturacion_servicio', 'FacturacionServicio::index');
