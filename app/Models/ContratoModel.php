@@ -234,12 +234,13 @@ class ContratoModel extends Model
             c.id_tarifa,
             rutas.nombre AS ruta,
             medidores.numero_serie AS medidor,
-            tarifario.codigo AS tarifa
+            tipos_de_cliente.nombre AS tarifa
         ');
         $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente');
         $builder->join('rutas', 'rutas.id_ruta = c.id_ruta');
         $builder->join('medidores', 'medidores.id_medidor = c.id_medidor');
-        $builder->join('tarifario', 'tarifario.id_tarifa = c.id_tarifa');
+        $builder->join('tarifas', 'tarifas.id_tarifa = c.id_tarifa');
+        $builder->join('tipos_de_cliente', 'tipos_de_cliente.id_tipo_cliente = tarifas.id_tipo_cliente');
 
         if ($estado) {
             $builder->where('c.estado', $estado);

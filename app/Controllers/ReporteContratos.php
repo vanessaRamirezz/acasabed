@@ -74,7 +74,7 @@ class ReporteContratos extends BaseController
         table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 9px;
+            font-size: 8px;
         }
         th {
             background-color: #003366;
