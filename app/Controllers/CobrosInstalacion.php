@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\CobroContratoModel;
+use App\Models\FacturaDetalleModel;
+use App\Models\FacturaModel;
 use App\Models\HistorialCobroInstalacionModel;
 use App\Models\PagosInstalacionModel;
 use App\Models\PeriodoModel;
@@ -19,6 +21,9 @@ class CobrosInstalacion extends BaseController
     private $periodosModel;
     private $rangoFacturasModel;
 
+    private $facturasDetalleModel;
+    private $facturasModel;
+
     public function __construct()
     {
         $this->cobrosContratoModel = new CobroContratoModel();
@@ -27,6 +32,9 @@ class CobrosInstalacion extends BaseController
         $this->pagosInstalacionModel = new PagosInstalacionModel();
         $this->periodosModel = new PeriodoModel();
         $this->rangoFacturasModel = new RangoFacturaModel();
+
+        $this->facturasDetalleModel = new FacturaDetalleModel();
+        $this->facturasModel = new FacturaModel();
     }
 
     public function index()
@@ -329,7 +337,7 @@ class CobrosInstalacion extends BaseController
                 }
             }
 
-            // 🔥 ACTUALIZAR SALDO
+            // ACTUALIZAR SALDO
             $nuevoSaldo = max(0, (float)$detalle['resumen']['saldo_pendiente'] - $montoAplicado);
 
             log_message('info', 'Nuevo saldo a actualizar: ' . $nuevoSaldo);
@@ -536,11 +544,11 @@ class CobrosInstalacion extends BaseController
             $pdf->SetXY($x, $yDetalle);
 
             $pdf->Cell($colW, 7, '', 'L', 0);
-            $pdf->Cell($colW * 3, 7, $item['descripcion'] ?? 'Cobro de instalación', 'L', 0);
-            $pdf->Cell($colW, 7, number_format($item['monto_cuota'] + $item['recargo_aplicado'], 2), 'LR', 1);
+            $pdf->Cell($colW * 3, 7, $item['concepto'] ?? 'Cobro de instalación', 'L', 0);
+            $pdf->Cell($colW, 7, number_format($item['monto'] + $item['mora'], 2), 'LR', 1);
 
             $yDetalle += 7;
-            $total += $item['monto_cuota'] + $item['recargo_aplicado'];
+            $total += $item['monto'] + $item['mora'];
         }
 
         // 2. Rellenar filas vacías hasta 10
@@ -591,10 +599,10 @@ class CobrosInstalacion extends BaseController
         );
 
         $pdf->SetXY($x + ($colW * 4), $currentY);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->Cell($colW, 5, $factura['fechaVencimiento'], 0, 0, 'R');
 
-        // $pdf->Cell($colW, 5, '03/02/2026', 0, 0, 'R');
-
-
+        $pdf->SetTextColor(0, 51, 153);
         $currentY = $pdf->GetY();
 
         // $currentY = $pdf->GetY();
@@ -756,48 +764,45 @@ class CobrosInstalacion extends BaseController
 
         try {
             $periodo = $this->periodosModel->getPeriodoActivo();
-
             if (!$periodo) {
                 throw new \Exception('No hay periodo activo');
             }
-
             log_message('info', 'Periodo activo ID: ' . $periodo['id_periodo']);
 
             $contratos = $this->cobrosContratoModel->getContratosParaFacturar();
             log_message('info', 'Contratos obtenidos: ' . count($contratos));
 
             $facturasGeneradas = 0;
-
             foreach ($contratos as $contrato) {
 
                 log_message('info', '--- Procesando contrato: ' . $contrato->id_contrato);
 
-                // 🔒 Validar si ya existe factura en el periodo
-                $existeFactura = $this->pagosInstalacionModel
+
+                // Validar si ya existe factura en el periodo actual activo
+                $existeFactura = $this->facturasModel
                     ->where('id_contrato', $contrato->id_contrato)
                     ->where('id_periodo', $periodo['id_periodo'])
                     ->first();
-
                 if ($existeFactura) {
                     log_message('info', 'Contrato omitido: ya tiene factura en este periodo');
                     continue;
                 }
+                log_message('info', 'Contrato Valido: no  tiene factura en este periodo');
 
-                // 📥 Obtener cuotas
+                // Obtener las cuotas del contrato
                 $cuotas = $this->cobrosContratoModel->getCuotasPendientesPorContrato($contrato->id_contrato);
-
                 if (empty($cuotas)) {
                     log_message('info', 'Sin cuotas para contrato');
                     continue;
                 }
-
                 log_message('info', 'Cuotas encontradas: ' . count($cuotas));
+
 
                 $cuotasPendientes = [];
                 $cuotaNueva = null;
 
                 // =========================
-                // 🔥 PASO 1: OBTENER HASTA 3 PENDIENTES
+                // PASO 1: OBTENER HASTA 3 PENDIENTES
                 // =========================
                 foreach ($cuotas as $cuota) {
 
@@ -805,23 +810,22 @@ class CobrosInstalacion extends BaseController
                         break;
                     }
 
-                    $historialPendiente = $db->table('historial_cobros_instalacion hci')
-                        ->select('hci.id_pago')
-                        ->join('pagos_instalacion pi', 'pi.id_pago = hci.id_pago')
-                        ->where('hci.id_cobro_instalacion', $cuota->id_cobro_instalacion)
-                        ->where('pi.estado', 'PENDIENTE')
-                        ->orderBy('pi.id_pago', 'DESC')
+                    $facturaPendiente = $db->table('facturas_detalle fd')
+                        ->select('f.id_factura, f.estado')
+                        ->join('facturas f', 'f.id_factura = fd.id_factura')
+                        ->where('fd.id_cobro_instalacion', $cuota->id_cobro_instalacion)
+                        ->orderBy('f.id_factura', 'DESC') // última factura donde apareció
                         ->get(1)
                         ->getFirstRow('array');
 
-                    if ($historialPendiente) {
+                    if ($facturaPendiente && $facturaPendiente['estado'] === 'VENCIDA') {
                         log_message('info', 'Pendiente detectada: cuota ' . $cuota->numero_cuota);
 
                         $cuotasPendientes[] = $cuota;
                     }
                 }
+                log_message('info', 'Total de cuotas pendientes no pagadas encontradas: ' . count($cuotasPendientes));
 
-                log_message('info', 'Total pendientes encontradas: ' . count($cuotasPendientes));
 
                 if (count($cuotasPendientes) >= 3) {
                     log_message('info', 'Contrato omitido: ya tiene 3 cuotas pendientes facturadas');
@@ -829,17 +833,17 @@ class CobrosInstalacion extends BaseController
                 }
 
                 // =========================
-                // 🔥 PASO 2: BUSCAR 1 NUEVA (solo si hay menos de 3 pendientes)
+                // PASO 2: BUSCAR 1 NUEVA (solo si hay menos de 3 pendientes)
                 // =========================
                 foreach ($cuotas as $cuota) {
 
-                    $historial = $db->table('historial_cobros_instalacion')
-                        ->select('id_pago')
+                    $existeEnFacturas = $db->table('facturas_detalle')
+                        ->select('id_factura_detalle')
                         ->where('id_cobro_instalacion', $cuota->id_cobro_instalacion)
                         ->get(1)
                         ->getFirstRow('array');
 
-                    if (!$historial) {
+                    if (!$existeEnFacturas) {
                         log_message('info', 'Cuota nueva detectada: ' . $cuota->numero_cuota);
 
                         $cuotaNueva = $cuota;
@@ -848,7 +852,7 @@ class CobrosInstalacion extends BaseController
                 }
 
                 // =========================
-                // 🔥 CONSTRUIR DETALLE
+                // CONSTRUIR DETALLE
                 // =========================
                 $detalle = [];
                 $total = 0;
@@ -857,25 +861,27 @@ class CobrosInstalacion extends BaseController
                 foreach ($cuotasPendientes as $cuota) {
 
                     $detalle[] = [
+                        'tipo' => 'Instalacion',
+                        'concepto' => 'Servicio de instalación cuota numero ' . $cuota->numero_cuota . ' (Factura Retrasada) de ' . count($cuotas),
+                        'mora' => 2.00,
+                        'monto' => $cuota->monto_cuota,
                         'id_cobro_instalacion' => $cuota->id_cobro_instalacion,
-                        'monto_cuota' => $cuota->monto_cuota,
-                        'recargo_aplicado' => 2.00,
-                        'descripcion' => 'Cuota numero ' . $cuota->numero_cuota . ' (FACTURA ANTERIOR)'
                     ];
 
                     $total += ($cuota->monto_cuota + 2.00);
                 }
 
-                // 🟢 Agregar nueva
+                // Agregar nueva
                 if ($cuotaNueva) {
 
                     $detalle[] = [
+                        'tipo' => 'Instalacion',
+                        'concepto' => ($cuotaNueva->numero_cuota == 0)
+                            ? 'Servicio de instalación'
+                            : 'Servicio de instalación cuota numero ' . $cuotaNueva->numero_cuota . ' de ' . count($cuotas),
+                        'mora' => 0,
+                        'monto' => $cuotaNueva->monto_cuota,
                         'id_cobro_instalacion' => $cuotaNueva->id_cobro_instalacion,
-                        'monto_cuota' => $cuotaNueva->monto_cuota,
-                        'recargo_aplicado' => 0,
-                        'descripcion' => ($cuotaNueva->numero_cuota == 0)
-                            ? 'Cobro por instalación'
-                            : 'Cuota numero ' . $cuotaNueva->numero_cuota
                     ];
 
                     $total += $cuotaNueva->monto_cuota;
@@ -890,38 +896,49 @@ class CobrosInstalacion extends BaseController
                 }
 
                 // =========================
-                // 🔥 GENERAR FACTURA
+                // GENERAR FACTURA
                 // =========================
-                $correlativo = $this->rangoFacturasModel->obtenerCorrelativoFactura($db);
+                $correlativoData = $this->rangoFacturasModel->obtenerCorrelativoFactura($db);
 
-                $idPago = $this->pagosInstalacionModel->insert([
-                    'correlativo'   => $correlativo,
-                    'id_contrato'   => $contrato->id_contrato,
-                    'id_solicitud'  => $contrato->id_solicitud,
-                    'id_periodo'    => $periodo['id_periodo'],
-                    'fecha_creacion' => date('Y-m-d'),
-                    'estado' => 'PENDIENTE'
+                $fechaEmision = date('Y-m-d');
+
+                // calcular día 3 del siguiente mes
+                $fechaVencimiento = date('Y-m-03', strtotime('first day of next month'));
+
+                $idFactura = $this->facturasModel->insert([
+                    'id_rango_factura' => $correlativoData['id_rango_factura'],
+                    'correlativo'      => $correlativoData['correlativo'],
+                    'tiraje'           => $correlativoData['tiraje'],
+                    'id_contrato'      => $contrato->id_contrato,
+                    'id_periodo'       => $periodo['id_periodo'],
+                    'fecha_emision'    => $fechaEmision,
+                    'fecha_vencimiento' => $fechaVencimiento,
+                    'estado'           => 'PENDIENTE',
+                    'total'            => $total,
+                    'saldo_pendiente'  => $total,
+                    'id_usuario'       => session('id_usuario')
                 ]);
 
-                foreach ($detalle as $item) {
+                $batch = [];
 
-                    $this->historialCobroInstalacionModel->insert([
-                        'id_pago'               => $idPago,
-                        'id_contrato'           => $contrato->id_contrato,
-                        'id_solicitud'          => $contrato->id_solicitud,
-                        'id_cobro_instalacion'  => $item['id_cobro_instalacion'],
-                        'recargo_aplicado'      => $item['recargo_aplicado'],
-                        'monto_cuota'           => $item['monto_cuota'],
-                        'fecha_creacion'        => date('Y-m-d'),
-                        'descripcion'           => $item['descripcion']
-                    ]);
+                foreach ($detalle as $item) {
+                    $batch[] = [
+                        'id_factura'           => $idFactura,
+                        'tipo'                 => $item['tipo'],
+                        'concepto'             => $item['concepto'],
+                        'monto'                => $item['monto'],
+                        'mora'                 => $item['mora'],
+                        'id_cobro_instalacion' => $item['id_cobro_instalacion'],
+                    ];
                 }
+
+                $this->facturasDetalleModel->insertBatch($batch);
 
                 $facturasGeneradas++;
 
                 log_message('info', 'Factura creada correctamente para contrato ' . $contrato->id_contrato);
             }
-
+            // exit;
             $db->transCommit();
 
             return $this->respondSuccess("Se generaron {$facturasGeneradas} facturas correctamente");

@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class FacturaServicioModel extends Model
 {
-    protected $table = 'facturas';
+    protected $table = 'facturas_anterior';
     protected $primaryKey = 'id_factura';
     protected $allowedFields = [
         'correlativo',

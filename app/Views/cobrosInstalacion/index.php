@@ -126,7 +126,7 @@
                                         <!-- <th>Monto cuotas</th>
                                         <th>Mora</th>
                                         <th>Total pagado</th> -->
-                                        <th>Fecha</th>
+                                        <th>Fecha Emision</th>
                                         <th>Opciones</th>
                                     </tr>
                                 </thead>

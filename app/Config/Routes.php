@@ -146,4 +146,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     //REPORTES
     $routes->get('reporte_contratos', 'ReporteContratos::index');
     $routes->get('reporte-contratos/pdf', 'ReporteContratos::generarPDF');
+
+    // PLANTILLAS
+    $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');
+    $routes->get('facturas/exportar-excel', 'CargarGenerarPlantillas::exportarExcel');
+    $routes->post('facturas/importar-excel', 'CargarGenerarPlantillas::importarExcel');
 });

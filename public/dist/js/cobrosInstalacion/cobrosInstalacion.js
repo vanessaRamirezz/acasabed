@@ -44,7 +44,7 @@ function cargarTablaCobros() {
             //     render: data => formatearMonto(data)
             // },
             {
-                data: 'fecha_creacion',
+                data: 'fecha_emision',
                 render: data => formatearFecha(data) || '-'
             },
             {

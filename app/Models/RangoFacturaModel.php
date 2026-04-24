@@ -115,14 +115,17 @@ class RangoFacturaModel extends Model
             throw new \Exception('El rango de facturación ya fue consumido');
         }
 
-        // siguiente valor
         $siguiente = $actual + 1;
 
         $db->table('rango_factura')
             ->where('id_rango_factura', $rango['id_rango_factura'])
             ->update(['numero_actual' => $siguiente]);
 
-        // 🔥 retornas el usado, no el siguiente
-        return $actual;
+        // 🔥 ahora retornas todo lo necesario
+        return [
+            'correlativo' => $actual,
+            'id_rango_factura' => $rango['id_rango_factura'],
+            'tiraje' => $rango['tiraje']
+        ];
     }
 }

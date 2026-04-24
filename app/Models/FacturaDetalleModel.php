@@ -10,8 +10,10 @@ class FacturaDetalleModel extends Model
     protected $primaryKey = 'id_factura_detalle';
     protected $allowedFields = [
         'id_factura',
+        'tipo',
         'concepto',
+        'mora',
         'monto',
-        'orden'
+        'id_cobro_instalacion'
     ];
 }
