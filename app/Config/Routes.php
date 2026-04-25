@@ -143,8 +143,12 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getRangoFacturas', 'RangoFacturas::getRangoFacturas');
 
     //REPORTES
+    //REPORTE DE CONTRATOS
     $routes->get('reporte_contratos', 'ReporteContratos::index');
     $routes->get('reporte-contratos/pdf', 'ReporteContratos::generarPDF');
+    //REPORTE DE RUTAS
+    $routes->get('reporte_rutas', 'ReporteRutas::index');
+    $routes->get('reporteRutas', 'ReporteRutas::reporteRutas');
 
     // PLANTILLAS
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');
