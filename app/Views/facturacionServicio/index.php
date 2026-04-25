@@ -32,8 +32,56 @@
 
 <section class="content">
     <div class="container-fluid">
-        <div class="card-header py-3 d-flex flex-wrap align-items-center">
-            <button type="button" id="btn-generar-facturas-servicio" class="btn bg-gradient-primary btn-flat">Generar Facturas del Servicio</button>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <h6 class="mb-0 fw-bold">Carga de Archivo de Alcaldía</h6>
+                <small class="text-muted">Sube el archivo Excel para validar cargos de alumbrado y aseo</small>
+            </div>
+
+            <div class="card-body">
+
+                <!-- Input file -->
+                <div class="mb-3">
+                    <label for="input-excel" class="form-label fw-semibold">
+                        Archivo Excel
+                    </label>
+
+                    <input type="file"
+                        id="input-excel"
+                        class="form-control"
+                        accept=".xlsx, .xls">
+
+                    <div class="form-text">
+                        Formatos permitidos: .xlsx, .xls
+                    </div>
+                </div>
+
+                <!-- Estado -->
+                <div id="estado-excel" class="alert alert-secondary d-none">
+                    <span id="estado-texto">Esperando archivo...</span>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end gap-2 flex-wrap">
+
+                    <button type="button"
+                        id="btn-cargar-excel"
+                        class="btn btn-outline-success">
+                        <i class="fas fa-upload me-1"></i>
+                        Validar Excel
+                    </button>
+
+                    <button type="button"
+                        id="btn-generar-facturas-servicio"
+                        class="btn btn-primary"
+                        >
+                        <i class="fas fa-file-invoice-dollar me-1"></i>
+                        Generar Facturas
+                    </button>
+
+                </div>
+            </div>
         </div>
 
         <input type="hidden" id="id-factura-servicio">

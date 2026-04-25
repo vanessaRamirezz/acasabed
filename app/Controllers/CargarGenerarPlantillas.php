@@ -154,9 +154,9 @@ class CargarGenerarPlantillas extends BaseController
 
         $row = 2;
         foreach ($facturas as $d) {
-            $referencia = $f['tiraje'] . '-' . $f['correlativo'];
+            $referencia2 = $d['tiraje'] . '-' . $d['correlativo'];
             $sheet2->fromArray([
-                $referencia,
+                $referencia2,
                 $d['fecha_de_pago'],
                 '',
                 $d['codigo'],
@@ -271,20 +271,45 @@ class CargarGenerarPlantillas extends BaseController
              * INDEXAR COBROS POR REFERENCIA (IMPORTANTE)
              * ==========================================
              */
+            $fechaActual = null;
+            $cobrosIndex = [];
+
             foreach ($cobrosData as $i => $c) {
 
                 if ($i === 0) continue; // encabezado
 
-                // AJUSTA SI TU REFERENCIA NO ESTÁ EN COLUMNA 0
+                // 1. REFERENCIA (columna 0) -> ej: 1-8
                 $referencia = trim($c[0] ?? null);
-
                 if (!$referencia) continue;
 
+                // 2. FECHA (columna 1)
+                $fechaExcel = trim($c[1] ?? '');
+
+                // 🔥 SI VIENE FECHA, LA ACTUALIZAMOS
+                if (!empty($fechaExcel)) {
+                    $fechaActual = $fechaExcel;
+                }
+
+                // 🔥 SI NO VIENE FECHA, USA LA ÚLTIMA
                 $cobrosIndex[$referencia] = [
-                    'fecha_pago' => $c[1],
+                    'fecha_pago'   => $fechaActual, // 👈 clave
                     'monto_pagado' => $c[5] ?? null
                 ];
             }
+            // foreach ($cobrosData as $i => $c) {
+
+            //     if ($i === 0) continue; // encabezado
+
+            //     // AJUSTA SI TU REFERENCIA NO ESTÁ EN COLUMNA 0
+            //     $referencia = trim($c[0] ?? null);
+
+            //     if (!$referencia) continue;
+
+            //     $cobrosIndex[$referencia] = [
+            //         'fecha_pago' => $c[1],
+            //         'monto_pagado' => $c[5] ?? null
+            //     ];
+            // }
 
             log_message('info', 'COBROS INDEX: ' . print_r($cobrosIndex, true));
 
@@ -368,7 +393,8 @@ class CargarGenerarPlantillas extends BaseController
                     $this->facturasModel->update($facturaId, [
                         'saldo_pendiente' => 0,
                         'estado' => 'PAGADA',
-                        'fecha_de_pago' => $fechaPago
+                        'fecha_de_pago' => $fechaPago,
+                        'mora' => 0
                     ]);
 
                     $facturasPendientes = $this->facturasModel
@@ -450,7 +476,8 @@ class CargarGenerarPlantillas extends BaseController
                      */
 
                     $this->facturasModel->update($facturaId, [
-                        'estado' => 'VENCIDA'
+                        'estado' => 'VENCIDA',
+                        'mora' => 2
                     ]);
 
                     $detalles = $this->facturaDetalleModel

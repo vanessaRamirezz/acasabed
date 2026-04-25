@@ -21,7 +21,9 @@ class FacturaModel extends Model
         'estado',
         'total',
         'id_usuario',
-        'fecha_de_pago'
+        'fecha_de_pago',
+        'mora',
+        'consumo'
     ];
 
     public function getFacturasExcel($idPeriodo)
@@ -243,19 +245,31 @@ class FacturaModel extends Model
         ];
     }
 
-    public function existeFacturaPeriodoContrato($idContrato, $idPeriodo)
+    public function existeFacturaConsumoPeriodoContrato($idContrato, $idPeriodo)
     {
-        return $this->where('id_contrato', $idContrato)
-            ->where('id_periodo', $idPeriodo)
-            ->countAllResults() > 0;
+        return $this->db->table('facturas f')
+            ->select('f.id_factura')
+            ->join('facturas_detalle fd', 'fd.id_factura = f.id_factura')
+            ->where('f.id_contrato', $idContrato)
+            ->where('f.id_periodo', $idPeriodo)
+            ->where('fd.tipo', 'Consumo')
+            ->groupBy('f.id_factura')
+            ->get()
+            ->getNumRows() > 0;
     }
 
     public function getFacturasPendientesContrato($idContrato)
     {
-        return $this->where('id_contrato', $idContrato)
-            ->whereIn('estado', ['PENDIENTE', 'VENCIDA'])
-            ->orderBy('fecha_emision', 'ASC')
-            ->findAll();
+        return $this->db->table('facturas f')
+            ->select('f.*')
+            ->join('facturas_detalle fd', 'fd.id_factura = f.id_factura')
+            ->where('f.id_contrato', $idContrato)
+            ->whereIn('f.estado', ['PENDIENTE', 'VENCIDA'])
+            ->where('fd.tipo', 'Consumo')
+            ->groupBy('f.id_factura') // evita duplicados
+            ->orderBy('f.fecha_emision', 'ASC')
+            ->get()
+            ->getResult();
     }
 
     public function getFacturaResumenPorId($idFactura)
@@ -272,7 +286,7 @@ class FacturaModel extends Model
         $builder->join('distritos ds', 'ds.id_distrito = cl.id_distrito', 'left');
         $builder->join('colonias col', 'col.id_colonia = cl.id_colonia', 'left');
         $builder->join('lecturas lec', 'lec.id_lectura = f.id_lectura', 'left');
-        $builder->join('tarifario tari', 'tari.id_tarifa = c.id_tarifa', 'left');
+        $builder->join('tarifas tari', 'tari.id_tarifa = c.id_tarifa', 'left');
 
         $factura = $builder
             ->select("
@@ -301,7 +315,7 @@ class FacturaModel extends Model
                 ORDER BY l2.id_periodo DESC, l2.id_lectura DESC
                 LIMIT 1
             ) AS lecturaAnterior,
-            f.consumo_mes,
+            f.consumo,
             tari.codigo AS codigoTarifa
         ", false)
             ->where('f.id_factura', $idFactura)

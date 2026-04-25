@@ -186,21 +186,17 @@ class ContratoModel extends Model
                 contratos.numero_contrato,
                 contratos.id_cliente,
                 contratos.id_tarifa,
+                contratos.ficha_alcaldia,
                 solicitudes.id_solicitud,
                 solicitudes.codigo_solicitud,
                 clientes.nombre_completo,
-                medidores.numero_serie,
-                lecturas.id_lectura,
-                lecturas.fecha AS fecha_lectura_actual,
-                lecturas.valor AS lectura_actual,
-                COALESCE(tarifario.valor_metro_cubico, 0) AS valor_metro_cubico,
-                COALESCE(tarifario.pago_minimo, 0) AS pago_minimo
+                medidores.numero_serie
             ", false)
             ->join('solicitudes', 'solicitudes.id_solicitud = contratos.id_solicitud', 'left')
             ->join('clientes', 'clientes.id_cliente = contratos.id_cliente', 'left')
             ->join('medidores', 'medidores.id_medidor = contratos.id_medidor', 'left')
-            ->join('lecturas', 'lecturas.id_contrato = contratos.id_contrato', 'left')
-            ->join('tarifario', 'tarifario.id_tarifa = contratos.id_tarifa', 'left')
+            // ->join('lecturas', 'lecturas.id_contrato = contratos.id_contrato', 'left')
+            ->join('tarifas', 'tarifas.id_tarifa = contratos.id_tarifa', 'left')
             ->where('contratos.estado', 'APROBADO')
             ->where('solicitudes.estado', 'APROBADA')
             ->orderBy('contratos.id_contrato', 'ASC')

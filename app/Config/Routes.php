@@ -134,6 +134,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getFacturasServicio', 'FacturacionServicio::getFacturasServicio');
     $routes->get('facturaCobroServicio/(:num)', 'FacturacionServicio::facturaCobroServicio/$1');
     $routes->post('generarFacturasServicio', 'FacturacionServicio::generarFacturasServicio');
+    $routes->post('cargarExcelAlcaldia', 'FacturacionServicio::cargarExcelAlcaldia');
 
 
     // RANGO DE FACTURAS

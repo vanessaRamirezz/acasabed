@@ -114,6 +114,68 @@ function cargarTablaFacturas() {
     });
 }
 
+function cargarExcelAlcaldia() {
+    let file = $("#input-excel")[0].files[0];
+
+    if (!file) {
+        Swal.fire("Atención", "Debes seleccionar un archivo Excel", "warning");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("excel", file);
+
+    // reset visual
+    $("#estado-excel")
+        .removeClass("d-none alert-success alert-danger")
+        .addClass("alert-info");
+
+    $("#estado-texto").text("Procesando archivo...");
+
+    // $("#btn-generar-facturas-servicio").prop("disabled", true);
+
+    $.ajax({
+        url: baseURL + "cargarExcelAlcaldia",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: "json",
+
+        success: function (response) {
+
+            $("#estado-excel").removeClass("alert-info");
+
+            if (response.status === "success") {
+
+                $("#estado-excel").addClass("alert-success");
+                $("#estado-texto").text(response.data);
+
+                // ✅ habilita el botón
+                $("#btn-generar-facturas-servicio").prop("disabled", false);
+
+            } else {
+
+                $("#estado-excel").addClass("alert-danger");
+                $("#estado-texto").text(response.mensaje || "No se pudo validar el archivo");
+
+                $("#btn-generar-facturas-servicio").prop("disabled", true);
+            }
+        },
+
+        error: function () {
+
+            $("#estado-excel")
+                .removeClass("alert-info")
+                .addClass("alert-danger");
+
+            $("#estado-texto").text("Error al cargar el archivo");
+
+            $("#btn-generar-facturas-servicio").prop("disabled", true);
+        }
+    });
+}
+
 function generarFacturasServicio() {
     let interval;
 
@@ -192,6 +254,11 @@ function eventosUsuarios() {
 
         // abrir PDF en nueva pestaña
         window.open(baseURL + 'facturaCobroServicio/' + id, '_blank');
+    });
+
+    //evento para cargar el excel
+    $("#btn-cargar-excel").on("click", function () {
+        cargarExcelAlcaldia();
     });
 }
 

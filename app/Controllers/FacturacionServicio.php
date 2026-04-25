@@ -9,6 +9,8 @@ use App\Models\FacturaServicioModel;
 use App\Models\LecturaModel;
 use App\Models\PeriodoModel;
 use App\Models\RangoFacturaModel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 
 class FacturacionServicio extends BaseController
 {
@@ -215,15 +217,17 @@ class FacturacionServicio extends BaseController
         $pdf->Cell($colW, 5, 'COD. TARIFA', 1, 0, 'C');
         $pdf->Cell($colW, 5, 'FECHA LECTURA', 1, 1, 'C'); // 👈 solo aquí salto
 
+        $pdf->SetTextColor(0, 0, 0);
         $pdf->SetX($x);
         $pdf->Cell($colW, 5, $factura['lecturaActual'], 1, 0);
         $pdf->Cell($colW, 5, $factura['lecturaAnterior'], 1, 0);
-        $pdf->Cell($colW, 5, $factura['consumo_mes'], 1, 0);
+        $pdf->Cell($colW, 5, $factura['consumo'], 1, 0);
         $pdf->Cell($colW, 5, $factura['codigoTarifa'], 1, 0);
         $pdf->Cell($colW, 5, $factura['fechaLectura'], 1, 1);
 
 
         // DETALLE
+        $pdf->SetTextColor(0, 51, 153);
         $pdf->SetXY($x, $y + 62);
 
         // CÓDIGO ocupa columna 1
@@ -300,12 +304,12 @@ class FacturacionServicio extends BaseController
         );
 
         $pdf->SetXY($x + ($colW * 4), $currentY);
-
+        $pdf->SetTextColor(0, 0, 0);
         $pdf->Cell($colW, 5, $factura['fechaVencimiento'], 0, 0, 'R');
 
 
         $currentY = $pdf->GetY();
-
+        $pdf->SetTextColor(0, 51, 153);
         // $currentY = $pdf->GetY();
 
         // === TELÉFONO (solo lado izquierdo enmarcado) ===
@@ -388,7 +392,152 @@ class FacturacionServicio extends BaseController
         return max(0, (float)$lecturaActual - (float)$lecturaAnterior);
     }
 
-    public function generarFacturasServicio()
+    private function buscarColumna($header, $palabra)
+    {
+        foreach ($header as $i => $col) {
+            if (strpos($col, $palabra) !== false) {
+                return $i;
+            }
+        }
+        return false;
+    }
+
+    private function procesarExcel($ruta)
+    {
+        try {
+
+            log_message('info', '2- Leyendo Excel: ' . $ruta);
+
+            $reader = new Xlsx();
+            $reader->setReadDataOnly(true);
+
+            //SOLO LEER NOMBRES DE HOJAS (no carga datos aún)
+            $worksheetNames = $reader->listWorksheetNames($ruta);
+
+            if (empty($worksheetNames)) {
+                throw new \Exception('El archivo no contiene hojas');
+            }
+
+            $primeraHoja = $worksheetNames[0];
+
+            log_message('info', '3- Primera hoja detectada: ' . $primeraHoja);
+
+            // SOLO cargar esa hoja
+            $reader->setLoadSheetsOnly($primeraHoja);
+
+            $spreadsheet = $reader->load($ruta);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $data = [];
+            $header = [];
+
+            foreach ($sheet->getRowIterator() as $rowIndex => $row) {
+
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(false);
+
+                $rowData = [];
+
+                foreach ($cellIterator as $cell) {
+                    $rowData[] = strtolower(trim((string)$cell->getValue()));
+                }
+
+                // encabezado
+                if ($rowIndex === 1) {
+
+                    $header = $rowData;
+
+                    log_message('info', '4- Encabezados: ' . print_r($header, true));
+
+                    $colFicha = $this->buscarColumna($header, 'ficha');
+                    $colAlumbrado = $this->buscarColumna($header, 'alumbrado');
+                    $colAseo = $this->buscarColumna($header, 'aseo');
+
+                    if ($colFicha === false || $colAlumbrado === false || $colAseo === false) {
+                        throw new \Exception('Columnas requeridas no encontradas');
+                    }
+
+                    continue;
+                }
+
+                $ficha = trim($rowData[$colFicha] ?? '');
+                if (empty($ficha)) continue;
+
+                $data[] = [
+                    'ficha' => $ficha,
+                    'alumbrado' => (float)($rowData[$colAlumbrado] ?? 0),
+                    'aseo' => (float)($rowData[$colAseo] ?? 0),
+                ];
+            }
+
+            // iberar memoria
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            log_message('info', '5- Filas procesadas: ' . count($data));
+
+            return $data;
+        } catch (\Throwable $e) {
+            log_message('error', 'Error Excel: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function cargarExcelAlcaldia()
+    {
+        try {
+
+            // evitar problemas de salida previa
+            if (ob_get_length()) ob_clean();
+
+            $db = \Config\Database::connect();
+
+            $file = $this->request->getFile('excel');
+
+            if (!$file || !$file->isValid()) {
+                return $this->respondError('Archivo inválido');
+            }
+
+            log_message('info', '1- Archivo recibido: ' . $file->getName());
+
+            // guardar archivo
+            $nombre = $file->getRandomName();
+            $file->move(WRITEPATH . 'uploads', $nombre);
+
+            $ruta = WRITEPATH . 'uploads/' . $nombre;
+
+            // procesar excel
+            $dataExcel = $this->procesarExcel($ruta);
+
+            if (empty($dataExcel)) {
+                return $this->respondError('El Excel no contiene datos válidos');
+            }
+
+            // limpiar tabla temporal
+            $db->table('tmp_alcaldia')->truncate();
+
+            // insertar datos
+            $db->table('tmp_alcaldia')->insertBatch($dataExcel);
+            // foreach ($dataExcel as $row) {
+            //     $db->table('tmp_alcaldia')->insert($row);
+            // }
+
+            log_message('info', '6- Datos insertados en tmp_alcaldia');
+
+            return $this->respondSuccess(
+                "Excel cargado correctamente (" . count($dataExcel) . " registros)"
+            );
+        } catch (\Throwable $e) {
+
+            log_message('error', 'Error en carga Excel: ' . $e->getMessage());
+
+            return $this->respondError(
+                'Error al procesar el archivo: ' . $e->getMessage()
+            );
+        }
+    }
+
+    public function generarFacturasServicioANTERIOR()
     {
         $db = \Config\Database::connect();
         $db->transBegin();
@@ -405,11 +554,11 @@ class FacturacionServicio extends BaseController
             log_message('info', 'Contratos obtenidos: ' . count($contratos));
 
             $facturasGeneradas = 0;
-
             foreach ($contratos as $contrato) {
 
                 log_message('info', '--- Procesando contrato: ' . $contrato->id_contrato);
                 log_message('info', 'dato del contrato ' . print_r($contrato, true));
+                exit;
 
                 // validar si ya existe factura en ese periodo
                 $existeFactura = $this->facturaModel
@@ -436,7 +585,6 @@ class FacturacionServicio extends BaseController
                 }
 
                 $saldoAnterior = 0;
-
                 foreach ($facturasPendientes as $factura) {
                     $saldoAnterior += $factura->saldo_pendiente;
                     log_message('info', 'saldo anterior de facturas vencidas ' . $saldoAnterior);
@@ -536,6 +684,241 @@ class FacturacionServicio extends BaseController
             log_message('error', $th->getMessage());
 
             return $this->respondError($th->getMessage());
+        }
+    }
+
+    private function calcularMontoServicio($idTarifa, $consumo)
+    {
+        $db = \Config\Database::connect();
+
+        $rangos = $db->table('tarifas_detalle')
+            ->where('id_tarifa', $idTarifa)
+            ->orderBy('desde_n_metros', 'ASC')
+            ->get()
+            ->getResult();
+
+        if (empty($rangos)) {
+            throw new \Exception("Tarifa sin configuración");
+        }
+
+        $total = 0;
+        $consumoRestante = $consumo;
+
+        foreach ($rangos as $index => $rango) {
+
+            $desde = (float)$rango->desde_n_metros;
+            $hasta = (float)$rango->hasta_n_metros;
+            $precio = (float)$rango->valor_metro_cubico;
+            $minimo = (float)$rango->pago_minimo;
+
+            // calcular metros dentro de este rango
+            if ($consumo > $desde) {
+
+                $limiteSuperior = min($consumo, $hasta);
+                $metrosEnRango = $limiteSuperior - $desde;
+
+                if ($metrosEnRango < 0) {
+                    $metrosEnRango = 0;
+                }
+
+                $subtotal = $metrosEnRango * $precio;
+
+                // 🔥 aplicar pago mínimo SOLO en el primer bloque
+                if ($index === 0 && $minimo > 0) {
+                    $subtotal = max($subtotal, $minimo);
+                }
+
+                $total += $subtotal;
+            }
+        }
+
+        return round($total, 2);
+    }
+
+    public function generarFacturasServicio()
+    {
+        $db = \Config\Database::connect();
+        $db->transBegin();
+
+        try {
+            log_message('info', '--------------------------------------------------------------');
+
+            $periodoActivo = $this->periodosModel->getPeriodoActivo();
+            if (!$periodoActivo) {
+                throw new \Exception('No hay periodo activo');
+            }
+
+            log_message('info', '1- Periodo activo ID ' . print_r($periodoActivo, true));
+
+            $contratos = $this->contratosModel->getContratosActivosFacturacionServicio();
+            log_message('info', '2- Contratos obtenidos: ' . count($contratos));
+
+            $facturasGeneradas = 0;
+
+            foreach ($contratos as $contrato) {
+
+                log_message('info', '3- --- Procesando contrato: ' . $contrato->id_contrato);
+
+                // 1. VALIDAR SI YA EXISTE FACTURA DE CONSUMO
+                $existeFactura = $this->facturaModel
+                    ->existeFacturaConsumoPeriodoContrato(
+                        $contrato->id_contrato,
+                        $periodoActivo['id_periodo']
+                    );
+
+                if ($existeFactura) {
+                    log_message('info', '5- Contrato omitido: ya tiene factura en este periodo');
+                    continue;
+                }
+
+                // 2. FACTURAS PENDIENTES
+                $facturasPendientes = $this->facturaModel
+                    ->getFacturasPendientesContrato($contrato->id_contrato);
+
+                if (count($facturasPendientes) >= 3) {
+                    log_message('info', '6- Tiene 3 o más pendientes, se omite');
+                    continue;
+                }
+
+                $detalle = [];
+                $totalFactura = 0;
+
+                // 🔴 AGREGAR SALDOS PENDIENTES
+                foreach ($facturasPendientes as $facturaPendiente) {
+
+                    $montoPendiente = (float)$facturaPendiente->saldo_pendiente + (float)$facturaPendiente->mora;
+
+                    if ($montoPendiente <= 0) continue;
+
+                    $detalle[] = [
+                        'tipo' => 'Consumo',
+                        'concepto' => 'Saldo pendiente de factura anterior',
+                        'monto' => $montoPendiente,
+                        'mora' => 0
+                    ];
+
+                    log_message('info', 'detalle de factura anterior ' . print_r($detalle, true));
+
+                    $totalFactura += $montoPendiente;
+                }
+
+                // 3. DATOS DE ALCALDÍA
+                $tmp = $db->table('tmp_alcaldia')
+                    ->where('ficha', $contrato->ficha_alcaldia)
+                    ->get()
+                    ->getRow();
+
+                if (!$tmp) {
+                    log_message('error', "7- Sin datos de alcaldía");
+                    continue;
+                }
+
+                $alumbrado = (float)$tmp->alumbrado;
+                $trenAseo  = (float)$tmp->aseo;
+
+                // 4. CORRELATIVO
+                $dataCorrelativo = $this->rangoFacturasModel->obtenerCorrelativoFactura($db);
+
+                // 5. LECTURAS
+                $lecturaActual = $this->lecturasModel
+                    ->getLecturaActual($contrato->id_contrato, $periodoActivo['id_periodo']);
+
+                if (!$lecturaActual) {
+                    log_message('error', 'Sin lectura');
+                    continue;
+                }
+
+                $lecturaAnterior = $this->lecturasModel
+                    ->getUltimaLecturaAnterior($contrato->id_contrato, $periodoActivo['id_periodo']);
+
+                $consumo = $this->calcularConsumo(
+                    (float)($lecturaActual['valor'] ?? 0),
+                    (float)($lecturaAnterior['valor'] ?? 0)
+                );
+
+                // 6. CARGOS ACTUALES
+                $montoServicio = $this->calcularMontoServicio(
+                    $contrato->id_tarifa,
+                    $consumo
+                );
+
+                $mora = 0;
+
+                // 🔴 AGREGAR CONCEPTOS ACTUALES
+                $detalle[] = [
+                    'tipo' => 'Consumo',
+                    'concepto' => 'SERVICIO DOMICILIAR',
+                    'monto' => $montoServicio,
+                    'mora' => 0
+                ];
+
+                $detalle[] = [
+                    'tipo' => 'Consumo',
+                    'concepto' => 'TREN DE ASEO',
+                    'monto' => $trenAseo,
+                    'mora' => 0
+                ];
+
+                $detalle[] = [
+                    'tipo' => 'Consumo',
+                    'concepto' => 'ALUMBRADO PU',
+                    'monto' => $alumbrado,
+                    'mora' => 0
+                ];
+
+                // 🔥 SUMAR TODO (NO SOBREESCRIBIR)
+                $totalFactura += ($montoServicio + $trenAseo + $alumbrado + $mora);
+
+                // 7. INSERT FACTURA
+                $fechaEmision = date('Y-m-d');
+                $fechaVencimiento = date('Y-m-03', strtotime('first day of next month'));
+
+                $this->facturaModel->insert([
+                    'id_rango_factura'   => $dataCorrelativo['id_rango_factura'],
+                    'correlativo'        => $dataCorrelativo['correlativo'],
+                    'tiraje'             => $dataCorrelativo['tiraje'],
+                    'id_contrato'        => $contrato->id_contrato,
+                    'id_periodo'         => $periodoActivo['id_periodo'],
+                    'id_lectura'         => $lecturaActual['id_lectura'],
+                    'fecha_emision'      => $fechaEmision,
+                    'fecha_vencimiento'  => $fechaVencimiento,
+                    'saldo_pendiente'    => $totalFactura,
+                    'estado'             => 'PENDIENTE',
+                    'total'              => $totalFactura,
+                    'id_usuario'         => session()->get('id_usuario'),
+                    'consumo'            => $consumo,
+                ]);
+
+                $idFactura = $this->facturaModel->insertID();
+
+                // 8. INSERT DETALLE COMPLETO
+                foreach ($detalle as $d) {
+                    $this->facturaDetalleModel->insert([
+                        'id_factura' => $idFactura,
+                        'tipo'       => $d['tipo'],
+                        'concepto'   => $d['concepto'],
+                        'monto'      => $d['monto'],
+                        'mora'       => $d['mora']
+                    ]);
+                }
+
+                $facturasGeneradas++;
+            }
+            // exit;
+            // limpiar tabla temporal después de usarla
+            $db->table('tmp_alcaldia')->truncate();
+
+            $db->transCommit();
+
+            return $this->respondSuccess(
+                "Se generaron {$facturasGeneradas} facturas correctamente"
+            );
+        } catch (\Throwable $e) {
+
+            $db->transRollback();
+            log_message('error', $e->getMessage());
+
+            return $this->respondError($e->getMessage());
         }
     }
 }
