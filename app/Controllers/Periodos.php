@@ -72,6 +72,17 @@ class Periodos extends BaseController
             //     $estadoNuevo = 'CERRADO';
             // }
 
+            // aca vamos a validar que no haya un periodo activo al crear uno nuevo
+            $periodoActivo = $this->periodosModel
+                ->where('estado', 'Activo')
+                ->get()
+                ->getRow();
+            
+            if($periodoActivo){
+                log_message('info', 'Ya existe un periodo activo');
+                return $this->respondError('Ya existe un periodo activo');
+            }
+            
             $estadoNuevo = 'ACTIVO';
 
             // INICIAR TRANSACCIÓN
