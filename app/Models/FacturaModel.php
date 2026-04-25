@@ -58,10 +58,17 @@ class FacturaModel extends Model
     {
         $builder = $this->db->table('facturas f');
 
+        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
         $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
         $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
         $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
         $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
+
+        $builder->where('fd.tipo', 'Instalacion');
+
+        // CLAVE PARA EVITAR DUPLICADOS
+        $builder->distinct();
+        $builder->select('f.id_factura');
 
         //total sin filtros
         $total = $builder->countAllResults(false);
