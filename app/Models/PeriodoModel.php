@@ -111,7 +111,7 @@ class PeriodoModel extends Model
 
     public function getPeriodoActivo()
     {
-        return $this->select('id_periodo')
+        return $this->select('id_periodo, nombre')
             ->where('estado', 'ACTIVO')
             ->orderBy('id_periodo', 'DESC') // por si hay más de uno
             ->first();

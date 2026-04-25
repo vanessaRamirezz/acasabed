@@ -365,7 +365,7 @@ class CobrosInstalacion extends BaseController
     function dibujarComprobante($pdf, $x, $y, $titulo, $factura, $detalle)
     {
         $w = 95; // aca se mide lo ancho del cuadro principal
-        $h = 150; // aca se mide lo largo del cuadro principal
+        $h = 140; // aca se mide lo largo del cuadro principal
 
         // Marco
         $pdf->SetDrawColor(0, 51, 153);
@@ -540,13 +540,36 @@ class CobrosInstalacion extends BaseController
         $total = 0;
         foreach ($detalle as $item) {
             $pdf->SetTextColor(0, 0, 0);
-            $pdf->SetXY($x, $yDetalle);
+            $pdf->SetFont('helvetica', '', 7);
 
-            $pdf->Cell($colW, 7, '', 'L', 0);
-            $pdf->Cell($colW * 3, 7, $item['concepto'] ?? 'Cobro de instalación', 'L', 0);
-            $pdf->Cell($colW, 7, number_format($item['monto'] + $item['mora'], 2), 'LR', 1);
+            $concepto = $item['concepto'] ?? 'Cobro de instalación';
+            $monto = number_format($item['monto'] + $item['mora'], 2);
 
-            $yDetalle += 7;
+            // Guardar posición inicial
+            $xInicio = $x;
+            $yInicio = $yDetalle;
+
+            // Calcular altura dinámica del concepto
+            $alturaConcepto = $pdf->getStringHeight($colW * 3, $concepto);
+
+            // Usar la mayor altura (mínimo 7 para mantener consistencia)
+            $alturaFila = max(7, $alturaConcepto);
+
+            // Columna vacía
+            $pdf->SetXY($xInicio, $yInicio);
+            $pdf->Cell($colW, $alturaFila, '', 'L', 0);
+
+            // Concepto con salto automático
+            $pdf->SetXY($xInicio + $colW, $yInicio);
+            $pdf->MultiCell($colW * 3, 7, $concepto, 'L', 'L', false);
+
+            // Monto (alineado con altura dinámica)
+            $pdf->SetXY($xInicio + ($colW * 4), $yInicio);
+            $pdf->Cell($colW, $alturaFila, $monto, 'LR', 0, 'R');
+
+            // Mover cursor hacia abajo
+            $yDetalle += $alturaFila;
+
             $total += $item['monto'] + $item['mora'];
         }
 
@@ -641,13 +664,21 @@ class CobrosInstalacion extends BaseController
         );
     }
 
-    private function agregarPaginaFacturaCobro($pdf, array $factura, array $detalle)
+    private function agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, array $factura, array $detalle, $posY)
     {
-        $pdf->AddPage();
-        $pdf->SetTitle('Factura ' . ($factura['cliente'] ?? 'Cobro'));
+        if ($pdf->getNumPages() === 0 || $posY == 10) {
+            $pdf->AddPage();
+        }
 
-        $this->dibujarComprobante($pdf, 10, 10, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
-        $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
+        if ($imprimir == 'SI') {
+            $pdf->SetTitle('Facturas_cobro_periodo_' . $periodo['nombre']);
+        } else {
+            $pdf->SetTitle('Factura ' . ($factura['cliente'] ?? 'Cobro'));
+        }
+
+        // Arriba o abajo según Y
+        $this->dibujarComprobante($pdf, 10, $posY, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
+        $this->dibujarComprobante($pdf, 110, $posY, 'COMPROBANTE DEL BANCO', $factura, $detalle);
     }
 
     private function responderVentanaImpresionConMensaje($mensaje, $statusCode = 400)
@@ -684,6 +715,8 @@ class CobrosInstalacion extends BaseController
 
         $factura = $data['factura'];
         $detalle = $data['detalle'];
+        $imprimir = 'NO';
+        $periodo = null;
 
         $pdf = new \TCPDF('P', 'mm', 'A4');
         $pdf->SetMargins(5, 5, 5);
@@ -691,7 +724,7 @@ class CobrosInstalacion extends BaseController
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
 
-        $this->agregarPaginaFacturaCobro($pdf, $factura, $detalle);
+        $this->agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, $factura, $detalle, 5);
 
         // 🔑 Nombre dinámico con cliente
         $nombrePDF = 'Factura_' . preg_replace('/[^A-Za-z0-9]/', '_', $factura['cliente']) . '.pdf';
@@ -712,8 +745,11 @@ class CobrosInstalacion extends BaseController
             }
 
             $facturas = $this->facturasModel
-                ->where('id_periodo', $periodo['id_periodo'])
-                ->orderBy('id_factura', 'ASC')
+                ->join('facturas_detalle fd', 'fd.id_factura = facturas.id_factura')
+                ->where('facturas.id_periodo', $periodo['id_periodo'])
+                ->where('fd.tipo', 'Instalacion')
+                ->groupBy('facturas.id_factura')
+                ->orderBy('facturas.id_factura', 'ASC')
                 ->findAll();
 
             if (empty($facturas)) {
@@ -726,6 +762,12 @@ class CobrosInstalacion extends BaseController
             $pdf->setPrintHeader(false);
             $pdf->setPrintFooter(false);
 
+            $imprimir = 'SI';
+
+
+            $posicionesY = [5, 150]; // arriba y abajo
+            $index = 0;
+
             foreach ($facturas as $factura) {
                 $dataFactura = $this->facturasModel->obtenerFacturaPorId($factura['id_factura']);
 
@@ -733,7 +775,23 @@ class CobrosInstalacion extends BaseController
                     continue;
                 }
 
-                $this->agregarPaginaFacturaCobro($pdf, $dataFactura['factura'], $dataFactura['detalle'] ?? []);
+                $posY = $posicionesY[$index % 2];
+
+                $this->agregarPaginaFacturaCobro(
+                    $pdf,
+                    $imprimir,
+                    $periodo,
+                    $dataFactura['factura'],
+                    $dataFactura['detalle'] ?? [],
+                    $posY
+                );
+
+                // Cada 2 facturas → nueva página
+                if ($index % 2 == 1) {
+                    // opcional: podrías forzar salto aquí si quieres control estricto
+                }
+
+                $index++;
             }
 
             if ($pdf->getNumPages() === 0) {
@@ -744,7 +802,7 @@ class CobrosInstalacion extends BaseController
                 $pdf->IncludeJS('print(true);');
             }
 
-            $nombrePDF = 'Facturas_cobro_periodo_' . $periodo['id_periodo'] . '_' . date('Ymd_His') . '.pdf';
+            $nombrePDF = 'Facturas_cobro_periodo_' . $periodo['nombre'] . '.pdf';
 
             $pdf->Output($nombrePDF, 'I');
             exit;
@@ -861,7 +919,7 @@ class CobrosInstalacion extends BaseController
 
                     $detalle[] = [
                         'tipo' => 'Instalacion',
-                        'concepto' => 'Servicio de instalación cuota numero ' . $cuota->numero_cuota . ' (Factura Retrasada) de ' . count($cuotas),
+                        'concepto' => 'Servicio de instalación cuota numero ' . $cuota->numero_cuota . ' de ' . count($cuotas) . ' (Factura Retrasada)',
                         'mora' => 2.00,
                         'monto' => $cuota->monto_cuota,
                         'id_cobro_instalacion' => $cuota->id_cobro_instalacion,

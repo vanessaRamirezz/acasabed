@@ -69,7 +69,7 @@ class FacturacionServicio extends BaseController
     function dibujarComprobante($pdf, $x, $y, $titulo, $factura, $detalle)
     {
         $w = 95; // aca se mide lo ancho del cuadro principal
-        $h = 150; // aca se mide lo largo del cuadro principal
+        $h = 140; // aca se mide lo largo del cuadro principal
 
         // Marco
         $pdf->SetDrawColor(0, 51, 153);
@@ -246,20 +246,43 @@ class FacturacionServicio extends BaseController
         $total = 0;
         foreach ($detalle as $item) {
             $pdf->SetTextColor(0, 0, 0);
-            $pdf->SetXY($x, $yDetalle);
+            $pdf->SetFont('helvetica', '', 7);
 
-            $pdf->Cell($colW, 7, '', 'L', 0);
-            $pdf->Cell($colW * 3, 7, $item['concepto'] ?? '', 'L', 0);
-            $pdf->Cell($colW, 7, number_format($item['monto'], 2), 'LR', 1);
+            $concepto = $item['concepto'] ?? '';
+            $monto = number_format($item['monto'], 2);
 
-            $yDetalle += 7;
+            // Guardar posición inicial
+            $xInicio = $x;
+            $yInicio = $yDetalle;
+
+            // Calcular altura dinámica del concepto
+            $alturaConcepto = $pdf->getStringHeight($colW * 3, $concepto);
+
+            // Usar la mayor altura (mínimo 7 para mantener consistencia)
+            $alturaFila = max(7, $alturaConcepto);
+
+            // Columna vacía
+            $pdf->SetXY($xInicio, $yInicio);
+            $pdf->Cell($colW, $alturaFila, '', 'L', 0);
+
+            // Concepto con salto automático
+            $pdf->SetXY($xInicio + $colW, $yInicio);
+            $pdf->MultiCell($colW * 3, 7, $concepto, 'L', 'L', false);
+
+            // Monto (alineado con altura dinámica)
+            $pdf->SetXY($xInicio + ($colW * 4), $yInicio);
+            $pdf->Cell($colW, $alturaFila, $monto, 'LR', 0, 'R');
+
+            // Mover cursor hacia abajo
+            $yDetalle += $alturaFila;
+
             $total += $item['monto'];
         }
 
         // 2. Rellenar filas vacías hasta 10
         $filas = count($detalle);
 
-        for ($i = $filas; $i < 10; $i++) {
+        for ($i = $filas; $i < 9; $i++) {
 
             $pdf->SetXY($x, $yDetalle);
 
@@ -347,13 +370,20 @@ class FacturacionServicio extends BaseController
         );
     }
 
-    private function agregarPaginaFacturaCobro($pdf, array $factura, array $detalle)
+    private function agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, array $factura, array $detalle, $posY)
     {
-        $pdf->AddPage();
-        $pdf->SetTitle('Factura ' . ($factura['cliente'] ?? 'Cobro'));
+        if ($pdf->getNumPages() === 0 || $posY == 10) {
+            $pdf->AddPage();
+        }
 
-        $this->dibujarComprobante($pdf, 10, 10, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
-        $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
+        if ($imprimir == 'SI') {
+            $pdf->SetTitle('Facturas_consumo_periodo_' . $periodo['nombre']);
+        } else {
+            $pdf->SetTitle('Factura ' . ($factura['cliente'] ?? 'Cobro'));
+        }
+
+        $this->dibujarComprobante($pdf, 10, $posY, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
+        $this->dibujarComprobante($pdf, 110, $posY, 'COMPROBANTE DEL BANCO', $factura, $detalle);
     }
 
     public function facturaCobroServicio($id)
@@ -368,6 +398,8 @@ class FacturacionServicio extends BaseController
 
         $factura = $data['factura'];
         $detalle = $data['detalle'];
+        $imprimir = 'NO';
+        $periodo = null;
 
         $pdf = new \TCPDF('P', 'mm', 'A4');
         $pdf->SetMargins(5, 5, 5);
@@ -375,7 +407,7 @@ class FacturacionServicio extends BaseController
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
 
-        $this->agregarPaginaFacturaCobro($pdf, $factura, $detalle);
+        $this->agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, $factura, $detalle, 5);
 
 
         // 🔑 Nombre dinámico con cliente
@@ -919,6 +951,104 @@ class FacturacionServicio extends BaseController
             log_message('error', $e->getMessage());
 
             return $this->respondError($e->getMessage());
+        }
+    }
+
+    private function responderVentanaImpresionConMensaje($mensaje, $statusCode = 400)
+    {
+        $html = '<!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Facturas de cobro</title>
+        </head>
+        <body>
+            <script>
+                alert(' . json_encode($mensaje) . ');
+                window.close();
+            </script>
+        </body>
+        </html>';
+
+        return $this->response
+            ->setStatusCode($statusCode)
+            ->setContentType('text/html; charset=UTF-8')
+            ->setBody($html);
+    }
+
+    public function imprimirFacturasConsumoPeriodoActivo()
+    {
+        try {
+            $periodo = $this->periodosModel->getPeriodoActivo();
+
+            if (!$periodo) {
+                return $this->responderVentanaImpresionConMensaje('No hay periodo activo para imprimir facturas.', 404);
+            }
+            $facturas = $this->facturaModel
+                ->join('facturas_detalle fd', 'fd.id_factura = facturas.id_factura')
+                ->where('facturas.id_periodo', $periodo['id_periodo'])
+                ->where('fd.tipo', 'Consumo')
+                ->groupBy('facturas.id_factura')
+                ->orderBy('facturas.id_factura', 'ASC')
+                ->findAll();
+
+            if (empty($facturas)) {
+                return $this->responderVentanaImpresionConMensaje('No hay facturas generadas en el periodo activo.', 404);
+            }
+
+            $pdf = new \TCPDF('P', 'mm', 'A4');
+            $pdf->SetMargins(5, 5, 5);
+            $pdf->SetAutoPageBreak(false);
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+
+            $imprimir = 'SI';
+
+            $posicionesY = [5, 150]; // arriba y abajo
+            $index = 0;
+
+            foreach ($facturas as $factura) {
+                $dataFactura = $this->facturaModel->getFacturaResumenPorId($factura['id_factura']);
+
+                if (empty($dataFactura['factura'])) {
+                    continue;
+                }
+
+                $posY = $posicionesY[$index % 2];
+
+                $this->agregarPaginaFacturaCobro(
+                    $pdf,
+                    $imprimir,
+                    $periodo,
+                    $dataFactura['factura'],
+                    $dataFactura['detalle'] ?? [],
+                    $posY
+                );
+
+                // Cada 2 facturas → nueva página
+                if ($index % 2 == 1) {
+                    // opcional: podrías forzar salto aquí si quieres control estricto
+                }
+
+                $index++;
+            }
+
+            if ($pdf->getNumPages() === 0) {
+                return $this->responderVentanaImpresionConMensaje('No se encontraron facturas válidas para imprimir en el periodo activo.', 404);
+            }
+
+            if ($this->request->getGet('autoPrint') === '1') {
+                $pdf->IncludeJS('print(true);');
+            }
+
+            $nombrePDF = 'Facturas_consumo_periodo_' . $periodo['id_periodo'] . '.pdf';
+
+            $pdf->Output($nombrePDF, 'I');
+            exit;
+        } catch (\Throwable $th) {
+            log_message('error', $th->getMessage());
+
+            return $this->responderVentanaImpresionConMensaje('Ocurrió un error al preparar la impresión de facturas.', 500);
         }
     }
 }

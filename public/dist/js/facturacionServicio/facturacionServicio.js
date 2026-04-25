@@ -239,6 +239,20 @@ function generarFacturasServicio() {
     });
 }
 
+function imprimirFacturasPeriodoActivo() {
+    const ventana = window.open(
+        baseURL + 'imprimirFacturasConsumoPeriodoActivo?autoPrint=1',
+        '_blank'
+    );
+
+    if (!ventana) {
+        alertaError('El navegador bloqueó la ventana de impresión. Permite ventanas emergentes e inténtalo nuevamente.');
+        return;
+    }
+
+    ventana.focus();
+}
+
 function eventosUsuarios() {
 
     //evento para generar las facturas
@@ -259,6 +273,11 @@ function eventosUsuarios() {
     //evento para cargar el excel
     $("#btn-cargar-excel").on("click", function () {
         cargarExcelAlcaldia();
+    });
+
+    //evento para imprimir las facturas
+    $("#btn-imprimir-facturas-periodo").on("click", function () {
+        imprimirFacturasPeriodoActivo();
     });
 }
 

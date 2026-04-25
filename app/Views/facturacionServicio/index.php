@@ -74,12 +74,11 @@
 
                     <button type="button"
                         id="btn-generar-facturas-servicio"
-                        class="btn btn-primary"
-                        >
+                        class="btn btn-primary">
                         <i class="fas fa-file-invoice-dollar me-1"></i>
                         Generar Facturas
                     </button>
-
+                    <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir</button>
                 </div>
             </div>
         </div>
