@@ -365,7 +365,7 @@ class CobrosInstalacion extends BaseController
     function dibujarComprobante($pdf, $x, $y, $titulo, $factura, $detalle)
     {
         $w = 95; // aca se mide lo ancho del cuadro principal
-        $h = 140; // aca se mide lo largo del cuadro principal
+        $h = 150; // aca se mide lo largo del cuadro principal
 
         // Marco
         $pdf->SetDrawColor(0, 51, 153);
@@ -664,11 +664,12 @@ class CobrosInstalacion extends BaseController
         );
     }
 
-    private function agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, array $factura, array $detalle, $posY)
+    private function agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, array $factura, array $detalle)
     {
-        if ($pdf->getNumPages() === 0 || $posY == 10) {
-            $pdf->AddPage();
-        }
+        // if ($pdf->getNumPages() === 0 || $posY == 10) {
+        //     }
+
+        $pdf->AddPage();
 
         if ($imprimir == 'SI') {
             $pdf->SetTitle('Facturas_cobro_periodo_' . $periodo['nombre']);
@@ -677,8 +678,8 @@ class CobrosInstalacion extends BaseController
         }
 
         // Arriba o abajo según Y
-        $this->dibujarComprobante($pdf, 10, $posY, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
-        $this->dibujarComprobante($pdf, 110, $posY, 'COMPROBANTE DEL BANCO', $factura, $detalle);
+        $this->dibujarComprobante($pdf, 10, 10, 'COMPROBANTE DEL CLIENTE', $factura, $detalle);
+        $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
     }
 
     private function responderVentanaImpresionConMensaje($mensaje, $statusCode = 400)
@@ -724,7 +725,7 @@ class CobrosInstalacion extends BaseController
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
 
-        $this->agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, $factura, $detalle, 5);
+        $this->agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, $factura, $detalle);
 
         // 🔑 Nombre dinámico con cliente
         $nombrePDF = 'Factura_' . preg_replace('/[^A-Za-z0-9]/', '_', $factura['cliente']) . '.pdf';
@@ -765,8 +766,8 @@ class CobrosInstalacion extends BaseController
             $imprimir = 'SI';
 
 
-            $posicionesY = [5, 150]; // arriba y abajo
-            $index = 0;
+            // $posicionesY = [5, 150]; // arriba y abajo
+            // $index = 0;
 
             foreach ($facturas as $factura) {
                 $dataFactura = $this->facturasModel->obtenerFacturaPorId($factura['id_factura']);
@@ -775,7 +776,7 @@ class CobrosInstalacion extends BaseController
                     continue;
                 }
 
-                $posY = $posicionesY[$index % 2];
+                // $posY = $posicionesY[$index % 2];
 
                 $this->agregarPaginaFacturaCobro(
                     $pdf,
@@ -783,15 +784,15 @@ class CobrosInstalacion extends BaseController
                     $periodo,
                     $dataFactura['factura'],
                     $dataFactura['detalle'] ?? [],
-                    $posY
+                    // $posY
                 );
 
                 // Cada 2 facturas → nueva página
-                if ($index % 2 == 1) {
-                    // opcional: podrías forzar salto aquí si quieres control estricto
-                }
+                // if ($index % 2 == 1) {
+                //     // opcional: podrías forzar salto aquí si quieres control estricto
+                // }
 
-                $index++;
+                // $index++;
             }
 
             if ($pdf->getNumPages() === 0) {

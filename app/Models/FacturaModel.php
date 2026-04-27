@@ -64,7 +64,7 @@ class FacturaModel extends Model
         $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
         $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
 
-        $builder->where('fd.tipo', 'Consumo');
+        $builder->where('fd.tipo', 'Instalacion');
 
         // CLAVE PARA EVITAR DUPLICADOS
         $builder->distinct();
