@@ -340,4 +340,66 @@ class FacturaModel extends Model
             'detalle' => $detalle
         ];
     }
+
+    public function getReporteFacturasPorPeriodo($idPeriodo, $tipo = 'Todos', $searchValue = '')
+    {
+        $builder = $this->db->table('facturas f');
+
+        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
+        $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
+        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+        $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
+        $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
+        $builder->join('pagos_factura pf', 'pf.id_factura = f.id_factura', 'left');
+
+        $builder->where('f.id_periodo', $idPeriodo);
+
+        if (!empty($tipo) && $tipo !== 'Todos') {
+            $builder->where('fd.tipo', $tipo);
+        }
+
+        if (!empty($searchValue)) {
+            $builder->groupStart()
+                ->like('cl.nombre_completo', $searchValue)
+                ->orLike('c.numero_contrato', $searchValue)
+                ->orLike('s.codigo_solicitud', $searchValue)
+                ->orLike('f.correlativo', $searchValue)
+                ->orLike('f.tiraje', $searchValue)
+                ->groupEnd();
+        }
+
+        return $builder
+            ->select("
+                f.id_factura,
+                f.tiraje,
+                f.correlativo,
+                f.total,
+                f.estado,
+                DATE_FORMAT(f.fecha_emision, '%d-%m-%Y') AS fecha_emision,
+                DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fecha_vencimiento,
+                DATE_FORMAT(COALESCE(MAX(pf.fecha_pago), f.fecha_de_pago), '%d-%m-%Y') AS fecha_pago,
+                c.numero_contrato,
+                s.codigo_solicitud,
+                cl.nombre_completo AS cliente,
+                p.nombre AS periodo,
+                GROUP_CONCAT(DISTINCT fd.tipo ORDER BY fd.tipo SEPARATOR ', ') AS tipo_factura
+            ", false)
+            ->groupBy('
+                f.id_factura,
+                f.tiraje,
+                f.correlativo,
+                f.total,
+                f.estado,
+                f.fecha_emision,
+                f.fecha_vencimiento,
+                f.fecha_de_pago,
+                c.numero_contrato,
+                s.codigo_solicitud,
+                cl.nombre_completo,
+                p.nombre
+            ')
+            ->orderBy('f.id_factura', 'DESC')
+            ->get()
+            ->getResultArray();
+    }
 }

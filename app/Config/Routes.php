@@ -150,6 +150,10 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     //REPORTE DE RUTAS
     $routes->get('reporte_rutas', 'ReporteRutas::index');
     $routes->get('reporteRutas', 'ReporteRutas::reporteRutas');
+    //REPORTE DE FACTURAS
+    $routes->get('reporte_facturas', 'ReporteFacturas::index');
+    $routes->get('getPeriodosReporteSelect', 'ReporteFacturas::getPeriodosReporteSelect');
+    $routes->get('reporte-facturas/pdf', 'ReporteFacturas::generarPDF');
 
     // PLANTILLAS
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');

@@ -116,4 +116,18 @@ class PeriodoModel extends Model
             ->orderBy('id_periodo', 'DESC') // por si hay más de uno
             ->first();
     }
+
+    public function buscarPeriodosSelect($search = '')
+    {
+        $builder = $this->select('id_periodo AS id, nombre AS text');
+
+        if (!empty($search)) {
+            $builder->like('nombre', $search);
+        }
+
+        return $builder
+            ->orderBy('id_periodo', 'DESC')
+            ->limit(15)
+            ->findAll();
+    }
 }
