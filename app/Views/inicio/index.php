@@ -275,7 +275,7 @@
                         <span class="stat-card__label">Contratos activos</span>
                         <div class="stat-card__value"><?= number_format($totalContratosActivos ?? 0) ?></div>
                     </div>
-                    <p class="stat-card__text">Contratos en estado aprobado y listos para operación dentro del sistema.</p>
+                    <p class="stat-card__text">Total de contratos activos dentro del sistema.</p>
                 </div>
 
                 <div class="stat-card stat-card--requests">
@@ -286,7 +286,7 @@
                         <span class="stat-card__label">Solicitudes activas</span>
                         <div class="stat-card__value"><?= number_format($totalSolicitudesActivas ?? 0) ?></div>
                     </div>
-                    <p class="stat-card__text">Incluye solicitudes en proceso y solicitudes ya aprobadas para seguimiento.</p>
+                    <p class="stat-card__text">Solicitudes activas dentro del sistema.</p>
                 </div>
             </div>
         </div>
@@ -298,8 +298,8 @@
 
 <?= $this->section('scripts') ?>
 
-<script>
+<!-- <script>
     console.log("Dashboard principal cargado");
-</script>
+</script> -->
 
 <?= $this->endSection() ?>

@@ -56,7 +56,7 @@ class Periodos extends BaseController
             $fechaCreacion = date('Y-m-d H:i:s');
             log_message('debug', print_r($this->request->getPost(), true));
 
-            if(!$nombrePeriodo){
+            if (!$nombrePeriodo) {
                 log_message('error', 'El campo nombre de periodo es requerido');
                 return $this->respondError('El campo nombre de periodo es requerido');
             }
@@ -74,15 +74,15 @@ class Periodos extends BaseController
 
             // aca vamos a validar que no haya un periodo activo al crear uno nuevo
             $periodoActivo = $this->periodosModel
-                ->where('estado', 'Activo')
+                ->where('estado', 'ACTIVO')
                 ->get()
                 ->getRow();
-            
-            if($periodoActivo){
+
+            if ($periodoActivo) {
                 log_message('info', 'Ya existe un periodo activo');
                 return $this->respondError('Ya existe un periodo activo');
             }
-            
+
             $estadoNuevo = 'ACTIVO';
 
             // INICIAR TRANSACCIÓN
@@ -136,7 +136,7 @@ class Periodos extends BaseController
             $idPeriodo = $this->request->getPost('idPeriodo');
             log_message('debug', print_r($this->request->getPost(), true));
 
-            if(!$nombrePeriodo){
+            if (!$nombrePeriodo) {
                 log_message('error', 'El campo nombre de periodo es requerido');
                 return $this->respondError('El campo nombre de periodo es requerido');
             }
@@ -144,6 +144,20 @@ class Periodos extends BaseController
             if (!$desde) {
                 log_message('error', 'El campo fecha desde es requerido');
                 return $this->respondError('El campo fecha desde es requerido');
+            }
+
+            // aca vamos a validar que no haya un periodo activo al actualizar un periodo
+            if ($estado == '1') { // Solo validar si quiere ACTIVAR
+                $periodoActivo = $this->periodosModel
+                    ->where('estado', 'ACTIVO')
+                    ->where('id_periodo !=', $idPeriodo) // excluir el actual
+                    ->get()
+                    ->getRow();
+
+                if ($periodoActivo) {
+                    log_message('info', 'Ya existe otro periodo activo');
+                    return $this->respondError('Ya existe otro periodo activo');
+                }
             }
 
             if ($estado == '1') {

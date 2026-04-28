@@ -12,7 +12,9 @@ class Inicio extends BaseController
         $periodosModel = new PeriodoModel();
 
         $periodoActivo = $periodosModel
-            ->select('id_periodo, nombre, fecha_desde, fecha_hasta')
+            ->select('id_periodo, nombre, 
+                    DATE_FORMAT(fecha_desde, "%d-%m-%Y") AS fecha_desde, 
+                    DATE_FORMAT(fecha_hasta, "%d-%m-%Y") AS fecha_hasta')
             ->where('estado', 'ACTIVO')
             ->orderBy('id_periodo', 'DESC')
             ->first();
