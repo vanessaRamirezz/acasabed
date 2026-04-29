@@ -358,4 +358,55 @@ class ClienteModel extends Model
             ->limit(10)
             ->findAll();
     }
+
+    public function getReporteClientesPorDireccion($idDepartamento = null, $idMunicipio = null, $idDistrito = null, $idColonia = null, $idTipoCliente = null)
+    {
+        $builder = $this->db->table('clientes');
+
+        $builder->join('departamentos', 'clientes.id_departamento = departamentos.id_departamento', 'left');
+        $builder->join('municipios', 'clientes.id_municipio = municipios.id_municipio', 'left');
+        $builder->join('distritos', 'clientes.id_distrito = distritos.id_distrito', 'left');
+        $builder->join('colonias', 'clientes.id_colonia = colonias.id_colonia', 'left');
+        $builder->join('tipos_de_cliente', 'clientes.id_tipo_cliente = tipos_de_cliente.id_tipo_cliente', 'left');
+
+        if (!empty($idDepartamento) && $idDepartamento !== '-1') {
+            $builder->where('clientes.id_departamento', $idDepartamento);
+        }
+
+        if (!empty($idMunicipio) && $idMunicipio !== '-1') {
+            $builder->where('clientes.id_municipio', $idMunicipio);
+        }
+
+        if (!empty($idDistrito) && $idDistrito !== '-1') {
+            $builder->where('clientes.id_distrito', $idDistrito);
+        }
+
+        if (!empty($idColonia) && $idColonia !== '-1') {
+            $builder->where('clientes.id_colonia', $idColonia);
+        }
+
+        if (!empty($idTipoCliente) && $idTipoCliente !== '-1') {
+            $builder->where('clientes.id_tipo_cliente', $idTipoCliente);
+        }
+
+        return $builder
+            ->select("
+                clientes.codigo,
+                clientes.nombre_completo,
+                clientes.dui,
+                clientes.nit,
+                clientes.telefono,
+                clientes.correo,
+                tipos_de_cliente.nombre AS tipo_cliente,
+                departamentos.nombre AS departamento,
+                municipios.nombre AS municipio,
+                distritos.nombre AS distrito,
+                colonias.nombre AS colonia,
+                clientes.complemento_direccion,
+                DATE_FORMAT(clientes.fecha_creacion, '%d-%m-%Y') AS fecha_creacion
+            ", false)
+            ->orderBy('clientes.nombre_completo', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 }
