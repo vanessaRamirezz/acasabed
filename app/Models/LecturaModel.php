@@ -142,4 +142,84 @@ class LecturaModel extends Model
             ->where('id_periodo', $idPeriodo)
             ->first();
     }
+
+    public function getReporteLecturasTomadas(
+        $idPeriodo = null,
+        $idContrato = null,
+        $idInstalador = null,
+        $idDepartamento = null,
+        $idMunicipio = null,
+        $idDistrito = null,
+        $idColonia = null
+    ) {
+        $builder = $this->db->table('lecturas');
+
+        $builder->join('periodos', 'lecturas.id_periodo = periodos.id_periodo', 'left');
+        $builder->join('contratos', 'lecturas.id_contrato = contratos.id_contrato', 'left');
+        $builder->join('clientes', 'contratos.id_cliente = clientes.id_cliente', 'left');
+        $builder->join('instaladores', 'lecturas.id_instalador = instaladores.id_instalador', 'left');
+        $builder->join('departamentos', 'clientes.id_departamento = departamentos.id_departamento', 'left');
+        $builder->join('municipios', 'clientes.id_municipio = municipios.id_municipio', 'left');
+        $builder->join('distritos', 'clientes.id_distrito = distritos.id_distrito', 'left');
+        $builder->join('colonias', 'clientes.id_colonia = colonias.id_colonia', 'left');
+
+        if (!empty($idPeriodo) && $idPeriodo !== '-1') {
+            $builder->where('lecturas.id_periodo', $idPeriodo);
+        }
+
+        if (!empty($idContrato) && $idContrato !== '-1') {
+            $builder->where('lecturas.id_contrato', $idContrato);
+        }
+
+        if (!empty($idInstalador) && $idInstalador !== '-1') {
+            $builder->where('lecturas.id_instalador', $idInstalador);
+        }
+
+        if (!empty($idDepartamento) && $idDepartamento !== '-1') {
+            $builder->where('clientes.id_departamento', $idDepartamento);
+        }
+
+        if (!empty($idMunicipio) && $idMunicipio !== '-1') {
+            $builder->where('clientes.id_municipio', $idMunicipio);
+        }
+
+        if (!empty($idDistrito) && $idDistrito !== '-1') {
+            $builder->where('clientes.id_distrito', $idDistrito);
+        }
+
+        if (!empty($idColonia) && $idColonia !== '-1') {
+            $builder->where('clientes.id_colonia', $idColonia);
+        }
+
+        return $builder
+            ->select("
+                lecturas.id_lectura,
+                lecturas.id_periodo,
+                lecturas.id_contrato,
+                lecturas.id_instalador,
+                periodos.nombre AS periodo,
+                contratos.numero_contrato,
+                clientes.codigo AS codigo_cliente,
+                clientes.nombre_completo AS cliente,
+                instaladores.nombre_completo AS instalador,
+                DATE_FORMAT(lecturas.fecha, '%d-%m-%Y') AS fecha_lectura,
+                lecturas.valor,
+                departamentos.nombre AS departamento,
+                municipios.nombre AS municipio,
+                distritos.nombre AS distrito,
+                colonias.nombre AS colonia,
+                clientes.complemento_direccion,
+                CONCAT_WS(', ',
+                    departamentos.nombre,
+                    municipios.nombre,
+                    distritos.nombre,
+                    colonias.nombre,
+                    clientes.complemento_direccion
+                ) AS direccion_cliente
+            ", false)
+            ->orderBy('lecturas.fecha', 'DESC')
+            ->orderBy('lecturas.id_lectura', 'DESC')
+            ->get()
+            ->getResultArray();
+    }
 }

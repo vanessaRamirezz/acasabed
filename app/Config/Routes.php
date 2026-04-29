@@ -157,6 +157,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     //REPORTE DE CLIENTES
     $routes->get('reporte_clientes', 'ReporteClientes::index');
     $routes->get('reporte-clientes/pdf', 'ReporteClientes::generarPDF');
+    //REPORTE DE LECTURAS
+    $routes->get('reporte_lecturas', 'ReporteLecturas::index');
+    $routes->get('reporte-lecturas/pdf', 'ReporteLecturas::generarPDF');
 
     // PLANTILLAS
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');
