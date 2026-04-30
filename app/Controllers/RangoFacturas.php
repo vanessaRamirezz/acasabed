@@ -74,8 +74,8 @@ class RangoFacturas extends BaseController
 
             $nuevoTiraje = $maxTiraje + 1;
 
-            // 🔴 4. numero_actual inicia en numero_inicio
-            $numeroActual = $numeroInicio;
+            // 🔴 4. numero_actual inicia en 0
+            $numeroActual = 0;
 
             // 🔴 5. Insertar
             $resultado = $this->rangoFacturasModel->insert([

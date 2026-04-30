@@ -20,7 +20,7 @@ function renderEstado(estado) {
         return `<span class="badge badge-success">${estado}</span>`;
     }
 
-    if (estado === "VENCIDA") {
+    if (estado === "NO PAGADA") {
         return `<span class="badge badge-danger">${estado}</span>`;
     }
 
@@ -404,7 +404,7 @@ function renderizarModal(detalle, resetFormulario) {
                 <input 
                     type="text" 
                     class="form-control input-mora"
-                    value="${formatearMonto(cuota.recargo)}"
+                    value="${formatearMonto(cuota.mora)}"
                     disabled >
             </td>
 

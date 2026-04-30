@@ -54,18 +54,10 @@ class ReporteFacturas extends BaseController
     public function generarPDF()
     {
         $idPeriodo = $this->request->getGet('periodo');
+        $idPeriodo = !empty($idPeriodo) ? $idPeriodo : null;
         $tipo = $this->request->getGet('tipo') ?? 'Todos';
         $search = trim($this->request->getGet('search') ?? '');
-
-        if (!$idPeriodo) {
-            return $this->response->setStatusCode(400)->setBody('Debe seleccionar un período');
-        }
-
-        $periodo = $this->periodosModel->find($idPeriodo);
-
-        if (!$periodo) {
-            return $this->response->setStatusCode(404)->setBody('El período seleccionado no existe');
-        }
+        $periodo = $idPeriodo ? $this->periodosModel->find($idPeriodo) : null;
 
         $facturas = $this->facturaModel->getReporteFacturasPorPeriodo($idPeriodo, $tipo, $search);
 
@@ -83,6 +75,11 @@ class ReporteFacturas extends BaseController
         $pdf->Image($logo, 10, 10, 25);
 
         $tipoTexto = $tipo === 'Todos' ? 'Todos los tipos' : $tipo;
+        $nombrePeriodo = 'Todos los periodos';
+
+        if (!empty($idPeriodo) && is_array($periodo) && !empty($periodo['nombre'])) {
+            $nombrePeriodo = esc($periodo['nombre']);
+        }
         $searchTexto = $search !== '' ? ' | Búsqueda: ' . esc($search) : '';
         $totalGeneral = 0;
 
@@ -135,7 +132,7 @@ class ReporteFacturas extends BaseController
         </style>
 
         <div class="titulo">REPORTE DE FACTURAS GENERADAS</div>
-        <div class="subtitulo">Periodo: ' . esc($periodo['nombre']) . '</div>
+        <div class="subtitulo">Periodo: ' . $nombrePeriodo . '</div>
         <div class="filtro">Tipo: ' . esc($tipoTexto) . $searchTexto . '</div>
         <br>
         <table>
@@ -146,7 +143,6 @@ class ReporteFacturas extends BaseController
                     <th align="left">Tipo</th>
                     <th align="left">Contrato</th>
                     <th align="left">Cliente</th>
-                    <th align="left">Monto</th>
                     <th align="left">Total</th>
                     <th align="left">F. pago</th>
                     <th align="left">Estado</th>
@@ -173,7 +169,6 @@ class ReporteFacturas extends BaseController
                         <td>' . esc($factura['tipo_factura'] ?? '-') . '</td>
                         <td>' . esc($factura['numero_contrato'] ?? '-') . '</td>
                         <td>' . esc($factura['cliente'] ?? '-') . '</td>
-                        <td>$ ' . number_format((float)($factura['monto'] ?? 0), 2) . '</td>
                         <td>$ ' . number_format((float)($factura['total'] ?? 0), 2) . '</td>
                         <td>' . esc($factura['fecha_pago'] ?? '-') . '</td>
                         <td>' . esc($factura['estado'] ?? '-') . '</td>

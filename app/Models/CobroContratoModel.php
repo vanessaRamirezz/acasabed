@@ -18,7 +18,7 @@ class CobroContratoModel extends Model
         'fecha_pago',
         'id_usuario',
         'fecha_creacion',
-        'recargo',
+        'mora'
     ];
 
     public function getCobrosRealizados($start, $length, $searchValue = '')
@@ -110,7 +110,7 @@ class CobroContratoModel extends Model
                 estado,
                 fecha_vencimiento,
                 fecha_pago,
-                recargo
+                mora
             ", false)
             ->orderBy('numero_cuota', 'ASC')
             ->findAll();
@@ -179,7 +179,6 @@ class CobroContratoModel extends Model
             monto_cuota,
             estado,
             fecha_vencimiento,
-            recargo
         ")
             ->where('id_contrato', $idContrato)
             ->orderBy('numero_cuota', 'ASC')

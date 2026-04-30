@@ -87,6 +87,48 @@ class RangoFacturaModel extends Model
         ];
     }
 
+    // public function obtenerCorrelativoFactura($db)
+    // {
+    //     $query = $db->query("
+    //     SELECT *
+    //     FROM rango_factura
+    //     WHERE estado = 'Activo'
+    //     LIMIT 1
+    //     FOR UPDATE
+    // ");
+
+    //     $rango = $query->getRowArray();
+
+    //     if (!$rango) {
+    //         throw new \Exception('No hay rango de facturación activo');
+    //     }
+
+    //     $actual = (int)$rango['numero_actual'];
+    //     $fin    = (int)$rango['numero_fin'];
+
+    //     if ($actual > $fin) {
+
+    //         $db->table('rango_factura')
+    //             ->where('id_rango_factura', $rango['id_rango_factura'])
+    //             ->update(['estado' => 'Finalizado']);
+
+    //         throw new \Exception('El rango de facturación ya fue consumido');
+    //     }
+
+    //     $siguiente = $actual + 1;
+
+    //     $db->table('rango_factura')
+    //         ->where('id_rango_factura', $rango['id_rango_factura'])
+    //         ->update(['numero_actual' => $siguiente]);
+
+    //     // 🔥 ahora retornas todo lo necesario
+    //     return [
+    //         'correlativo' => $actual,
+    //         'id_rango_factura' => $rango['id_rango_factura'],
+    //         'tiraje' => $rango['tiraje']
+    //     ];
+    // }
+
     public function obtenerCorrelativoFactura($db)
     {
         $query = $db->query("
@@ -103,10 +145,15 @@ class RangoFacturaModel extends Model
             throw new \Exception('No hay rango de facturación activo');
         }
 
-        $actual = (int)$rango['numero_actual'];
+        $actual = (int)$rango['numero_actual']; // último usado
+        $inicio = (int)$rango['numero_inicio'];
         $fin    = (int)$rango['numero_fin'];
 
-        if ($actual > $fin) {
+        // 🔥 calcular el siguiente a emitir
+        $siguiente = ($actual === 0) ? $inicio : $actual + 1;
+
+        // 🔥 validar si ya se pasó
+        if ($siguiente > $fin) {
 
             $db->table('rango_factura')
                 ->where('id_rango_factura', $rango['id_rango_factura'])
@@ -115,15 +162,13 @@ class RangoFacturaModel extends Model
             throw new \Exception('El rango de facturación ya fue consumido');
         }
 
-        $siguiente = $actual + 1;
-
+        // 🔥 guardar el número realmente emitido (NO el siguiente)
         $db->table('rango_factura')
             ->where('id_rango_factura', $rango['id_rango_factura'])
             ->update(['numero_actual' => $siguiente]);
 
-        // 🔥 ahora retornas todo lo necesario
         return [
-            'correlativo' => $actual,
+            'correlativo' => $siguiente,
             'id_rango_factura' => $rango['id_rango_factura'],
             'tiraje' => $rango['tiraje']
         ];

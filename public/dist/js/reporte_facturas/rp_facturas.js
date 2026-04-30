@@ -1,5 +1,3 @@
-import { alertaError } from "../metodos/metodos.js";
-
 function cargarPeriodos() {
     $("#periodo").select2({
         placeholder: "Busque y seleccione un período",
@@ -27,15 +25,13 @@ function generarReporte() {
     const tipo = $("#tipo").val();
     const search = $("#searchReporteFactura").val().trim();
 
-    if (!periodo) {
-        alertaError("Debe seleccionar un período");
-        return;
-    }
-
     const params = new URLSearchParams({
-        periodo,
         tipo
     });
+
+    if (periodo) {
+        params.append("periodo", periodo);
+    }
 
     if (search) {
         params.append("search", search);

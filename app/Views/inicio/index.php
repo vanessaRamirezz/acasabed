@@ -12,7 +12,7 @@
     }
 
     .dashboard-hero {
-        background: #343A40;
+        background: #3979ba;
         border-radius: 22px;
         padding: 28px;
         color: #fff;

@@ -23,7 +23,7 @@ class FacturaModel extends Model
         'id_usuario',
         'fecha_de_pago',
         'mora',
-        'consumo'
+        'tipo'
     ];
 
     public function getFacturasExcel($idPeriodo)
@@ -64,7 +64,7 @@ class FacturaModel extends Model
         $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
         $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
 
-        $builder->where('fd.tipo', 'Instalacion');
+        $builder->where('f.tipo', 'Instalacion');
 
         // CLAVE PARA EVITAR DUPLICADOS
         $builder->distinct();
@@ -78,8 +78,7 @@ class FacturaModel extends Model
             $builder->groupStart()
                 ->like('cl.nombre_completo', $searchValue)
                 ->orLike('s.codigo_solicitud', $searchValue)
-                ->orLike('c.numero_contrato', $searchValue)
-                ->orLike('f.correlativo', $searchValue)
+                ->orLike('p.nombre', $searchValue)
                 ->groupEnd();
         }
 
@@ -96,20 +95,7 @@ class FacturaModel extends Model
             cl.nombre_completo AS cliente,
             f.fecha_emision,
             f.fecha_de_pago,
-            p.nombre AS periodo,
-
-            (
-                SELECT SUM(fd.monto - fd.mora)
-                FROM facturas_detalle fd
-                WHERE fd.id_factura = f.id_factura
-            ) AS total_cuotas,
-
-            (
-                SELECT SUM(fd.mora)
-                FROM facturas_detalle fd
-                WHERE fd.id_factura = f.id_factura
-            ) AS total_mora
-
+            p.nombre AS periodo
         ", false)
             ->orderBy('f.id_factura', 'DESC')
             ->limit($length, $start)
@@ -158,21 +144,8 @@ class FacturaModel extends Model
             f.estado,
             f.total,
             f.saldo_pendiente,
-
-            medi.numero_serie,
-
-            (
-                SELECT COALESCE(SUM(fd.monto - fd.mora),0)
-                FROM facturas_detalle fd
-                WHERE fd.id_factura = f.id_factura
-            ) AS total_cuotas,
-
-            (
-                SELECT COALESCE(SUM(fd.mora),0)
-                FROM facturas_detalle fd
-                WHERE fd.id_factura = f.id_factura
-            ) AS total_mora
-
+            f.mora,
+            medi.numero_serie
         ", false)
             ->where('f.id_factura', $idFactura)
             ->get()
@@ -182,10 +155,9 @@ class FacturaModel extends Model
         $detalle = $this->db->table('facturas_detalle fd')
             ->select("
             fd.id_factura_detalle,
-            fd.tipo,
             fd.concepto,
-            fd.monto,
             fd.mora,
+            fd.monto,
             fd.id_cobro_instalacion
         ")
             ->where('fd.id_factura', $idFactura)
@@ -341,63 +313,66 @@ class FacturaModel extends Model
         ];
     }
 
-    public function getReporteFacturasPorPeriodo($idPeriodo, $tipo = 'Todos', $searchValue = '')
+    public function getReporteFacturasPorPeriodo($idPeriodo = null, $tipo = 'Todos', $searchValue = '')
     {
         $builder = $this->db->table('facturas f');
 
-        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
+        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'left'); // 🔥 CAMBIO CLAVE
         $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
         $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
         $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
         $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
         $builder->join('pagos_factura pf', 'pf.id_factura = f.id_factura', 'left');
 
-        $builder->where('f.id_periodo', $idPeriodo);
+        if (!empty($idPeriodo)) {
+            $builder->where('f.id_periodo', $idPeriodo);
+        }
 
         if (!empty($tipo) && $tipo !== 'Todos') {
-            $builder->where('fd.tipo', $tipo);
+            $builder->where('f.tipo', $tipo);
         }
 
         if (!empty($searchValue)) {
+
+            $searchClean = str_replace('-', '', $searchValue);
+
             $builder->groupStart()
                 ->like('cl.nombre_completo', $searchValue)
                 ->orLike('c.numero_contrato', $searchValue)
-                ->orLike('s.codigo_solicitud', $searchValue)
-                ->orLike('f.correlativo', $searchValue)
-                ->orLike('f.tiraje', $searchValue)
+                ->orLike("REPLACE(c.numero_contrato, '-', '')", $searchClean) // 🔥 CLAVE
                 ->groupEnd();
         }
 
         return $builder
             ->select("
-                f.id_factura,
-                f.tiraje,
-                f.correlativo,
-                f.total,
-                f.estado,
-                DATE_FORMAT(f.fecha_emision, '%d-%m-%Y') AS fecha_emision,
-                DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fecha_vencimiento,
-                DATE_FORMAT(COALESCE(MAX(pf.fecha_pago), f.fecha_de_pago), '%d-%m-%Y') AS fecha_pago,
-                c.numero_contrato,
-                s.codigo_solicitud,
-                cl.nombre_completo AS cliente,
-                p.nombre AS periodo,
-                GROUP_CONCAT(DISTINCT fd.tipo ORDER BY fd.tipo SEPARATOR ', ') AS tipo_factura
-            ", false)
-            ->groupBy('
-                f.id_factura,
-                f.tiraje,
-                f.correlativo,
-                f.total,
-                f.estado,
-                f.fecha_emision,
-                f.fecha_vencimiento,
-                f.fecha_de_pago,
-                c.numero_contrato,
-                s.codigo_solicitud,
-                cl.nombre_completo,
-                p.nombre
-            ')
+            f.id_factura,
+            f.tiraje,
+            f.correlativo,
+            f.total,
+            f.estado,
+            DATE_FORMAT(f.fecha_emision, '%d-%m-%Y') AS fecha_emision,
+            DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fecha_vencimiento,
+            DATE_FORMAT(COALESCE(MAX(pf.fecha_pago), f.fecha_de_pago), '%d-%m-%Y') AS fecha_pago,
+            c.numero_contrato,
+            s.codigo_solicitud,
+            cl.nombre_completo AS cliente,
+            p.nombre AS periodo,
+            GROUP_CONCAT(DISTINCT f.tipo ORDER BY f.tipo SEPARATOR ', ') AS tipo_factura
+        ", false)
+            ->groupBy([
+                'f.id_factura',
+                'f.tiraje',
+                'f.correlativo',
+                'f.total',
+                'f.estado',
+                'f.fecha_emision',
+                'f.fecha_vencimiento',
+                'f.fecha_de_pago',
+                'c.numero_contrato',
+                's.codigo_solicitud',
+                'cl.nombre_completo',
+                'p.nombre'
+            ])
             ->orderBy('f.id_factura', 'DESC')
             ->get()
             ->getResultArray();

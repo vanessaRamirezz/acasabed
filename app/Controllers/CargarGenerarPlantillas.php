@@ -8,6 +8,7 @@ use App\Models\FacturaDetalleModel;
 use App\Models\FacturaModel;
 use App\Models\PagoFacturaModel;
 use App\Models\PeriodoModel;
+use App\Models\ServicioModel;
 use App\Models\SolicitudModel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -22,6 +23,7 @@ class CargarGenerarPlantillas extends BaseController
     private $cobrosContratoModel;
     private $solicitudesModel;
     private $contratosModel;
+    private $servicioModel;
 
     public function __construct()
     {
@@ -32,6 +34,7 @@ class CargarGenerarPlantillas extends BaseController
         $this->cobrosContratoModel = new CobroContratoModel();
         $this->solicitudesModel = new SolicitudModel();
         $this->contratosModel = new ContratoModel();
+        $this->servicioModel = new ServicioModel();
     }
 
     public function index()
@@ -103,7 +106,8 @@ class CargarGenerarPlantillas extends BaseController
         $sheet1->setTitle('BASE');
 
         $sheet1->fromArray([
-            'referencia',
+            'Tiraje',
+            'Correlativo',
             'fcliente',
             'nombre',
             'total',
@@ -113,9 +117,11 @@ class CargarGenerarPlantillas extends BaseController
 
         $row = 2;
         foreach ($facturas as $f) {
-            $referencia = $f['tiraje'] . '-' . $f['correlativo'];
+            $tiraje = $f['tiraje'];
+            $correlativo = $f['correlativo'];
             $sheet1->fromArray([
-                $referencia,
+                $tiraje,
+                $correlativo,
                 $f['codigo'],
                 $f['cliente'],
                 $f['total'],
@@ -126,12 +132,12 @@ class CargarGenerarPlantillas extends BaseController
         }
 
         $lastRow = $row - 1;
-        $range1 = "A1:F{$lastRow}";
+        $range1 = "A1:G{$lastRow}";
 
         // 🔥 USANDO HELPERS
-        $this->aplicarEstiloEncabezado($sheet1, 'A1:F1');
+        $this->aplicarEstiloEncabezado($sheet1, 'A1:G1');
         $this->aplicarBordesTabla($sheet1, $range1);
-        $this->autoSizeColumnas($sheet1, 'A', 'F');
+        $this->autoSizeColumnas($sheet1, 'A', 'G');
         $this->configurarHoja($sheet1, $range1);
 
 
@@ -142,7 +148,8 @@ class CargarGenerarPlantillas extends BaseController
         $sheet2->setTitle('COBROS');
 
         $sheet2->fromArray([
-            'referencia',
+            'Tiraje',
+            'Correlativo',
             'Fecha de pago',
             'CANTIDAD RECIBO',
             'fcliente',
@@ -154,9 +161,11 @@ class CargarGenerarPlantillas extends BaseController
 
         $row = 2;
         foreach ($facturas as $d) {
-            $referencia2 = $d['tiraje'] . '-' . $d['correlativo'];
+            $tiraje2 = $d['tiraje'];
+            $correlativo2 = $d['correlativo'];
             $sheet2->fromArray([
-                $referencia2,
+                $tiraje2,
+                $correlativo2,
                 $d['fecha_de_pago'],
                 '',
                 $d['codigo'],
@@ -169,12 +178,12 @@ class CargarGenerarPlantillas extends BaseController
         }
 
         $lastRow = $row - 1;
-        $range2 = "A1:H{$lastRow}";
+        $range2 = "A1:I{$lastRow}";
 
         // 🔥 USANDO HELPERS
-        $this->aplicarEstiloEncabezado($sheet2, 'A1:H1');
+        $this->aplicarEstiloEncabezado($sheet2, 'A1:I1');
         $this->aplicarBordesTabla($sheet2, $range2);
-        $this->autoSizeColumnas($sheet2, 'A', 'H');
+        $this->autoSizeColumnas($sheet2, 'A', 'I');
         $this->configurarHoja($sheet2, $range2);
 
         // Alineaciones específicas
@@ -210,7 +219,7 @@ class CargarGenerarPlantillas extends BaseController
         $mes = $meses[(int)date('n')];
         $anio = date('Y');
 
-        $filename = "BASE DE ACAYCCOMAC {$mes} {$anio}.xlsx";
+        $filename = "BASE DE ACAYCCOMAC {$periodo['nombre']} {$anio}.xlsx";
 
 
         // =========================
@@ -278,12 +287,23 @@ class CargarGenerarPlantillas extends BaseController
 
                 if ($i === 0) continue; // encabezado
 
-                // 1. REFERENCIA (columna 0) -> ej: 1-8
-                $referencia = trim($c[0] ?? null);
+                // intentar formato nuevo (tiraje / correlativo separados)
+                $tirajeCobro = trim($c[0] ?? null);
+                $correlativoCobro = trim($c[1] ?? null);
+
+                if ($tirajeCobro && $correlativoCobro) {
+                    $referencia = $tirajeCobro . '-' . $correlativoCobro;
+                } else {
+                    // fallback formato viejo "1-6"
+                    $referencia = trim($c[0] ?? null);
+                }
+
                 if (!$referencia) continue;
 
+                log_message('info', 'Referencia COBRO detectada: ' . $referencia);
+
                 // 2. FECHA (columna 1)
-                $fechaExcel = trim($c[1] ?? '');
+                $fechaExcel = trim($c[2] ?? '');
 
                 // 🔥 SI VIENE FECHA, LA ACTUALIZAMOS
                 if (!empty($fechaExcel)) {
@@ -293,23 +313,9 @@ class CargarGenerarPlantillas extends BaseController
                 // 🔥 SI NO VIENE FECHA, USA LA ÚLTIMA
                 $cobrosIndex[$referencia] = [
                     'fecha_pago'   => $fechaActual, // 👈 clave
-                    'monto_pagado' => $c[5] ?? null
+                    'monto_pagado' => $c[6] ?? null
                 ];
             }
-            // foreach ($cobrosData as $i => $c) {
-
-            //     if ($i === 0) continue; // encabezado
-
-            //     // AJUSTA SI TU REFERENCIA NO ESTÁ EN COLUMNA 0
-            //     $referencia = trim($c[0] ?? null);
-
-            //     if (!$referencia) continue;
-
-            //     $cobrosIndex[$referencia] = [
-            //         'fecha_pago' => $c[1],
-            //         'monto_pagado' => $c[5] ?? null
-            //     ];
-            // }
 
             log_message('info', 'COBROS INDEX: ' . print_r($cobrosIndex, true));
 
@@ -319,20 +325,19 @@ class CargarGenerarPlantillas extends BaseController
 
                 if ($index === 0) continue;
 
-                $referencia = trim($row[0] ?? null);
+                $tiraje = trim($row[0] ?? null);
+                $correlativo = trim($row[1] ?? null);
                 $estadoExcel = trim($row[4] ?? null);
 
-                if (!$referencia) {
-                    $errores[] = "Fila $index sin referencia";
+                // reconstruir referencia para uso interno
+                $referencia = $tiraje . '-' . $correlativo;
+
+                if (!$tiraje || !$correlativo) {
+                    $errores[] = "Fila $index sin tiraje o correlativo";
                     continue;
                 }
 
-                if (!str_contains($referencia, '-')) {
-                    $errores[] = "Referencia inválida en fila $index: $referencia";
-                    continue;
-                }
-
-                [$tiraje, $correlativo] = explode('-', $referencia);
+                log_message('info', "Referencia reconstruida: $referencia");
 
                 $factura = $this->facturasModel
                     ->where('tiraje', $tiraje)
@@ -394,7 +399,6 @@ class CargarGenerarPlantillas extends BaseController
                         'saldo_pendiente' => 0,
                         'estado' => 'PAGADA',
                         'fecha_de_pago' => $fechaPago,
-                        'mora' => 0
                     ]);
 
                     $facturasPendientes = $this->facturasModel
@@ -429,14 +433,13 @@ class CargarGenerarPlantillas extends BaseController
                     $montoCapital = 0;
                     foreach ($detalles as $d) {
 
-                        if ($d['tipo'] === 'Instalacion' && !empty($d['id_cobro_instalacion'])) {
+                        if (!empty($d['id_cobro_instalacion'])) {
 
                             $this->cobrosContratoModel->update(
                                 $d['id_cobro_instalacion'],
                                 [
                                     'estado' => 'CANCELADO',
-                                    'fecha_pago' => $fechaPago,
-                                    'recargo' => $d['mora'] ?? 0
+                                    'fecha_pago' => $fechaPago
                                 ]
                             );
 
@@ -471,37 +474,41 @@ class CargarGenerarPlantillas extends BaseController
 
                     /**
                      * ==========================================
-                     * NO PAGÓ
+                     * NO PAGÓ → SOLO NO PAGADA
                      * ==========================================
                      */
 
+                    // 1. Marcar factura como no pagada
                     $this->facturasModel->update($facturaId, [
-                        'estado' => 'VENCIDA',
-                        'mora' => 2
+                        'estado' => 'NO PAGADA',
                     ]);
 
+                    log_message('info', 'Factura marcada como NO PAHADA ID: ' . $facturaId);
+
+                    // 2. Actualizar cobros asociados
                     $detalles = $this->facturaDetalleModel
                         ->where('id_factura', $facturaId)
                         ->findAll();
 
                     foreach ($detalles as $d) {
 
-                        if ($d['tipo'] === 'Instalacion' && !empty($d['id_cobro_instalacion'])) {
+                        if (!empty($d['id_cobro_instalacion'])) {
 
                             $this->cobrosContratoModel->update(
                                 $d['id_cobro_instalacion'],
                                 [
-                                    'estado' => 'VENCIDA',
-                                    'recargo' => 2
+                                    'estado' => 'NO PAGADA',
                                 ]
                             );
                         }
                     }
+
+                    log_message('info', 'Factura no pagada SIN aplicar mora aún');
                 }
 
                 $procesados++;
             }
-            // exit;
+
             $db->transComplete();
 
             if ($db->transStatus() === false) {
