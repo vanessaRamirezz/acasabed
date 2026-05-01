@@ -2,7 +2,7 @@ import { alertaOk, alertEnSweet, eliminarColorYfocus, validarCampo } from "../me
 
 
 function iniciarTodo() {
-    document.getElementById('visorPDF').src = baseURL + 'reporteRutas';
+    document.getElementById('visorPDF').src = baseURL + 'reporte-rutas/pdf';
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

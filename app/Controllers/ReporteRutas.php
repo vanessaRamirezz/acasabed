@@ -25,7 +25,7 @@ class MYPDF extends \TCPDF
 
 class ReporteRutas extends BaseController
 {
-    private $rutasModel;
+    private RutaModel $rutasModel;
 
     public function __construct()
     {
@@ -125,7 +125,7 @@ class ReporteRutas extends BaseController
 
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
-            ->setHeader('Content-Disposition', 'inline; filename="reporte_contratos.pdf"')
-            ->setBody($pdf->Output('reporte_contratos.pdf', 'S'));
+            ->setHeader('Content-Disposition', 'inline; filename="reporte_rutas.pdf"')
+            ->setBody($pdf->Output('reporte_rutas.pdf', 'S'));
     }
 }
