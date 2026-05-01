@@ -9,6 +9,10 @@ const inputs = {
     valor: $('#valor'),
     instalador: $('#instalador'),
     idLectura: $("#id-lectura"),
+    filtroDepartamentoReporteLectura: $('#filtro-departamento-reporte-lectura'),
+    filtroMunicipioReporteLectura: $('#filtro-municipio-reporte-lectura'),
+    filtroDistritoReporteLectura: $('#filtro-distrito-reporte-lectura'),
+    filtroColoniaReporteLectura: $('#filtro-colonia-reporte-lectura'),
 };
 
 function getData() {
@@ -31,6 +35,10 @@ function limpiarFormulario() {
     inputs.valor.val('');
     inputs.instalador.val(null).trigger('change');
     inputs.idLectura.val('');
+}
+
+function resetSelect(selector, placeholder = "Todos") {
+    $(selector).empty().append(`<option value="-1">${placeholder}</option>`);
 }
 
 function cargarPeriodos() {
@@ -324,6 +332,139 @@ function cargarPeriodosLote() {
     });
 }
 
+function cargarDepartamentosReporteLectura() {
+    $.ajax({
+        type: 'GET',
+        url: baseURL + 'getDepartamentos',
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar los departamentos');
+                return;
+            }
+
+            inputs.filtroDepartamentoReporteLectura.empty().append('<option value="-1">Todos</option>');
+
+            response.data.forEach(function (departamento) {
+                inputs.filtroDepartamentoReporteLectura.append(
+                    $('<option></option>')
+                        .attr('value', departamento.id_departamento)
+                        .text(departamento.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar los departamentos');
+        }
+    });
+}
+
+function cargarMunicipiosReporteLectura(idDepartamento) {
+    resetSelect(inputs.filtroMunicipioReporteLectura, 'Todos');
+    resetSelect(inputs.filtroDistritoReporteLectura, 'Todos');
+    resetSelect(inputs.filtroColoniaReporteLectura, 'Todos');
+
+    if (!idDepartamento || idDepartamento === '-1') {
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'getMunicipios',
+        data: { idDepartamento },
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar los municipios');
+                return;
+            }
+
+            response.data.forEach(function (municipio) {
+                inputs.filtroMunicipioReporteLectura.append(
+                    $('<option></option>')
+                        .attr('value', municipio.id_municipio)
+                        .text(municipio.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar los municipios');
+        }
+    });
+}
+
+function cargarDistritosReporteLectura(idMunicipio) {
+    resetSelect(inputs.filtroDistritoReporteLectura, 'Todos');
+    resetSelect(inputs.filtroColoniaReporteLectura, 'Todos');
+
+    if (!idMunicipio || idMunicipio === '-1') {
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'getDistritos',
+        data: { idMunicipio },
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar los distritos');
+                return;
+            }
+
+            response.data.forEach(function (distrito) {
+                inputs.filtroDistritoReporteLectura.append(
+                    $('<option></option>')
+                        .attr('value', distrito.id_distrito)
+                        .text(distrito.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar los distritos');
+        }
+    });
+}
+
+function cargarColoniasReporteLectura(idDistrito) {
+    resetSelect(inputs.filtroColoniaReporteLectura, 'Todos');
+
+    if (!idDistrito || idDistrito === '-1') {
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'getColonias',
+        data: { idDistrito },
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar las colonias');
+                return;
+            }
+
+            response.data.forEach(function (colonia) {
+                inputs.filtroColoniaReporteLectura.append(
+                    $('<option></option>')
+                        .attr('value', colonia.id_colonia)
+                        .text(colonia.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar las colonias');
+        }
+    });
+}
+
+function reiniciarFiltrosReporteLectura() {
+    inputs.filtroDepartamentoReporteLectura.val('-1');
+    resetSelect(inputs.filtroMunicipioReporteLectura, 'Todos');
+    resetSelect(inputs.filtroDistritoReporteLectura, 'Todos');
+    resetSelect(inputs.filtroColoniaReporteLectura, 'Todos');
+}
+
 let cacheInstaladores = null;
 let instaladorActualLote = null;
 
@@ -527,6 +668,65 @@ function abrirModalNuevaLecturaLote() {
     $('#modal-lecturas-lote').modal('show');
 }
 
+function abrirModalReporteLecturas() {
+    const periodo = $('#periodo-lote').val();
+
+    if (!periodo) {
+        alertaError('Debe seleccionar un período');
+        return;
+    }
+
+    reiniciarFiltrosReporteLectura();
+    $('#modal-reporte-lecturas-direccion').modal('show');
+}
+
+function generarPDFReporteLecturas() {
+    const periodo = $('#periodo-lote').val();
+
+    if (!periodo) {
+        alertaError('Debe seleccionar un período');
+        return;
+    }
+
+    const params = new URLSearchParams({
+        periodo
+    });
+
+    const departamento = inputs.filtroDepartamentoReporteLectura.val();
+    const municipio = inputs.filtroMunicipioReporteLectura.val();
+    const distrito = inputs.filtroDistritoReporteLectura.val();
+    const colonia = inputs.filtroColoniaReporteLectura.val();
+
+    if (departamento && departamento !== '-1') {
+        params.append('departamento', departamento);
+    }
+
+    if (municipio && municipio !== '-1') {
+        params.append('municipio', municipio);
+    }
+
+    if (distrito && distrito !== '-1') {
+        params.append('distrito', distrito);
+    }
+
+    if (colonia && colonia !== '-1') {
+        params.append('colonia', colonia);
+    }
+
+    const ventana = window.open(
+        `${baseURL}reporte-toma-lecturas/pdf?${params.toString()}`,
+        '_blank'
+    );
+
+    if (!ventana) {
+        alertaError('El navegador bloqueó la ventana del PDF. Permite ventanas emergentes e inténtalo nuevamente.');
+        return;
+    }
+
+    $('#modal-reporte-lecturas-direccion').modal('hide');
+    ventana.focus();
+}
+
 function eventosUsuarios() {
 
     $("#guardar-registro").on("click", function () {
@@ -611,14 +811,36 @@ function eventosUsuarios() {
     $('#btn-guardar-lecturas').on('click', function () {
         guardarLecturasLote();
     });
+
+    $('#btn-hacer-pdf-lecturas').on('click', function () {
+        abrirModalReporteLecturas();
+    });
+
+    $('#btn-generar-pdf-lecturas-direccion').on('click', function () {
+        generarPDFReporteLecturas();
+    });
+
+    inputs.filtroDepartamentoReporteLectura.on('change', function () {
+        cargarMunicipiosReporteLectura($(this).val());
+    });
+
+    inputs.filtroMunicipioReporteLectura.on('change', function () {
+        cargarDistritosReporteLectura($(this).val());
+    });
+
+    inputs.filtroDistritoReporteLectura.on('change', function () {
+        cargarColoniasReporteLectura($(this).val());
+    });
 }
 
 function iniciarTodo() {
     eventosUsuarios();
     cargarPeriodos();
+    cargarPeriodosLote();
     cargarContratos();
     cargarInstaladores();
     cargarLecturas();
+    cargarDepartamentosReporteLectura();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

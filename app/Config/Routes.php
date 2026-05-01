@@ -94,6 +94,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('editarLectura', 'Lecturas::editarLectura');
     $routes->get('getContratosPeriodos', 'Lecturas::getContratosPeriodos');
     $routes->post('guardarLecturasMasivas', 'Lecturas::guardarLecturasMasivas');
+    $routes->get('reporte-toma-lecturas/pdf', 'Lecturas::generarPDFTomaLecturas');
 
     // SOLICITUDES
     $routes->get('solicitudes', 'Solicitudes::index');

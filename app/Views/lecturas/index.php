@@ -35,6 +35,7 @@
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <button type="button" id="btn-agregar" class="btn bg-gradient-primary btn-flat">Lectura Individual</button>
+                <button type="button" id="btn-hacer-pdf-lecturas" class="btn bg-gradient-danger btn-flat ml-2">Generar Documento toma de lecturas</button>
             </div>
             <div class="card-header py-3">
                 <button type="button" id="btn-agregar-lote" class="btn bg-gradient-primary btn-flat">Lectura Completa</button>
@@ -204,6 +205,55 @@
                         <button class="btn btn-success" id="btn-guardar-lecturas">Guardar todo</button>
                     </div>
 
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-reporte-lecturas-direccion" tabindex="-1" aria-labelledby="modal-reporte-lecturas-direccion-label" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-reporte-lecturas-direccion-label">Filtro de dirección para toma de lecturas</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-light border mb-3">
+                            Si no seleccionas ningún filtro, el PDF incluirá todos los contratos pendientes de lectura del período actual.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-departamento-reporte-lectura">Departamento</label>
+                                <select id="filtro-departamento-reporte-lectura" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-municipio-reporte-lectura">Municipio</label>
+                                <select id="filtro-municipio-reporte-lectura" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-distrito-reporte-lectura">Distrito</label>
+                                <select id="filtro-distrito-reporte-lectura" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-colonia-reporte-lectura">Colonia</label>
+                                <select id="filtro-colonia-reporte-lectura" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button class="btn btn-danger" id="btn-generar-pdf-lecturas-direccion">Generar PDF</button>
+                    </div>
                 </div>
             </div>
         </div>

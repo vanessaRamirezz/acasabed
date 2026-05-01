@@ -178,6 +178,76 @@ class ContratoModel extends Model
             ->getResultArray();
     }
 
+    public function getReporteTomaLecturas(
+        $idPeriodo,
+        $idDepartamento = null,
+        $idMunicipio = null,
+        $idDistrito = null,
+        $idColonia = null
+    ) {
+        $builder = $this->db->table('contratos');
+
+        $builder->join('solicitudes', 'contratos.id_solicitud = solicitudes.id_solicitud', 'left');
+        $builder->join('clientes', 'contratos.id_cliente = clientes.id_cliente', 'left');
+        $builder->join('medidores', 'contratos.id_medidor = medidores.id_medidor', 'left');
+        $builder->join('departamentos', 'clientes.id_departamento = departamentos.id_departamento', 'left');
+        $builder->join('municipios', 'clientes.id_municipio = municipios.id_municipio', 'left');
+        $builder->join('distritos', 'clientes.id_distrito = distritos.id_distrito', 'left');
+        $builder->join('colonias', 'clientes.id_colonia = colonias.id_colonia', 'left');
+
+        $builder->select("
+            contratos.id_contrato,
+            contratos.numero_contrato,
+            clientes.nombre_completo,
+            medidores.numero_serie,
+            departamentos.nombre AS departamento,
+            municipios.nombre AS municipio,
+            distritos.nombre AS distrito,
+            colonias.nombre AS colonia,
+            (
+                SELECT l.valor
+                FROM lecturas l
+                WHERE l.id_contrato = contratos.id_contrato
+                AND l.id_periodo < " . (int)$idPeriodo . "
+                ORDER BY l.id_periodo DESC, l.id_lectura DESC
+                LIMIT 1
+            ) AS lectura_anterior
+        ", false);
+
+        $builder->where('solicitudes.estado', 'APROBADA');
+        $builder->where('contratos.estado', 'APROBADO');
+
+        if (!empty($idDepartamento) && $idDepartamento !== '-1') {
+            $builder->where('clientes.id_departamento', $idDepartamento);
+        }
+
+        if (!empty($idMunicipio) && $idMunicipio !== '-1') {
+            $builder->where('clientes.id_municipio', $idMunicipio);
+        }
+
+        if (!empty($idDistrito) && $idDistrito !== '-1') {
+            $builder->where('clientes.id_distrito', $idDistrito);
+        }
+
+        if (!empty($idColonia) && $idColonia !== '-1') {
+            $builder->where('clientes.id_colonia', $idColonia);
+        }
+
+        $subQuery = $this->db->table('lecturas')
+            ->select('1')
+            ->where('lecturas.id_contrato = contratos.id_contrato', null, false)
+            ->where('lecturas.id_periodo', $idPeriodo)
+            ->getCompiledSelect();
+
+        $builder->where("NOT EXISTS ($subQuery)", null, false);
+
+        return $builder
+            ->orderBy('clientes.nombre_completo', 'ASC')
+            ->orderBy('contratos.numero_contrato', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
     public function getContratosActivosFacturacionServicio()
     {
         return $this->db->table('contratos')
