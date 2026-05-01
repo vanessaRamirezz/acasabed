@@ -27,61 +27,100 @@
     <div class="container-fluid">
         <div class="card report-card">
             <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-4">
+
+                <!-- 🔹 FILA 1 -->
+                <div class="row g-3 mb-3">
+
+                    <div class="col-12 col-sm-6 col-lg-4">
                         <label>Período</label>
                         <select id="periodo" class="form-control"></select>
                     </div>
-                    <div class="col-md-4">
+
+                    <div class="col-12 col-sm-6 col-lg-4">
                         <label>Contrato</label>
                         <select id="contrato" class="form-control"></select>
                     </div>
-                    <div class="col-md-4">
+
+                    <div class="col-12 col-sm-6 col-lg-4">
                         <label>Instalador</label>
                         <select id="instalador" class="form-control"></select>
                     </div>
+
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-3">
+                <!-- 🔹 FILA 2 -->
+                <div class="row g-3 mb-3">
+
+                    <div class="col-12 col-sm-6 col-lg-3">
                         <label>Departamento</label>
                         <select id="departamento" class="form-control">
                             <option value="-1">Seleccione...</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+
+                    <div class="col-12 col-sm-6 col-lg-3">
                         <label>Municipio</label>
                         <select id="municipio" class="form-control">
                             <option value="-1">Seleccione...</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+
+                    <div class="col-12 col-sm-6 col-lg-3">
                         <label>Distrito</label>
                         <select id="distrito" class="form-control">
                             <option value="-1">Seleccione...</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+
+                    <div class="col-12 col-sm-6 col-lg-3">
                         <label>Colonia</label>
                         <select id="colonia" class="form-control">
                             <option value="-1">Seleccione...</option>
                         </select>
                     </div>
+
                 </div>
 
+                <!-- 🔹 BOTÓN -->
                 <div class="row">
-                    <div class="col-md-3 ml-auto">
-                        <button id="btnGenerarReporteLecturas" class="btn btn-primary btn-block">
+                    <div class="col-12 col-md-3 ms-auto">
+                        <button id="btnGenerarReporteLecturas" class="btn btn-primary w-100">
                             Generar reporte
                         </button>
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <div class="row mt-4">
+        <div class="row">
             <div class="col-12">
-                <iframe id="visorPDFLecturas" style="width:100%; height:650px; border:none;"></iframe>
+
+                <div id="pdfBox" style="position:relative; width:100%; height:600px; border:1px solid #ddd; background:#f8f9fa;">
+
+                    <!-- 👇 Mensaje inicial -->
+                    <div id="pdfMessage" style="
+                        position:absolute;
+                        inset:0;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        flex-direction:column;
+                        font-family:Arial;
+                        color:#666;
+                        text-align:center;
+                    ">
+                        <h4 style="margin:0;">Lecturas</h4>
+                        <p style="margin-top:8px;">Selecciona un estado y presiona <b>Generar Reporte</b></p>
+                    </div>
+
+                    <!-- 👇 iframe -->
+                    <iframe id="visorPDF"
+                        style="width:100%; height:100%; border:none; display:none;">
+                    </iframe>
+
+                </div>
+
             </div>
         </div>
     </div>

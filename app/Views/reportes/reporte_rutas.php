@@ -36,7 +36,7 @@
         <!-- Vista previa -->
         <div class="row">
             <div class="col-12">
-                <iframe id="visorPDF" style="width:100%; height:600px; border:none;"></iframe>
+                <iframe id="visorPDF" style="width:100%; height:700px; border:none;"></iframe>
             </div>
         </div>
 

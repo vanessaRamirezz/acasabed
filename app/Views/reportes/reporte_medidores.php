@@ -1,6 +1,6 @@
 <?= $this->extend('layouts/main') ?>
 
-<?= $this->section('title') ?> Reporte de contratos <?= $this->endSection() ?>
+<?= $this->section('title') ?> Reporte de Medidores <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
 <style>
@@ -15,7 +15,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0 text-dark texto">Reporte de contratos</h1>
+                <h1 class="m-0 text-dark texto">Reporte de medidores</h1>
             </div><!-- /.col -->
         </div><!-- /.row -->
     </div><!-- /.container-fluid -->
@@ -30,8 +30,8 @@
                 <label>Estado</label>
                 <select id="estado" class="form-control">
                     <option value="">Todos</option>
-                    <option value="aprobado">Aprobado</option>
-                    <option value="suspendido">Suspendido</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
                 </select>
             </div>
 
@@ -60,7 +60,7 @@
                         color:#666;
                         text-align:center;
                     ">
-                        <h4 style="margin:0;">Contratos</h4>
+                        <h4 style="margin:0;">Medidores</h4>
                         <p style="margin-top:8px;">Selecciona un estado y presiona <b>Generar Reporte</b></p>
                     </div>
 
@@ -83,6 +83,6 @@
 
 <?= $this->section('scripts') ?>
 
-<script type="module" src="<?= base_url('dist/js/reporte_contratos/rp_contratos.js') ?>"></script>
+<script type="module" src="<?= base_url('dist/js/reporte_medidores/rp_medidores.js') ?>"></script>
 
 <?= $this->endSection() ?>

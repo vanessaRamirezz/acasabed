@@ -125,4 +125,23 @@ class MedidorModel extends Model
             ->limit(10)
             ->findAll();
     }
+
+    public function getReporteMedidores($estado = null){
+        $builder = $this->db->table('medidores m');
+        $builder->select('
+            m.numero_serie,
+            m.fecha_instalacion,
+            c.numero_contrato,
+            i.nombre_completo,
+            m.estado
+        ');
+        $builder->join('contratos c', 'c.id_contrato = m.id_contrato','left');
+        $builder->join('instaladores i', 'i.id_instalador = m.id_instalador','left');
+
+        if($estado){
+            $builder->where('m.estado', $estado);
+        }
+
+        return $builder->get()->getResultArray();
+    }
 }

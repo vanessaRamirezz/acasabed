@@ -9,7 +9,7 @@ function eventosUsuarios() {
 
         const estado = document.getElementById('estado').value;
 
-        let url = baseURL + 'reporte-contratos/pdf';
+        let url = baseURL + 'reporte-medidores/pdf';
         if (estado) {
             url += '?estado=' + estado;
         }

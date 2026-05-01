@@ -226,7 +226,19 @@ function generarReporte() {
         params.append("instalador", instalador);
     }
 
-    $("#visorPDFLecturas").attr("src", `${baseURL}reporte-lecturas/pdf?${params.toString()}`);
+    const iframe = document.getElementById("visorPDF");
+    const message = document.getElementById("pdfMessage");
+
+    // 👇 ocultar mensaje inicial
+    message.style.display = "none";
+
+    // 👇 mostrar iframe
+    iframe.style.display = "block";
+
+    // 👇 cargar PDF
+    iframe.src = `${baseURL}reporte-lecturas/pdf?${params.toString()}`;
+
+    // $("#visorPDFLecturas").attr("src", `${baseURL}reporte-lecturas/pdf?${params.toString()}`);
 }
 
 function eventosUsuarios() {
@@ -246,6 +258,8 @@ function eventosUsuarios() {
 }
 
 function iniciarTodo() {
+    $.fn.select2.defaults.set("width", "100%");
+
     cargarPeriodos();
     cargarContratos();
     cargarInstaladores();

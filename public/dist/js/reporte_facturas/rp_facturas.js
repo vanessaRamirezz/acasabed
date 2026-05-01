@@ -25,9 +25,7 @@ function generarReporte() {
     const tipo = $("#tipo").val();
     const search = $("#searchReporteFactura").val().trim();
 
-    const params = new URLSearchParams({
-        tipo
-    });
+    const params = new URLSearchParams({ tipo });
 
     if (periodo) {
         params.append("periodo", periodo);
@@ -37,7 +35,17 @@ function generarReporte() {
         params.append("search", search);
     }
 
-    $("#visorPDFFacturas").attr("src", `${baseURL}reporte-facturas/pdf?${params.toString()}`);
+    const iframe = document.getElementById("visorPDF");
+    const message = document.getElementById("pdfMessage");
+
+    // 👇 ocultar mensaje inicial
+    message.style.display = "none";
+
+    // 👇 mostrar iframe
+    iframe.style.display = "block";
+
+    // 👇 cargar PDF
+    iframe.src = `${baseURL}reporte-facturas/pdf?${params.toString()}`;
 }
 
 function eventosUsuarios() {
@@ -51,6 +59,7 @@ function eventosUsuarios() {
 }
 
 function iniciarTodo() {
+    $.fn.select2.defaults.set("width", "100%");
     cargarPeriodos();
     eventosUsuarios();
 }

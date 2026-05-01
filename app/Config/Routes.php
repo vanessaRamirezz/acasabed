@@ -161,6 +161,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     //REPORTE DE LECTURAS
     $routes->get('reporte_lecturas', 'ReporteLecturas::index');
     $routes->get('reporte-lecturas/pdf', 'ReporteLecturas::generarPDF');
+    //REPORTE MEDIDORES
+    $routes->get('reporte_medidores', 'ReporteMedidores::index');
+    $routes->get('reporte-medidores/pdf', 'ReporteMedidores::generarPDF');
 
     // PLANTILLAS
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');

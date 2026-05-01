@@ -131,6 +131,7 @@ function cargarColonias(idDistrito) {
 }
 
 function generarReporte() {
+
     const params = new URLSearchParams({
         departamento: $("#departamento").val() || "-1",
         municipio: $("#municipio").val() || "-1",
@@ -139,10 +140,23 @@ function generarReporte() {
         tipoCliente: $("#tipo-cliente").val() || "-1"
     });
 
-    $("#visorPDFClientes").attr("src", `${baseURL}reporte-clientes/pdf?${params.toString()}`);
+    const iframe = document.getElementById("visorPDF");
+    const message = document.getElementById("pdfMessage"); // 👈 asegúrate que exista
+
+    // 👇 ocultar mensaje inicial
+    if (message) {
+        message.style.display = "none";
+    }
+
+    // 👇 mostrar iframe
+    iframe.style.display = "block";
+
+    // 👇 cargar PDF
+    iframe.src = `${baseURL}reporte-clientes/pdf?${params.toString()}`;
 }
 
 function eventosUsuarios() {
+
     $("#departamento").on("change", function () {
         cargarMunicipios($(this).val());
     });

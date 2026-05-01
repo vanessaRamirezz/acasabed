@@ -60,7 +60,7 @@
                         <select id="tipo-cliente" class="form-control">
                             <option value="-1">Todos</option>
                             <?php foreach (($tiposCliente ?? []) as $tipo): ?>
-                                <option value="<?= esc($tipo['id_tipo_cliente']) ?>"><?= esc($tipo['nombre']) ?></option>
+                                <option value="<?= esc((string)$tipo['id_tipo_cliente']) ?>"><?= esc((string)$tipo['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -73,9 +73,34 @@
             </div>
         </div>
 
-        <div class="row mt-4">
+        <div class="row">
             <div class="col-12">
-                <iframe id="visorPDFClientes" style="width:100%; height:650px; border:none;"></iframe>
+
+                <div id="pdfBox" style="position:relative; width:100%; height:600px; border:1px solid #ddd; background:#f8f9fa;">
+
+                    <!-- 👇 Mensaje inicial -->
+                    <div id="pdfMessage" style="
+                        position:absolute;
+                        inset:0;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        flex-direction:column;
+                        font-family:Arial;
+                        color:#666;
+                        text-align:center;
+                    ">
+                        <h4 style="margin:0;">Clientes</h4>
+                        <p style="margin-top:8px;">Selecciona un estado y presiona <b>Generar Reporte</b></p>
+                    </div>
+
+                    <!-- 👇 iframe -->
+                    <iframe id="visorPDF"
+                        style="width:100%; height:100%; border:none; display:none;">
+                    </iframe>
+
+                </div>
+
             </div>
         </div>
     </div>
