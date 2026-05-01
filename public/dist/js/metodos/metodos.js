@@ -4,7 +4,7 @@ export function alertaError(msg) {
 }
 
 export function alertaOk(msg) {
-    toastr.success(msg, 'CORRECTO');
+    toastr.success(msg, 'Éxito');
 }
 
 export function alertaAdvertencia(msg) {

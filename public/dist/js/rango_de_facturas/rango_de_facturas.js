@@ -119,7 +119,7 @@ function guardarRangoFactura() {
         dataType: 'json',
         success: function (response) {
             if (response.status == 'success') {
-                alertEnSweet('success', 'Correcto', response.mensaje)
+                alertEnSweet('success', 'Éxito', response.mensaje)
                 // alertaOk(response.mensaje);
                 tablaRangoFacturas.ajax.reload();
                 // Swal.close();
