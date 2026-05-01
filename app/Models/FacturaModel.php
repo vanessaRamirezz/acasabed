@@ -418,4 +418,30 @@ class FacturaModel extends Model
             ->get()
             ->getResultArray();
     }
+
+    public function getResumenFacturasPagadas()
+    {
+        $builder = $this->db->table('facturas f');
+
+        return $builder
+            ->select([
+                'COUNT(DISTINCT f.id_factura) as total_facturas',
+                'COALESCE(SUM(fd.subtotal), 0) as total_sin_mora',
+                'COALESCE(SUM(fd.total_mora), 0) as total_mora',
+                'COALESCE(SUM(fd.subtotal + fd.total_mora), 0) as total_pagado'
+            ])
+            ->join(
+                '(SELECT 
+                id_factura, 
+                SUM(monto) as subtotal,
+                SUM(mora) as total_mora
+                FROM facturas_detalle 
+                GROUP BY id_factura) fd',
+                'fd.id_factura = f.id_factura',
+                'left'
+            )
+            ->where('f.estado', 'PAGADA')
+            ->get()
+            ->getRowArray();
+    }
 }

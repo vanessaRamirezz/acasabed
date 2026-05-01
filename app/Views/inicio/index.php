@@ -133,6 +133,10 @@
         color: #fff;
     }
 
+    .stat-card--billing .stat-card__icon {
+        background: #1f7a8c;
+    }
+
     .stat-card--clients .stat-card__icon {
         background: #1f7a8c;
     }
@@ -217,8 +221,8 @@
                     <span>Periodo Activo</span>
                 </div>
 
-                <?php if (!empty($periodoActivo)): ?>
-                    <h1 class="m-0"><?= esc($periodoActivo['nombre']) ?></h1>
+                <?php if (!empty($periodoActivo) && is_array($periodoActivo)): ?>
+                    <h1 class="m-0"><?= esc((string)$periodoActivo['nombre']) ?></h1>
                     <p>
                         Este es el período actualmente habilitado en el sistema para lectura,
                         facturación y control operativo.
@@ -226,11 +230,11 @@
                     <div class="dashboard-hero__meta">
                         <div class="dashboard-hero__pill">
                             <span>Fecha de inicio</span>
-                            <strong><?= esc($periodoActivo['fecha_desde']) ?></strong>
+                            <strong><?= esc((string)$periodoActivo['fecha_desde']) ?></strong>
                         </div>
                         <div class="dashboard-hero__pill">
                             <span>Fecha de cierre</span>
-                            <strong><?= esc($periodoActivo['fecha_hasta']) ?></strong>
+                            <strong><?= esc((string) ($periodoActivo['fecha_hasta'] ?? '')) ?></strong>
                         </div>
                     </div>
                 <?php else: ?>
@@ -245,6 +249,38 @@
             <div class="dashboard-section-title">Resumen del sistema</div>
 
             <div class="stats-grid">
+
+                <div class="stat-card stat-card--billing">
+                    <div>
+                        <div class="stat-card__icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+
+                        <span class="stat-card__label">Facturas pagadas</span>
+
+                        <!-- PRINCIPAL: CANTIDAD -->
+                        <div class="stat-card__value">
+                            <?= number_format($resumenFacturas['total_facturas'] ?? 0) ?>
+                        </div>
+
+                        <!-- SECUNDARIO: TOTAL -->
+                        <small>
+                            Total $<?= number_format($resumenFacturas['total_pagado'] ?? 0, 2) ?>
+                        </small>
+                    </div>
+
+                    <!-- DESGLOSE -->
+                    <div class="stat-card__breakdown">
+                        <small>
+                            Base: $<?= number_format($resumenFacturas['total_sin_mora'] ?? 0, 2) ?>
+                        </small>
+                        <br>
+                        <small>
+                            Mora: $<?= number_format($resumenFacturas['total_mora'] ?? 0, 2) ?>
+                        </small>
+                    </div>
+                </div>
+
                 <div class="stat-card stat-card--clients">
                     <div>
                         <div class="stat-card__icon">
