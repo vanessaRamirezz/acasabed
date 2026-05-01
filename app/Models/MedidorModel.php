@@ -9,9 +9,9 @@ class MedidorModel extends Model
 {
     protected $table = 'medidores';
     protected $primaryKey = 'id_medidor';
-    protected $allowedFields = ['numero_serie', 'fecha_instalacion', 'id_contrato', 'id_instalador', 'id_usuario', 'fecha_creacion'];
+    protected $allowedFields = ['numero_serie', 'fecha_instalacion', 'id_contrato', 'id_instalador', 'id_usuario', 'fecha_creacion', 'estado'];
 
-    public function getTodosMedidores($start, $length, $searchValue = '')
+    public function getTodosMedidores(int $start, int $length, string $searchValue = '')
     {
         // =============================
         // BUILDER BASE
@@ -60,6 +60,7 @@ class MedidorModel extends Model
             ->select('
                 medidores.id_medidor AS id,
                 medidores.numero_serie AS numeros_de_serie,
+                medidores.estado AS status,
                 medidores.fecha_instalacion AS fecha_de_instalacion,
                 DATE_FORMAT(medidores.fecha_instalacion, "%d-%m-%Y") AS fecha_de_instalacion_texto,
                 contratos.id_contrato AS id_de_contrato,
@@ -80,12 +81,13 @@ class MedidorModel extends Model
     }
 
     public function insertarNuevoMedidor(
-        $numeroSerie,
-        $fechaInstalacion,
-        $idContrato,
-        $idInstalador,
-        $idUsuario,
-        $fechaCreacion
+        ?string $numeroSerie,
+        ?string $fechaInstalacion,
+        ?int $idContrato,
+        ?int $idInstalador,
+        ?int $idUsuario,
+        ?string $fechaCreacion,
+        ?string $estado
     ) {
         return $this->insert([
             'numero_serie' => $numeroSerie,
@@ -93,26 +95,29 @@ class MedidorModel extends Model
             'id_contrato' => $idContrato,
             'id_instalador' => $idInstalador,
             'id_usuario' => $idUsuario,
-            'fecha_creacion' => $fechaCreacion
+            'fecha_creacion' => $fechaCreacion,
+            'estado' => $estado,
         ]);
     }
 
     public function actualizarMedidor(
-        $numeroSerie,
-        $fechaInstalacion,
-        $idContrato,
-        $idInstalador,
-        $idMedidor
+        ?string $numeroSerie,
+        ?string $fechaInstalacion,
+        ?int $idContrato,
+        ?int $idInstalador,
+        ?int $idMedidor,
+        ?string $estado
     ) {
         return $this->update($idMedidor, [
             'numero_serie' => $numeroSerie,
             'fecha_instalacion' => $fechaInstalacion,
             'id_contrato' => $idContrato,
             'id_instalador' => $idInstalador,
+            'estado' => $estado,
         ]);
     }
 
-    public function buscarMedidores($search)
+    public function buscarMedidores(string $search)
     {
         return $this->select('id_medidor, numero_serie')
             ->like('numero_serie', $search)

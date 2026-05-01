@@ -8,9 +8,9 @@ use App\Models\MedidorModel;
 
 class Medidores extends BaseController
 {
-    private $medidoresModel;
-    private $contratosModel;
-    private $instaladoresModel;
+    private MedidorModel $medidoresModel;
+    private ContratoModel $contratosModel;
+    private InstaladorModel $instaladoresModel;
 
     public function __construct()
     {
@@ -107,6 +107,7 @@ class Medidores extends BaseController
                 return $this->respondError('El numero de serie es requerido');
             }
 
+            $estadoNuevo = 'ACTIVO';
 
             // INICIAR TRANSACCIÓN
             $db = $this->medidoresModel->db;
@@ -118,7 +119,8 @@ class Medidores extends BaseController
                 $idContrato,
                 $idInstalador,
                 $idUsuario,
-                $fechaCreacion
+                $fechaCreacion,
+                $estadoNuevo,
             );
 
             if (!$resultado) {
@@ -162,7 +164,7 @@ class Medidores extends BaseController
 
             $fechaInstalacion = $this->request->getPost('fecha');
             $fechaInstalacion = !empty($fechaInstalacion) ? $fechaInstalacion : null;
-
+            $estado = $this->request->getPost('estado') ?: null;
             $idContrato = $this->request->getPost('contrato');
             if (
                 $idContrato === '' ||
@@ -188,6 +190,11 @@ class Medidores extends BaseController
                 return $this->respondError('El numero de serie es requerido');
             }
 
+            if ($estado == '1') {
+                $estadoNuevo = 'ACTIVO';
+            } else {
+                $estadoNuevo = 'CERRADO';
+            }
 
             // INICIAR TRANSACCIÓN
             $db = $this->medidoresModel->db;
@@ -199,6 +206,7 @@ class Medidores extends BaseController
                 $idContrato,
                 $idInstalador,
                 $idMedidor,
+                $estadoNuevo
             );
 
             if (!$resultado) {

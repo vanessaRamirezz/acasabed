@@ -8,6 +8,7 @@ const inputs = {
     contrato: $('#contrato'),
     instalador: $('#instalador'),
     idMedidor: $("#id-medidor"),
+    estado: $('input[name="estado"]')
 };
 
 function getData() {
@@ -19,6 +20,12 @@ function getData() {
     formData.append('instalador', inputs.instalador.val());
     formData.append('idMedidor', inputs.idMedidor.val());
 
+    // obtener estado seleccionado
+    let estado = $('input[name="estado"]:checked').val() || null;
+
+    // agregar al FormData
+    formData.append('estado', estado);
+
     return formData;
 }
 
@@ -28,6 +35,9 @@ function limpiarFormulario() {
     inputs.contrato.val(null).trigger('change');
     inputs.instalador.val(null).trigger('change');
     inputs.idMedidor.val('');
+
+    $('input[name="estado"]').prop('checked', false);
+    $('#estado-activo').prop('checked', true);
 }
 
 function cargarContratos() {
@@ -91,6 +101,7 @@ function abrirModalNuevoMedidor() {
     limpiarFormulario();
 
     eliminarColorYfocus(inputs.numero[0]);
+    $('#estado-inactivo').prop('disabled', true);
 
     $('#modal-medidores').modal('show');
 }
@@ -121,9 +132,16 @@ function abrirModalEditarMedidor(elemento) {
         dataMedidor.nombre_instalador
     );
 
+    if (dataMedidor.status == 'ACTIVO') {
+        $('#estado-activo').prop('checked', true);
+    } else {
+        $('#estado-inactivo').prop('checked', true);
+    }
+
     $('#id-medidor').val(dataMedidor.id);
 
     eliminarColorYfocus(inputs.numero[0]);
+    $('#estado-inactivo').prop('disabled', false);
 
     $('#modal-medidores').modal('show');
 }
@@ -146,6 +164,16 @@ function cargarMedidores() {
         columns: [
             {
                 data: 'numeros_de_serie'
+            },
+            {
+                data: 'status',
+                render: function (data) {
+                    if (data == 'ACTIVO') {
+                        return '<span class="badge badge-success">Activo</span>';
+                    } else {
+                        return '<span class="badge badge-secondary">Inactivo</span>';
+                    }
+                }
             },
             {
                 data: 'fecha_de_instalacion_texto'

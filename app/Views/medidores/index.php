@@ -51,6 +51,7 @@
                         <thead>
                             <tr>
                                 <th>Número de serie</th>
+                                <th>Estado</th>
                                 <th>Fecha de Instalación</th>
                                 <th>Código de contrato</th>
                                 <th>Instalador</th>
@@ -116,6 +117,36 @@
                                         <select id="instalador" class="form-control">
                                             <option value="">Seleccione...</option>
                                         </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <label class="form-label d-block">Estado Medidor</label>
+
+                                    <div class="form-check form-check-inline">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="estado"
+                                            id="estado-activo"
+                                            value="1"
+                                            checked>
+                                        <label class="form-check-label" for="estado-activo">
+                                            Activo
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check form-check-inline">
+                                        <input
+                                            class="form-check-input"
+                                            type="radio"
+                                            name="estado"
+                                            id="estado-inactivo"
+                                            value="0">
+                                        <label class="form-check-label" for="estado-inactivo">
+                                            Inactivo
+                                        </label>
                                     </div>
                                 </div>
                             </div>
