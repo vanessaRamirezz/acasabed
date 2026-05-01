@@ -15,26 +15,20 @@ use PHPUnit\Event\Telemetry\Info;
 
 class CobrosInstalacion extends BaseController
 {
-    private $facturasModel;
-
-    private $cobrosContratoModel;
-
-    private $solicitudesModel;
-    private $periodosModel;
-    private $rangoFacturasModel;
-    private $facturasDetalleModel;
-    private $serviciosModel;
+    private FacturaModel $facturasModel;
+    private CobroContratoModel $cobrosContratoModel;
+    private PeriodoModel $periodosModel;
+    private RangoFacturaModel $rangoFacturasModel;
+    private FacturaDetalleModel $facturasDetalleModel;
+    private ServicioModel $serviciosModel;
 
 
     public function __construct()
     {
         $this->facturasModel = new FacturaModel();
-
         $this->cobrosContratoModel = new CobroContratoModel();
-        $this->solicitudesModel = new SolicitudModel();
         $this->periodosModel = new PeriodoModel();
         $this->rangoFacturasModel = new RangoFacturaModel();
-
         $this->facturasDetalleModel = new FacturaDetalleModel();
         $this->serviciosModel = new ServicioModel();
     }
@@ -365,7 +359,7 @@ class CobrosInstalacion extends BaseController
     //     }
     // }
 
-    function dibujarComprobante($pdf, $x, $y, $titulo, $factura, $detalle)
+    function dibujarComprobante(\TCPDF $pdf, int $x, int $y, string $titulo, array $factura, array $detalle)
     {
         $w = 95; // aca se mide lo ancho del cuadro principal
         $h = 150; // aca se mide lo largo del cuadro principal
@@ -667,7 +661,7 @@ class CobrosInstalacion extends BaseController
         );
     }
 
-    private function agregarPaginaFacturaCobro($pdf, $imprimir, $periodo, array $factura, array $detalle)
+    private function agregarPaginaFacturaCobro(\TCPDF $pdf, string $imprimir,  ?array $periodo, array $factura, array $detalle)
     {
         // if ($pdf->getNumPages() === 0 || $posY == 10) {
         //     }
@@ -685,21 +679,31 @@ class CobrosInstalacion extends BaseController
         $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
     }
 
-    private function responderVentanaImpresionConMensaje($mensaje, $statusCode = 400)
+    private function responderVentanaImpresionConMensaje(string $mensaje, int $statusCode = 400)
     {
         $html = '<!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <title>Facturas de cobro</title>
-        </head>
-        <body>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>Facturas de cobro</title>
+
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            </head>
+            <body>
+
             <script>
-                alert(' . json_encode($mensaje) . ');
-                window.close();
+                Swal.fire({
+                    icon: "warning",
+                    title: "Atención",
+                    text: ' . json_encode($mensaje) . ',
+                    confirmButtonText: "Cerrar"
+                }).then(() => {
+                    window.close();
+                });
             </script>
-        </body>
-        </html>';
+
+            </body>
+            </html>';
 
         return $this->response
             ->setStatusCode($statusCode)
@@ -707,7 +711,7 @@ class CobrosInstalacion extends BaseController
             ->setBody($html);
     }
 
-    public function facturaCobroInstalacion($id)
+    public function facturaCobroInstalacion(int $id)
     {
         $data = $this->facturasModel->obtenerFacturaPorId($id);
 
