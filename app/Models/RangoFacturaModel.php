@@ -20,12 +20,12 @@ class RangoFacturaModel extends Model
     ];
 
     function insertarRango(
-        $numeroInicio,
-        $numeroFinal,
-        $estado,
-        $idUsuario,
-        $fechaCreacion,
-        $numeroActual
+        int $numeroInicio,
+        int $numeroFinal,
+        string $estado,
+        int $idUsuario,
+        string $fechaCreacion,
+        int $numeroActual
     ) {
         return $this->insert([
             'numero_inicio' => $numeroInicio,
@@ -37,7 +37,7 @@ class RangoFacturaModel extends Model
         ]);
     }
 
-    public function getRangosFacturas($start, $length, $searchValue = '')
+    public function getRangosFacturas(int $start, int $length, string $searchValue = '')
     {
         // =============================
         // BUILDER BASE
@@ -129,48 +129,51 @@ class RangoFacturaModel extends Model
     //     ];
     // }
 
-    public function obtenerCorrelativoFactura($db)
+    public function obtenerCorrelativoFactura(\CodeIgniter\Database\BaseConnection $db)
     {
-        $query = $db->query("
-        SELECT *
-        FROM rango_factura
-        WHERE estado = 'Activo'
-        LIMIT 1
-        FOR UPDATE
-    ");
+        $db->transException(true);
 
-        $rango = $query->getRowArray();
+        $rangos = $db->table('rango_factura')
+            ->where('estado', 'Activo')
+            ->orderBy('id_rango_factura', 'ASC')
+            ->get()
+            ->getResultArray();
 
-        if (!$rango) {
-            throw new \Exception('No hay rango de facturación activo');
+        if (empty($rangos)) {
+            return null; // 👈 NO excepción
         }
 
-        $actual = (int)$rango['numero_actual']; // último usado
-        $inicio = (int)$rango['numero_inicio'];
-        $fin    = (int)$rango['numero_fin'];
+        foreach ($rangos as $rango) {
 
-        // 🔥 calcular el siguiente a emitir
-        $siguiente = ($actual === 0) ? $inicio : $actual + 1;
+            $actual = (int)$rango['numero_actual'];
+            $inicio = (int)$rango['numero_inicio'];
+            $fin    = (int)$rango['numero_fin'];
 
-        // 🔥 validar si ya se pasó
-        if ($siguiente > $fin) {
+            $siguiente = ($actual == 0) ? $inicio : $actual + 1;
 
+            if ($siguiente <= $fin) {
+
+                $db->table('rango_factura')
+                    ->where('id_rango_factura', $rango['id_rango_factura'])
+                    ->update([
+                        'numero_actual' => $siguiente,
+                        'estado' => ($siguiente == $fin ? 'Finalizado' : 'Activo')
+                    ]);
+
+                return [
+                    'correlativo' => $siguiente,
+                    'id_rango_factura' => $rango['id_rango_factura'],
+                    'tiraje' => $rango['tiraje'],
+                    'restantes' => $fin - $siguiente
+                ];
+            }
+
+            // cerrar si no sirve
             $db->table('rango_factura')
                 ->where('id_rango_factura', $rango['id_rango_factura'])
                 ->update(['estado' => 'Finalizado']);
-
-            throw new \Exception('El rango de facturación ya fue consumido');
         }
 
-        // 🔥 guardar el número realmente emitido (NO el siguiente)
-        $db->table('rango_factura')
-            ->where('id_rango_factura', $rango['id_rango_factura'])
-            ->update(['numero_actual' => $siguiente]);
-
-        return [
-            'correlativo' => $siguiente,
-            'id_rango_factura' => $rango['id_rango_factura'],
-            'tiraje' => $rango['tiraje']
-        ];
+        return null;
     }
 }

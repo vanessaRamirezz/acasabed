@@ -6,7 +6,7 @@ use App\Models\RangoFacturaModel;
 
 class RangoFacturas extends BaseController
 {
-    private $rangoFacturasModel;
+    private RangoFacturaModel $rangoFacturasModel;
 
     public function __construct()
     {
@@ -41,15 +41,15 @@ class RangoFacturas extends BaseController
             $db->transBegin();
 
             // 🔴 1. Validar que no haya otro activo
-            $activo = $db->table('rango_factura')
-                ->where('estado', 'Activo')
-                ->get()
-                ->getRow();
+            // $activo = $db->table('rango_factura')
+            //     ->where('estado', 'Activo')
+            //     ->get()
+            //     ->getRow();
 
-            if ($activo) {
-                $db->transRollback();
-                return $this->respondError('Ya existe un tiraje activo');
-            }
+            // if ($activo) {
+            //     $db->transRollback();
+            //     return $this->respondError('Ya existe un tiraje activo');
+            // }
 
             // 🔴 2. Validar solapamiento
             $solapado = $db->table('rango_factura')

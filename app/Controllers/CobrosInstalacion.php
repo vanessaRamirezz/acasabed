@@ -851,6 +851,46 @@ class CobrosInstalacion extends BaseController
             $contratos = $this->cobrosContratoModel->getContratosParaFacturar();
             log_message('info', 'Contratos obtenidos: ' . count($contratos));
 
+            // $rango = $this->rangoFacturasModel
+            //     ->where('estado', 'Activo')
+            //     ->first();
+
+            // $actual = (int)$rango['numero_actual'];
+            // $fin = (int)$rango['numero_fin'];
+
+            // $disponibles = $fin - $actual;
+            // $totalContratos = count($contratos);
+
+            // if ($totalContratos > $disponibles) {
+
+            //     throw new \Exception(
+            //         "El Tiraje de correlativos no alcanza para generar todas las facturas. " .
+            //             "Disponibles: {$disponibles}, Requeridas: {$totalContratos}. " .
+            //             "Cree un nuevo tiraje continuando con el actual."
+            //     );
+            // }
+
+            $rangoActivo = $this->rangoFacturasModel
+                ->where('estado', 'Activo')
+                ->findAll();
+
+            $totalDisponibles = 0;
+
+            foreach ($rangoActivo as $r) {
+                $totalDisponibles += ((int)$r['numero_fin'] - (int)$r['numero_actual']);
+            }
+
+            $totalContratos = count($contratos);
+
+            if ($totalContratos > $totalDisponibles) {
+
+                return $this->respondError(
+                    "El Tiraje de correlativos no alcanza para generar todas las facturas. " .
+                        "Disponibles: {$totalDisponibles}, Requeridas: {$totalContratos}. " .
+                        "Debe crear un nuevo tiraje antes de continuar."
+                );
+            }
+
             $facturasGeneradas = 0;
 
             foreach ($contratos as $contrato) {
