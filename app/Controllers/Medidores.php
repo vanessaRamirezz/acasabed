@@ -193,7 +193,7 @@ class Medidores extends BaseController
             if ($estado == '1') {
                 $estadoNuevo = 'ACTIVO';
             } else {
-                $estadoNuevo = 'CERRADO';
+                $estadoNuevo = 'INACTIVO';
             }
 
             // INICIAR TRANSACCIÓN
