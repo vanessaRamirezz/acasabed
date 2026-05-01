@@ -906,7 +906,7 @@ class CobrosInstalacion extends BaseController
                 }
 
                 // =========================
-                // 🧠 CUOTAS DE FACTURAS ANTERIORES (DESCRIPCIÓN)
+                // 🧠 CUOTAS INVOLUCRADAS (SOLO TEXTO)
                 // =========================
                 $idsFacturas = array_column($facturasNoPagadas, 'id_factura');
                 log_message('info', 'IDs facturas NO PAGADAS: ' . json_encode($idsFacturas));
@@ -936,50 +936,122 @@ class CobrosInstalacion extends BaseController
 
                 $textoCuotas = '';
                 if (!empty($numerosCuotas)) {
-                    if (count($numerosCuotas) === 1) {
-                        $textoCuotas = 'cuota ' . $numerosCuotas[0];
-                    } else {
-                        $textoCuotas = 'cuotas ' . implode(', ', $numerosCuotas);
+                    $textoCuotas = (count($numerosCuotas) === 1)
+                        ? 'cuota ' . $numerosCuotas[0]
+                        : 'cuotas ' . implode(', ', $numerosCuotas);
+                }
+
+                // =========================
+                // 🧾 SALDO REAL (CORREGIDO)
+                // =========================
+                $totalDeudaAnterior = $this->cobrosContratoModel
+                    ->selectSum('monto_cuota')
+                    ->where('id_contrato', $contrato->id_contrato)
+                    ->where('estado', 'NO PAGADA')
+                    ->get()
+                    ->getRow()
+                    ->monto_cuota ?? 0;
+
+                log_message('info', 'Total deuda anterior: ' . $totalDeudaAnterior);
+
+                // =========================
+                // 🧾 MORA (CORREGIDO)
+                // =========================
+                $cobrosMora = $this->cobrosContratoModel
+                    ->where('id_contrato', $contrato->id_contrato)
+                    ->where('estado', 'NO PAGADA')
+                    ->findAll();
+
+                $moraPorCuota = 2;
+                $totalMora = 0;
+
+                // foreach ($cobrosMora as $cobro) {
+
+                //     // CUOTA 0 → ACUMULATIVA
+                //     if ($cobro['numero_cuota'] == 0) {
+
+                //         $this->cobrosContratoModel
+                //             ->where('id_cobro_instalacion', $cobro['id_cobro_instalacion'])
+                //             ->set('mora', "COALESCE(mora,0) + {$moraPorCuota}", false)
+                //             ->update();
+
+                //         $totalMora += $moraPorCuota;
+                //     }
+
+                //     // CUOTAS NORMALES
+                //     else {
+
+                //         if ((float)$cobro['mora'] == 0) {
+
+                //             $this->cobrosContratoModel
+                //                 ->where('id_cobro_instalacion', $cobro['id_cobro_instalacion'])
+                //                 ->set('mora', $moraPorCuota)
+                //                 ->update();
+
+                //             $totalMora += $moraPorCuota;
+                //         } else {
+                //             $totalMora += (float)$cobro['mora'];
+                //         }
+                //     }
+                // }
+                $moraPorCuota = 2;
+                $totalMora = 0;
+
+                foreach ($cobrosMora as $cobro) {
+
+                    // 🟡 CUOTA 0 (CASO ESPECIAL)
+                    if ($cobro['numero_cuota'] == 0) {
+
+                        $cantidadFacturas = count($facturasNoPagadas);
+
+                        $moraCalculada = $cantidadFacturas * $moraPorCuota;
+
+                        // actualizar acumulado real en BD (solo +2 cada corrida)
+                        $this->cobrosContratoModel
+                            ->where('id_cobro_instalacion', $cobro['id_cobro_instalacion'])
+                            ->set('mora', "COALESCE(mora,0) + {$moraPorCuota}", false)
+                            ->update();
+
+                        // 🔥 CLAVE: usar mora calculada, no solo +2
+                        $totalMora += $moraCalculada;
+
+                        log_message('info', 'Mora cuota 0 calculada: ' . $moraCalculada);
+                    }
+
+                    // 🟢 CUOTAS NORMALES
+                    else {
+
+                        if ((float)$cobro['mora'] == 0) {
+
+                            $this->cobrosContratoModel
+                                ->where('id_cobro_instalacion', $cobro['id_cobro_instalacion'])
+                                ->set('mora', $moraPorCuota)
+                                ->update();
+
+                            $totalMora += $moraPorCuota;
+                        } else {
+
+                            // ya tenía mora → no incrementar
+                            $totalMora += (float)$cobro['mora'];
+                        }
                     }
                 }
+
+                log_message('info', 'Total mora calculada: ' . $totalMora);
 
                 // =========================
                 // 🧾 DETALLE
                 // =========================
-                $totalDeudaAnterior = 0;
-
-                if (!empty($facturasNoPagadas)) {
-
-                    $idsFacturas = array_column($facturasNoPagadas, 'id_factura');
-
-                    $detallesCapital = $db->table('facturas_detalle fd')
-                        ->select('fd.monto')
-                        ->whereIn('fd.id_factura', $idsFacturas)
-                        ->where('fd.id_servicio !=', $mapServicios['MORA']) // 👈 clave
-                        ->get()
-                        ->getResult();
-
-                    foreach ($detallesCapital as $d) {
-                        $totalDeudaAnterior += (float)$d->monto;
-                    }
-                }
-                $cantidadFacturas = count($facturasNoPagadas);
-
-                log_message('info', 'Total deuda anterior: ' . $totalDeudaAnterior);
-
                 $detalle = [];
                 $total = 0;
 
-                // saldo acumulado
                 if ($totalDeudaAnterior > 0) {
 
                     $concepto = 'Saldo pendiente';
-
                     if ($textoCuotas) {
                         $concepto .= ' (' . $textoCuotas . ')';
                     }
-
-                    $concepto .= ' de ' . $cantidadFacturas . ' factura(s) no pagadas';
+                    $concepto .= ' de ' . count($facturasNoPagadas) . ' factura(s) no pagadas';
 
                     $detalle[] = [
                         'id_servicio' => $mapServicios['DERECHO DE CONEXION'],
@@ -989,15 +1061,8 @@ class CobrosInstalacion extends BaseController
                         'id_cobro_instalacion' => null,
                     ];
 
-                    log_message('info', 'Detalle agregado: ' . $concepto . ' -> ' . $totalDeudaAnterior);
-
                     $total += $totalDeudaAnterior;
                 }
-
-                // mora
-                $totalMora = $cantidadFacturas * 2;
-
-                log_message('info', 'Total mora calculada: ' . $totalMora);
 
                 if ($totalMora > 0) {
                     $detalle[] = [
@@ -1011,7 +1076,6 @@ class CobrosInstalacion extends BaseController
                     $total += $totalMora;
                 }
 
-                // cuota nueva
                 if ($cuotaNueva) {
 
                     $conceptoCuota = ($cuotaNueva->numero_cuota == 0)
@@ -1026,8 +1090,6 @@ class CobrosInstalacion extends BaseController
                         'id_cobro_instalacion' => $cuotaNueva->id_cobro_instalacion,
                     ];
 
-                    log_message('info', 'Detalle cuota nueva: ' . $conceptoCuota . ' -> ' . $cuotaNueva->monto_cuota);
-
                     $total += $cuotaNueva->monto_cuota;
                 }
 
@@ -1035,7 +1097,6 @@ class CobrosInstalacion extends BaseController
                 log_message('info', 'TOTAL FACTURA: ' . $total);
 
                 if (empty($detalle)) {
-                    log_message('info', 'No hay nada que facturar');
                     continue;
                 }
 
@@ -1049,20 +1110,17 @@ class CobrosInstalacion extends BaseController
 
                 $idFactura = $this->facturasModel->insert([
                     'id_rango_factura' => $correlativoData['id_rango_factura'],
-                    'correlativo'      => $correlativoData['correlativo'],
-                    'tiraje'           => $correlativoData['tiraje'],
-                    'id_contrato'      => $contrato->id_contrato,
-                    'id_periodo'       => $periodo['id_periodo'],
-                    'fecha_emision'    => $fechaEmision,
+                    'correlativo' => $correlativoData['correlativo'],
+                    'tiraje' => $correlativoData['tiraje'],
+                    'id_contrato' => $contrato->id_contrato,
+                    'id_periodo' => $periodo['id_periodo'],
+                    'fecha_emision' => $fechaEmision,
                     'fecha_vencimiento' => $fechaVencimiento,
-                    // 'saldo_pendiente'  => $total,
-                    'estado'           => 'PENDIENTE',
-                    'total'            => $total,
-                    'id_usuario'       => session('id_usuario'),
-                    'tipo'             => 'Instalacion'
+                    'estado' => 'PENDIENTE',
+                    'total' => $total,
+                    'id_usuario' => session('id_usuario'),
+                    'tipo' => 'Instalacion'
                 ]);
-
-                log_message('info', 'Factura creada ID: ' . $idFactura);
 
                 foreach ($detalle as &$item) {
                     $item['id_factura'] = $idFactura;
@@ -1070,22 +1128,18 @@ class CobrosInstalacion extends BaseController
 
                 $this->facturasDetalleModel->insertBatch($detalle);
 
-                $facturasGeneradas++;
-
-                // actualizar vencimientos
+                // actualizar fechas de vencimiento en cobros
                 $idsCobros = array_column($detalle, 'id_cobro_instalacion');
-
-                log_message('info', 'Actualizando fecha de vencimiento a cobros: ' . json_encode($idsCobros));
 
                 $this->cobrosContratoModel
                     ->whereIn('id_cobro_instalacion', $idsCobros)
                     ->set(['fecha_vencimiento' => $fechaVencimiento])
                     ->update();
-            }
-            exit;
-            $db->transCommit();
 
-            log_message('info', 'Proceso finalizado. Facturas generadas: ' . $facturasGeneradas);
+                $facturasGeneradas++;
+            }
+            // exit;
+            $db->transCommit();
 
             return $this->respondSuccess("Se generaron {$facturasGeneradas} facturas correctamente");
         } catch (\Throwable $e) {
