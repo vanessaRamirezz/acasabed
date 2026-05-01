@@ -7,6 +7,10 @@ const inputs = {
     idContrato: $("#id-contrato-cobro"),
     buscarCliente: $("#buscar-cliente"),
     montoPago: $("#monto-pago"),
+    filtroDepartamentoImpresion: $("#filtro-departamento-impresion"),
+    filtroMunicipioImpresion: $("#filtro-municipio-impresion"),
+    filtroDistritoImpresion: $("#filtro-distrito-impresion"),
+    filtroColoniaImpresion: $("#filtro-colonia-impresion"),
     //     btnProcesarPago: $("#btn-procesar-pago"),
     //     btnValidarCobro: $("#btn-validar-cobro"),
 };
@@ -128,6 +132,10 @@ function formatearMonto(valor) {
     return `$${numero.toFixed(2)}`;
 }
 
+function resetSelect(selector, placeholder = "Todos") {
+    $(selector).empty().append(`<option value="-1">${placeholder}</option>`);
+}
+
 function renderizarTablaCuenta(detalles) {
     const tbody = $('#tbl-cuentas-cobro tbody');
 
@@ -216,6 +224,139 @@ function cargarClientes() {
             cache: true
         }
     })
+}
+
+function cargarDepartamentosImpresion() {
+    $.ajax({
+        type: "GET",
+        url: baseURL + "getDepartamentos",
+        dataType: "json",
+        success: function (response) {
+            if (response.status !== "success") {
+                alertaError(response.mensaje || "No se pudieron cargar los departamentos");
+                return;
+            }
+
+            inputs.filtroDepartamentoImpresion.empty().append('<option value="-1">Todos</option>');
+
+            response.data.forEach(function (departamento) {
+                inputs.filtroDepartamentoImpresion.append(
+                    $("<option></option>")
+                        .attr("value", departamento.id_departamento)
+                        .text(departamento.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError("Error al cargar los departamentos para impresión");
+        }
+    });
+}
+
+function cargarMunicipiosImpresion(idDepartamento) {
+    resetSelect(inputs.filtroMunicipioImpresion, "Todos");
+    resetSelect(inputs.filtroDistritoImpresion, "Todos");
+    resetSelect(inputs.filtroColoniaImpresion, "Todos");
+
+    if (!idDepartamento || idDepartamento === "-1") {
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: baseURL + "getMunicipios",
+        data: { idDepartamento },
+        dataType: "json",
+        success: function (response) {
+            if (response.status !== "success") {
+                alertaError(response.mensaje || "No se pudieron cargar los municipios");
+                return;
+            }
+
+            response.data.forEach(function (municipio) {
+                inputs.filtroMunicipioImpresion.append(
+                    $("<option></option>")
+                        .attr("value", municipio.id_municipio)
+                        .text(municipio.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError("Error al cargar los municipios");
+        }
+    });
+}
+
+function cargarDistritosImpresion(idMunicipio) {
+    resetSelect(inputs.filtroDistritoImpresion, "Todos");
+    resetSelect(inputs.filtroColoniaImpresion, "Todos");
+
+    if (!idMunicipio || idMunicipio === "-1") {
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: baseURL + "getDistritos",
+        data: { idMunicipio },
+        dataType: "json",
+        success: function (response) {
+            if (response.status !== "success") {
+                alertaError(response.mensaje || "No se pudieron cargar los distritos");
+                return;
+            }
+
+            response.data.forEach(function (distrito) {
+                inputs.filtroDistritoImpresion.append(
+                    $("<option></option>")
+                        .attr("value", distrito.id_distrito)
+                        .text(distrito.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError("Error al cargar los distritos");
+        }
+    });
+}
+
+function cargarColoniasImpresion(idDistrito) {
+    resetSelect(inputs.filtroColoniaImpresion, "Todos");
+
+    if (!idDistrito || idDistrito === "-1") {
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: baseURL + "getColonias",
+        data: { idDistrito },
+        dataType: "json",
+        success: function (response) {
+            if (response.status !== "success") {
+                alertaError(response.mensaje || "No se pudieron cargar las colonias");
+                return;
+            }
+
+            response.data.forEach(function (colonia) {
+                inputs.filtroColoniaImpresion.append(
+                    $("<option></option>")
+                        .attr("value", colonia.id_colonia)
+                        .text(colonia.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError("Error al cargar las colonias");
+        }
+    });
+}
+
+function reiniciarFiltrosImpresion() {
+    inputs.filtroDepartamentoImpresion.val("-1");
+    resetSelect(inputs.filtroMunicipioImpresion, "Todos");
+    resetSelect(inputs.filtroDistritoImpresion, "Todos");
+    resetSelect(inputs.filtroColoniaImpresion, "Todos");
 }
 
 
@@ -556,8 +697,33 @@ function generarFacturas() {
 }
 
 function imprimirFacturasPeriodoActivo() {
+    const params = new URLSearchParams({
+        autoPrint: "1"
+    });
+
+    const departamento = inputs.filtroDepartamentoImpresion.val();
+    const municipio = inputs.filtroMunicipioImpresion.val();
+    const distrito = inputs.filtroDistritoImpresion.val();
+    const colonia = inputs.filtroColoniaImpresion.val();
+
+    if (departamento && departamento !== "-1") {
+        params.append("departamento", departamento);
+    }
+
+    if (municipio && municipio !== "-1") {
+        params.append("municipio", municipio);
+    }
+
+    if (distrito && distrito !== "-1") {
+        params.append("distrito", distrito);
+    }
+
+    if (colonia && colonia !== "-1") {
+        params.append("colonia", colonia);
+    }
+
     const ventana = window.open(
-        baseURL + 'imprimirFacturasCobroPeriodoActivo?autoPrint=1',
+        `${baseURL}imprimirFacturasCobroPeriodoActivo?${params.toString()}`,
         '_blank'
     );
 
@@ -566,6 +732,7 @@ function imprimirFacturasPeriodoActivo() {
         return;
     }
 
+    // $('#modal-imprimir-facturas-direccion').modal('hide');
     ventana.focus();
 }
 
@@ -620,12 +787,30 @@ function eventosUsuarios() {
 
     // eventos para imprimir las facturas
     $("#btn-imprimir-facturas-periodo").on("click", function () {
+        reiniciarFiltrosImpresion();
+        $("#modal-imprimir-facturas-direccion").modal("show");
+    });
+
+    $("#btn-confirmar-imprimir-facturas").on("click", function () {
         imprimirFacturasPeriodoActivo();
+    });
+
+    inputs.filtroDepartamentoImpresion.on("change", function () {
+        cargarMunicipiosImpresion($(this).val());
+    });
+
+    inputs.filtroMunicipioImpresion.on("change", function () {
+        cargarDistritosImpresion($(this).val());
+    });
+
+    inputs.filtroDistritoImpresion.on("change", function () {
+        cargarColoniasImpresion($(this).val());
     });
 }
 
 function iniciarTodo() {
     cargarClientes();
+    cargarDepartamentosImpresion();
     eventosUsuarios();
     cargarTablaCobros();
 }

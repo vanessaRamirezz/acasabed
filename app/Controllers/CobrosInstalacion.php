@@ -743,21 +743,25 @@ class CobrosInstalacion extends BaseController
     {
         try {
             $periodo = $this->periodosModel->getPeriodoActivo();
+            $idDepartamento = $this->request->getGet('departamento');
+            $idMunicipio = $this->request->getGet('municipio');
+            $idDistrito = $this->request->getGet('distrito');
+            $idColonia = $this->request->getGet('colonia');
 
             if (!$periodo) {
                 return $this->responderVentanaImpresionConMensaje('No hay periodo activo para imprimir facturas.', 404);
             }
 
-            $facturas = $this->facturasModel
-                ->join('facturas_detalle fd', 'fd.id_factura = facturas.id_factura')
-                ->where('facturas.id_periodo', $periodo['id_periodo'])
-                ->where('facturas.tipo', 'Instalacion')
-                ->groupBy('facturas.id_factura')
-                ->orderBy('facturas.id_factura', 'ASC')
-                ->findAll();
+            $facturas = $this->facturasModel->getFacturasInstalacionPorPeriodoYDireccion(
+                $periodo['id_periodo'],
+                $idDepartamento,
+                $idMunicipio,
+                $idDistrito,
+                $idColonia
+            );
 
             if (empty($facturas)) {
-                return $this->responderVentanaImpresionConMensaje('No hay facturas generadas en el periodo activo.', 404);
+                return $this->responderVentanaImpresionConMensaje('No hay facturas generadas en el periodo activo para los filtros seleccionados.', 404);
             }
 
             $pdf = new \TCPDF('P', 'mm', 'A4');
@@ -799,7 +803,7 @@ class CobrosInstalacion extends BaseController
             }
 
             if ($pdf->getNumPages() === 0) {
-                return $this->responderVentanaImpresionConMensaje('No se encontraron facturas válidas para imprimir en el periodo activo.', 404);
+                return $this->responderVentanaImpresionConMensaje('No se encontraron facturas válidas para imprimir con los filtros seleccionados.', 404);
             }
 
             if ($this->request->getGet('autoPrint') === '1') {

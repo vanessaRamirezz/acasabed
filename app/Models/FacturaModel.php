@@ -377,4 +377,45 @@ class FacturaModel extends Model
             ->get()
             ->getResultArray();
     }
+
+    public function getFacturasInstalacionPorPeriodoYDireccion(
+        $idPeriodo,
+        $idDepartamento = null,
+        $idMunicipio = null,
+        $idDistrito = null,
+        $idColonia = null
+    ) {
+        $builder = $this->db->table('facturas f');
+
+        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
+        $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
+        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+
+        $builder->where('f.id_periodo', $idPeriodo);
+        $builder->where('f.tipo', 'Instalacion');
+
+        if (!empty($idDepartamento) && $idDepartamento !== '-1') {
+            $builder->where('cl.id_departamento', $idDepartamento);
+        }
+
+        if (!empty($idMunicipio) && $idMunicipio !== '-1') {
+            $builder->where('cl.id_municipio', $idMunicipio);
+        }
+
+        if (!empty($idDistrito) && $idDistrito !== '-1') {
+            $builder->where('cl.id_distrito', $idDistrito);
+        }
+
+        if (!empty($idColonia) && $idColonia !== '-1') {
+            $builder->where('cl.id_colonia', $idColonia);
+        }
+
+        return $builder
+            ->distinct()
+            ->select('f.id_factura')
+            ->groupBy('f.id_factura')
+            ->orderBy('f.id_factura', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 }
