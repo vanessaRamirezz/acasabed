@@ -191,23 +191,23 @@ function guardarOeditarTarifa(tipoProceso) {
     data.detalles.sort((a, b) => a.desde - b.desde);
 
     // 🔥 validar rangos
-    for (let d of data.detalles) {
+    // for (let d of data.detalles) {
 
-        if (d.desde === "" || d.desde == null) {
-            alertEnSweet('error', 'Error', 'El campo "Desde" es obligatorio');
-            return;
-        }
+    //     if (d.desde === "" || d.desde == null) {
+    //         alertEnSweet('error', 'Error', 'El campo "Desde" es obligatorio');
+    //         return;
+    //     }
 
-        if (d.hasta !== null && d.hasta <= d.desde) {
-            alertEnSweet('error', 'Error', 'El rango "Hasta" debe ser mayor que "Desde"');
-            return;
-        }
+    //     if (d.hasta !== null && d.hasta <= d.desde) {
+    //         alertEnSweet('error', 'Error', 'El rango "Hasta" debe ser mayor que "Desde"');
+    //         return;
+    //     }
 
-        if (d.valor_metro_cubico == 0 && d.pago_minimo == 0) {
-            alertEnSweet('error', 'Error', 'Debe ingresar pago mínimo o valor por m³');
-            return;
-        }
-    }
+    //     if (d.valor_metro_cubico == 0 && d.pago_minimo == 0) {
+    //         alertEnSweet('error', 'Error', 'Debe ingresar pago mínimo o valor por m³');
+    //         return;
+    //     }
+    // }
 
     Swal.fire({
         title: 'Espere...',

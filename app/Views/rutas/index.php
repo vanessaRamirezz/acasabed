@@ -88,7 +88,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-sm-5">
+                                <div class="col-sm-9">
                                     <div class="form-group">
                                         <label for="nombre">Nombre de ruta</label>
                                         <div class="input-group mb-3">
