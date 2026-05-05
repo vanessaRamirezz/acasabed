@@ -48,7 +48,7 @@ class FacturaModel extends Model
             ->where('f.estado', 'PENDIENTE')
             ->join('contratos c', 'c.id_contrato = f.id_contrato')
             ->join('clientes cl', 'cl.id_cliente = c.id_cliente')
-            ->orderBy('f.id_factura', 'DESC')
+            ->orderBy('f.id_factura', 'ASC')
             ->get()
             ->getResultArray();
     }

@@ -16,13 +16,13 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class CargarGenerarPlantillas extends BaseController
 {
-    private $facturasModel;
-    private $periodosModel;
-    private $pagosFacturaModel;
-    private $facturaDetalleModel;
-    private $cobrosContratoModel;
-    private $solicitudesModel;
-    private $contratosModel;
+    private FacturaModel $facturasModel;
+    private PeriodoModel $periodosModel;
+    private PagoFacturaModel $pagosFacturaModel;
+    private FacturaDetalleModel $facturaDetalleModel;
+    private CobroContratoModel $cobrosContratoModel;
+    private SolicitudModel $solicitudesModel;
+    private ContratoModel $contratosModel;
     private $servicioModel;
 
     public function __construct()
@@ -327,7 +327,7 @@ class CargarGenerarPlantillas extends BaseController
 
                 $tiraje = trim($row[0] ?? null);
                 $correlativo = trim($row[1] ?? null);
-                $estadoExcel = trim($row[4] ?? null);
+                $estadoExcel = trim($row[5] ?? null);
 
                 // reconstruir referencia para uso interno
                 $referencia = $tiraje . '-' . $correlativo;
@@ -380,12 +380,10 @@ class CargarGenerarPlantillas extends BaseController
                         ->first();
 
                     if (!$existePago) {
-
                         $this->pagosFacturaModel->insert([
                             'id_factura' => $facturaId,
                             'tiraje' => $tiraje,
                             'correlativo' => $correlativo,
-                            'referencia' => $referencia,
                             'monto_pagado' => $montoPagado,
                             'fecha_pago' => $fechaPago,
                             'fecha_carga' => date('Y-m-d'),
@@ -394,21 +392,68 @@ class CargarGenerarPlantillas extends BaseController
                         ]);
                     }
 
-                    // actualizar factura
+                    // actualizar factura actual
                     $this->facturasModel->update($facturaId, [
-                        'saldo_pendiente' => 0,
                         'estado' => 'PAGADA',
                         'fecha_de_pago' => $fechaPago,
                     ]);
 
+                    // inicializar
+                    $contrato = $this->contratosModel
+                        ->where('id_contrato', $factura['id_contrato'])
+                        ->first();
+
+                    log_message('info', ' data de contrato obtenido ' . print_r($contrato, true));
+
+                    $solicitudesAfectadas = [];
+                    $montoCapital = 0;
+
+                    /**
+                     * ==========================================
+                     * 1. FACTURAS ANTERIORES
+                     * ==========================================
+                     */
                     $facturasPendientes = $this->facturasModel
                         ->where('id_contrato', $factura['id_contrato'])
-                        ->whereIn('estado', ['VENCIDA', 'PENDIENTE'])
-                        ->where('id_factura <', $facturaId) // clave: anteriores
-                        ->orderBy('id_factura', 'ASC') // FIFO
+                        ->whereIn('estado', ['PENDIENTE'])
+                        ->where('id_factura <', $facturaId)
+                        ->orderBy('id_factura', 'ASC')
                         ->findAll();
 
                     foreach ($facturasPendientes as $fp) {
+
+                        $detallesPendientes = $this->facturaDetalleModel
+                            ->where('id_factura', $fp['id_factura'])
+                            ->findAll();
+
+                        foreach ($detallesPendientes as $dp) {
+
+                            if (
+                                (!empty($dp['id_cobro_instalacion']) ||
+                                    stripos($dp['concepto'], 'cuota') !== false)
+                                &&
+                                stripos($dp['concepto'], 'mora') === false
+                            ) {
+
+                                // sumar capital SIEMPRE
+                                $montoCapital += (float)($dp['monto'] ?? 0);
+
+                                // actualizar SOLO si tiene ID
+                                if (!empty($dp['id_cobro_instalacion'])) {
+                                    $this->cobrosContratoModel->update(
+                                        $dp['id_cobro_instalacion'],
+                                        [
+                                            'estado' => 'CANCELADO',
+                                            'fecha_pago' => $fechaPago
+                                        ]
+                                    );
+                                }
+
+                                if ($contrato && !empty($contrato['id_solicitud'])) {
+                                    $solicitudesAfectadas[$contrato['id_solicitud']] = true;
+                                }
+                            }
+                        }
 
                         $this->facturasModel->update($fp['id_factura'], [
                             'estado' => 'CANCELADA',
@@ -418,38 +463,50 @@ class CargarGenerarPlantillas extends BaseController
                     }
 
                     /**
-                     * INSTALACIONES
+                     * ==========================================
+                     * 2. FACTURA ACTUAL
+                     * ==========================================
                      */
                     $detalles = $this->facturaDetalleModel
                         ->where('id_factura', $facturaId)
                         ->findAll();
 
-                    $contrato = $this->contratosModel
-                        ->where('id_contrato', $factura['id_contrato'])
-                        ->first();
-                    log_message('info', ' data de contrato obtenido ' . print_r($contrato, true));
-
-                    $solicitudesAfectadas = [];
-                    $montoCapital = 0;
                     foreach ($detalles as $d) {
 
-                        if (!empty($d['id_cobro_instalacion'])) {
+                        if (
+                            (!empty($d['id_cobro_instalacion']) ||
+                                stripos($d['concepto'], 'cuota') !== false)
+                            &&
+                            stripos($d['concepto'], 'mora') === false
+                        ) {
 
-                            $this->cobrosContratoModel->update(
-                                $d['id_cobro_instalacion'],
-                                [
-                                    'estado' => 'CANCELADO',
-                                    'fecha_pago' => $fechaPago
-                                ]
-                            );
-
+                            // sumar capital
                             $montoCapital += (float)($d['monto'] ?? 0);
+
+                            // actualizar SOLO si tiene ID
+                            if (!empty($d['id_cobro_instalacion'])) {
+                                $this->cobrosContratoModel->update(
+                                    $d['id_cobro_instalacion'],
+                                    [
+                                        'estado' => 'CANCELADO',
+                                        'fecha_pago' => $fechaPago
+                                    ]
+                                );
+                            }
+
+                            log_message('info', 'monto acumulado ' . $montoCapital);
+
                             if ($contrato && !empty($contrato['id_solicitud'])) {
                                 $solicitudesAfectadas[$contrato['id_solicitud']] = true;
                             }
                         }
                     }
 
+                    /**
+                     * ==========================================
+                     * 3. ACTUALIZAR SOLICITUD
+                     * ==========================================
+                     */
                     foreach (array_keys($solicitudesAfectadas) as $idSolicitud) {
 
                         $solicitud = $this->solicitudesModel->find($idSolicitud);
@@ -508,6 +565,7 @@ class CargarGenerarPlantillas extends BaseController
 
                 $procesados++;
             }
+            // exit;
 
             $db->transComplete();
 
