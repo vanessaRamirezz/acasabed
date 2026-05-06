@@ -135,7 +135,7 @@ class LecturaModel extends Model
         ]);
     }
 
-    public function getLecturaActual($idContrato, $idPeriodo)
+    public function getLecturaActual(int $idContrato, int $idPeriodo)
     {
         return $this->select('id_lectura, valor')
             ->where('id_contrato', $idContrato)

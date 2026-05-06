@@ -268,7 +268,7 @@ class ContratoModel extends Model
             // ->join('lecturas', 'lecturas.id_contrato = contratos.id_contrato', 'left')
             ->join('tarifas', 'tarifas.id_tarifa = contratos.id_tarifa', 'left')
             ->where('contratos.estado', 'APROBADO')
-            ->where('solicitudes.estado', 'APROBADA')
+            // ->where('solicitudes.estado', 'APROBADA')
             ->orderBy('contratos.id_contrato', 'ASC')
             ->get()
             ->getResult();

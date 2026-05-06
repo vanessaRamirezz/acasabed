@@ -461,8 +461,8 @@ class CobrosInstalacion extends BaseController
         $totalRight = $leftHeight;
 
         // dividir en 4 bloques (doc label, doc value, cuenta label, cuenta value)
-        $hLabel = $totalRight * 0.2;
-        $hValue = $totalRight * 0.2;
+        $hLabel = $totalRight * 0.27;
+        $hValue = $totalRight * 0.28;
 
 
         // === No. DOCUMENTO ===
@@ -900,6 +900,7 @@ class CobrosInstalacion extends BaseController
                 // 🔒 evitar duplicado en el mismo periodo
                 $existeFactura = $this->facturasModel
                     ->where('id_contrato', $contrato->id_contrato)
+                    ->where('tipo', 'Instalacion')
                     ->where('id_periodo', $periodo['id_periodo'])
                     ->first();
 

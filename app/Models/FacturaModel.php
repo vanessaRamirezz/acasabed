@@ -26,7 +26,7 @@ class FacturaModel extends Model
         'tipo'
     ];
 
-    public function getFacturasExcel($idPeriodo)
+    public function getFacturasExcel(?int $idPeriodo)
     {
         return $this->db->table('facturas f')
             ->select("
@@ -54,7 +54,7 @@ class FacturaModel extends Model
     }
 
     // modelo para facturas de cobros de instalacion
-    public function getHistorial($start, $length, $searchValue = '')
+    public function getHistorial(int $start, int $length, $searchValue = '')
     {
         $builder = $this->db->table('facturas f');
 
@@ -109,7 +109,7 @@ class FacturaModel extends Model
         ];
     }
 
-    public function obtenerFacturaPorId($idFactura)
+    public function obtenerFacturaPorId(int $idFactura)
     {
         $builder = $this->db->table('facturas f');
 
@@ -171,7 +171,7 @@ class FacturaModel extends Model
     }
 
     // modelo para facturas de consumo mes a mes
-    public function getHistorialFacturas($start, $length, $searchValue = '')
+    public function getHistorialFacturas(int $start, int $length, $searchValue = '')
     {
         $builder = $this->db->table('facturas f');
 
@@ -181,7 +181,7 @@ class FacturaModel extends Model
         $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
         $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
 
-        $builder->where('fd.tipo', 'Consumo');
+        $builder->where('f.tipo', 'Consumo');
 
         // CLAVE PARA EVITAR DUPLICADOS
         $builder->distinct();
@@ -224,34 +224,7 @@ class FacturaModel extends Model
         ];
     }
 
-    public function existeFacturaConsumoPeriodoContrato($idContrato, $idPeriodo)
-    {
-        return $this->db->table('facturas f')
-            ->select('f.id_factura')
-            ->join('facturas_detalle fd', 'fd.id_factura = f.id_factura')
-            ->where('f.id_contrato', $idContrato)
-            ->where('f.id_periodo', $idPeriodo)
-            ->where('fd.tipo', 'Consumo')
-            ->groupBy('f.id_factura')
-            ->get()
-            ->getNumRows() > 0;
-    }
-
-    public function getFacturasPendientesContrato($idContrato)
-    {
-        return $this->db->table('facturas f')
-            ->select('f.*')
-            ->join('facturas_detalle fd', 'fd.id_factura = f.id_factura')
-            ->where('f.id_contrato', $idContrato)
-            ->whereIn('f.estado', ['PENDIENTE', 'VENCIDA'])
-            ->where('fd.tipo', 'Consumo')
-            ->groupBy('f.id_factura') // evita duplicados
-            ->orderBy('f.fecha_emision', 'ASC')
-            ->get()
-            ->getResult();
-    }
-
-    public function getFacturaResumenPorId($idFactura)
+    public function getFacturaResumenPorId(int $idFactura)
     {
         $builder = $this->db->table('facturas f');
 
@@ -379,7 +352,7 @@ class FacturaModel extends Model
     }
 
     public function getFacturasInstalacionPorPeriodoYDireccion(
-        $idPeriodo,
+        int $idPeriodo,
         $idDepartamento = null,
         $idMunicipio = null,
         $idDistrito = null,
@@ -443,5 +416,46 @@ class FacturaModel extends Model
             ->where('f.estado', 'PAGADA')
             ->get()
             ->getRowArray();
+    }
+
+    public function getFacturasConsumoPorPeriodoYDireccion(
+        int $idPeriodo,
+        $idDepartamento = null,
+        $idMunicipio = null,
+        $idDistrito = null,
+        $idColonia = null
+    ) {
+        $builder = $this->db->table('facturas f');
+
+        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
+        $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
+        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+
+        $builder->where('f.id_periodo', $idPeriodo);
+        $builder->where('f.tipo', 'Consumo');
+
+        if (!empty($idDepartamento) && $idDepartamento !== '-1') {
+            $builder->where('cl.id_departamento', $idDepartamento);
+        }
+
+        if (!empty($idMunicipio) && $idMunicipio !== '-1') {
+            $builder->where('cl.id_municipio', $idMunicipio);
+        }
+
+        if (!empty($idDistrito) && $idDistrito !== '-1') {
+            $builder->where('cl.id_distrito', $idDistrito);
+        }
+
+        if (!empty($idColonia) && $idColonia !== '-1') {
+            $builder->where('cl.id_colonia', $idColonia);
+        }
+
+        return $builder
+            ->distinct()
+            ->select('f.id_factura')
+            ->groupBy('f.id_factura')
+            ->orderBy('f.id_factura', 'ASC')
+            ->get()
+            ->getResultArray();
     }
 }

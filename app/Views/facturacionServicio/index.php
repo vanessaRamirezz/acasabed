@@ -132,6 +132,55 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="modal-imprimir-facturas-direccion" tabindex="-1" aria-labelledby="modal-imprimir-facturas-direccion-label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-imprimir-facturas-direccion-label">Imprimir facturas por dirección</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-light border mb-3">
+                            Si no seleccionas ningún filtro, se imprimirán todas las facturas del período activo.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-departamento-impresion">Departamento</label>
+                                <select id="filtro-departamento-impresion" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-municipio-impresion">Municipio</label>
+                                <select id="filtro-municipio-impresion" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-distrito-impresion">Distrito</label>
+                                <select id="filtro-distrito-impresion" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-colonia-impresion">Colonia</label>
+                                <select id="filtro-colonia-impresion" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-success" id="btn-confirmar-imprimir-facturas">Generar PDF e imprimir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
