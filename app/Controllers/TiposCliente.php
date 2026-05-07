@@ -6,7 +6,7 @@ use App\Models\TipoClienteModel;
 
 class TiposCliente extends BaseController
 {
-    private $tipoClienteModel;
+    private TipoClienteModel $tipoClienteModel;
 
     public function __construct()
     {
@@ -29,7 +29,7 @@ class TiposCliente extends BaseController
             $errorMessage .= 'Trace: ' . $th->getTraceAsString();
             log_message('error', $errorMessage);
 
-            return $this->respondError('Error al obtener los tipos de cliente');
+            return $this->respondError('Error al obtener los tipos de tarifa');
         }
     }
 
@@ -48,9 +48,9 @@ class TiposCliente extends BaseController
             }
 
             if (!$tipoCliente) {
-                log_message('error', 'Tipo de Cliente incompleto');
+                log_message('error', 'Tipo de tarifa incompleto');
 
-                return $this->respondError('Tipo de Cliente incompleto');
+                return $this->respondError('Tipo de tarifa incompleto');
             }
 
             // INICIAR TRANSACCIÓN
@@ -70,12 +70,12 @@ class TiposCliente extends BaseController
                 // Código MySQL para duplicate entry
                 if ($errorDB['code'] == 1062) {
                     $db->transRollback();
-                    return $this->respondError('El Código de tipo de cliente ya existe');
+                    return $this->respondError('El Código de tipo de tarifa ya existe');
                 }
 
                 $db->transRollback();
-                log_message('error', 'Error en transacción guardar nuevo tipo de cliente');
-                return $this->respondError('No se pudieron guardar los datos del nuevo tipo de cliente');
+                log_message('error', 'Error en transacción guardar nuevo tipo de tarifa');
+                return $this->respondError('No se pudieron guardar los datos del nuevo tipo de tarifa');
             }
 
             if ($db->transStatus() === false) {
@@ -85,8 +85,8 @@ class TiposCliente extends BaseController
 
             $db->transCommit();
 
-            log_message('info', 'Tipo Cliente registrado correctamente');
-            return $this->respondOk('Tipo Cliente registrado correctamente.');
+            log_message('info', 'Tipo de tarifa registrado correctamente');
+            return $this->respondOk('Tipo de tarifa registrado correctamente.');
         } catch (\Throwable $th) {
             if (isset($db)) {
                 $db->transRollback();
@@ -96,7 +96,7 @@ class TiposCliente extends BaseController
             $errorMessage .= 'Trace: ' . $th->getTraceAsString();
             log_message('error', $errorMessage);
 
-            return $this->respondError('Error al guardar nuevo tipo de cliente');
+            return $this->respondError('Error al guardar nuevo tipo de tarifa');
         }
     }
 
@@ -121,12 +121,12 @@ class TiposCliente extends BaseController
                 // Código MySQL para duplicate entry
                 if ($errorDB['code'] == 1062) {
                     $db->transRollback();
-                    return $this->respondError('El Código de tipo de cliente ya existe');
+                    return $this->respondError('El Código de tipo de tarifa ya existe');
                 }
 
                 $db->transRollback();
-                log_message('error', 'Error en transacción editar tipo de cliente');
-                return $this->respondError('No se pudieron actualizar los datos del tipo de cliente');
+                log_message('error', 'Error en transacción editar tipo de tarifa');
+                return $this->respondError('No se pudieron actualizar los datos del tipo de tarifa');
             }
 
             if ($db->transStatus() === false) {
@@ -136,8 +136,8 @@ class TiposCliente extends BaseController
 
             $db->transCommit();
 
-            log_message('info', 'Tipo Cliente actualizado correctamente');
-            return $this->respondOk('Tipo Cliente actualizado correctamente.');
+            log_message('info', 'Tipo de tarifa actualizado correctamente');
+            return $this->respondOk('Tipo de tarifa actualizado correctamente.');
         } catch (\Throwable $th) {
             if (isset($db)) {
                 $db->transRollback();
@@ -147,7 +147,7 @@ class TiposCliente extends BaseController
             $errorMessage .= 'Trace: ' . $th->getTraceAsString();
             log_message('error', $errorMessage);
 
-            return $this->respondError('Error al actualizar tipo de cliente');
+            return $this->respondError('Error al actualizar tipo de tarifa');
         }
     }
 }

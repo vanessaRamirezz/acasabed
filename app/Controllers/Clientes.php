@@ -8,13 +8,11 @@ use App\Models\TipoClienteModel;
 
 class Clientes extends BaseController
 {
-    private TipoClienteModel $tiposClientesModel;
     private ActividadEconomicaModel $actividadesModel;
     private ClienteModel $clientesModel;
 
     public function __construct()
     {
-        $this->tiposClientesModel = new TipoClienteModel();
         $this->actividadesModel = new ActividadEconomicaModel();
         $this->clientesModel = new ClienteModel();
     }

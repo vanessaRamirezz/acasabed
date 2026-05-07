@@ -1,5 +1,5 @@
 <?= $this->extend('layouts/main') ?>
-<?= $this->section('title') ?> Tipos de Cliente <?= $this->endSection() ?>
+<?= $this->section('title') ?> Tipos de tarifa <?= $this->endSection() ?>
 <?= $this->section('styles') ?>
 <style>
     /* label {
@@ -16,7 +16,7 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0 text-dark texto">Tipos de cliente</h1>
+                <h1 class="m-0 text-dark texto">Tipos de tarifa</h1>
             </div><!-- /.col -->
         </div><!-- /.row -->
     </div><!-- /.container-fluid -->
