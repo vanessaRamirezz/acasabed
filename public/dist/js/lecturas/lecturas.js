@@ -13,6 +13,10 @@ const inputs = {
     filtroMunicipioReporteLectura: $('#filtro-municipio-reporte-lectura'),
     filtroDistritoReporteLectura: $('#filtro-distrito-reporte-lectura'),
     filtroColoniaReporteLectura: $('#filtro-colonia-reporte-lectura'),
+    filtroDepartamentoCargarContratos: $('#filtro-departamento-cargar-contratos'),
+    filtroMunicipioCargarContratos: $('#filtro-municipio-cargar-contratos'),
+    filtroDistritoCargarContratos: $('#filtro-distrito-cargar-contratos'),
+    filtroColoniaCargarContratos: $('#filtro-colonia-cargar-contratos'),
 };
 
 function getData() {
@@ -518,7 +522,7 @@ function limpiarLoteLecturas() {
     $('#tbl-lecturas-lote tbody').empty();
 }
 
-function cargarContratosLectura() {
+function cargarContratosLectura(filtros = {}) {
     instaladorActualLote = null;
     const periodo = $('#periodo-lote').val();
 
@@ -532,7 +536,11 @@ function cargarContratosLectura() {
         type: 'GET',
         dataType: 'json',
         data: {
-            periodo: periodo
+            periodo: periodo,
+            departamento: filtros.departamento || '-1',
+            municipio: filtros.municipio || '-1',
+            distrito: filtros.distrito || '-1',
+            colonia: filtros.colonia || '-1'
         },
         success: function (response) {
 
@@ -666,6 +674,163 @@ function abrirModalNuevaLecturaLote() {
     $('#fecha-lote').val(fecha);
 
     $('#modal-lecturas-lote').modal('show');
+}
+
+function cargarDepartamentosFiltroContratos() {
+    $.ajax({
+        type: 'GET',
+        url: baseURL + 'getDepartamentos',
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar los departamentos');
+                return;
+            }
+
+            inputs.filtroDepartamentoCargarContratos.empty().append('<option value="-1">Todos</option>');
+
+            response.data.forEach(function (departamento) {
+                inputs.filtroDepartamentoCargarContratos.append(
+                    $('<option></option>')
+                        .attr('value', departamento.id_departamento)
+                        .text(departamento.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar los departamentos');
+        }
+    });
+}
+
+function cargarMunicipiosFiltroContratos(idDepartamento) {
+    resetSelect(inputs.filtroMunicipioCargarContratos, 'Todos');
+    resetSelect(inputs.filtroDistritoCargarContratos, 'Todos');
+    resetSelect(inputs.filtroColoniaCargarContratos, 'Todos');
+
+    if (!idDepartamento || idDepartamento === '-1') {
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'getMunicipios',
+        data: { idDepartamento },
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar los municipios');
+                return;
+            }
+
+            response.data.forEach(function (municipio) {
+                inputs.filtroMunicipioCargarContratos.append(
+                    $('<option></option>')
+                        .attr('value', municipio.id_municipio)
+                        .text(municipio.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar los municipios');
+        }
+    });
+}
+
+function cargarDistritosFiltroContratos(idMunicipio) {
+    resetSelect(inputs.filtroDistritoCargarContratos, 'Todos');
+    resetSelect(inputs.filtroColoniaCargarContratos, 'Todos');
+
+    if (!idMunicipio || idMunicipio === '-1') {
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'getDistritos',
+        data: { idMunicipio },
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar los distritos');
+                return;
+            }
+
+            response.data.forEach(function (distrito) {
+                inputs.filtroDistritoCargarContratos.append(
+                    $('<option></option>')
+                        .attr('value', distrito.id_distrito)
+                        .text(distrito.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar los distritos');
+        }
+    });
+}
+
+function cargarColoniasFiltroContratos(idDistrito) {
+    resetSelect(inputs.filtroColoniaCargarContratos, 'Todos');
+
+    if (!idDistrito || idDistrito === '-1') {
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + 'getColonias',
+        data: { idDistrito },
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar las colonias');
+                return;
+            }
+
+            response.data.forEach(function (colonia) {
+                inputs.filtroColoniaCargarContratos.append(
+                    $('<option></option>')
+                        .attr('value', colonia.id_colonia)
+                        .text(colonia.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar las colonias');
+        }
+    });
+}
+
+function reiniciarFiltrosCargaContratos() {
+    inputs.filtroDepartamentoCargarContratos.val('-1');
+    resetSelect(inputs.filtroMunicipioCargarContratos, 'Todos');
+    resetSelect(inputs.filtroDistritoCargarContratos, 'Todos');
+    resetSelect(inputs.filtroColoniaCargarContratos, 'Todos');
+}
+
+function abrirModalFiltroContratos() {
+    const periodo = $('#periodo-lote').val();
+
+    if (!periodo) {
+        alertaError('Debe seleccionar un período');
+        return;
+    }
+
+    reiniciarFiltrosCargaContratos();
+    $('#modal-filtro-contratos-direccion').modal('show');
+}
+
+function confirmarCargaContratosConFiltro() {
+    const filtros = {
+        departamento: inputs.filtroDepartamentoCargarContratos.val(),
+        municipio: inputs.filtroMunicipioCargarContratos.val(),
+        distrito: inputs.filtroDistritoCargarContratos.val(),
+        colonia: inputs.filtroColoniaCargarContratos.val()
+    };
+
+    $('#modal-filtro-contratos-direccion').modal('hide');
+    cargarContratosLectura(filtros);
 }
 
 function abrirModalReporteLecturas() {
@@ -805,7 +970,7 @@ function eventosUsuarios() {
     });
 
     $('#btn-cargar-contratos').on('click', function () {
-        cargarContratosLectura();
+        abrirModalFiltroContratos();
     });
 
     $('#btn-guardar-lecturas').on('click', function () {
@@ -831,6 +996,22 @@ function eventosUsuarios() {
     inputs.filtroDistritoReporteLectura.on('change', function () {
         cargarColoniasReporteLectura($(this).val());
     });
+
+    $('#btn-confirmar-cargar-contratos').on('click', function () {
+        confirmarCargaContratosConFiltro();
+    });
+
+    inputs.filtroDepartamentoCargarContratos.on('change', function () {
+        cargarMunicipiosFiltroContratos($(this).val());
+    });
+
+    inputs.filtroMunicipioCargarContratos.on('change', function () {
+        cargarDistritosFiltroContratos($(this).val());
+    });
+
+    inputs.filtroDistritoCargarContratos.on('change', function () {
+        cargarColoniasFiltroContratos($(this).val());
+    });
 }
 
 function iniciarTodo() {
@@ -841,6 +1022,7 @@ function iniciarTodo() {
     cargarInstaladores();
     cargarLecturas();
     cargarDepartamentosReporteLectura();
+    cargarDepartamentosFiltroContratos();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

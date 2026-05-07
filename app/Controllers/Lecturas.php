@@ -251,12 +251,22 @@ class Lecturas extends BaseController
     {
         try {
             $idPeriodo = $this->request->getVar('periodo');
+            $idDepartamento = $this->request->getVar('departamento');
+            $idMunicipio = $this->request->getVar('municipio');
+            $idDistrito = $this->request->getVar('distrito');
+            $idColonia = $this->request->getVar('colonia');
 
             if (!$idPeriodo) {
                 return $this->respondError('Debe seleccionar periodo');
             }
 
-            $data = $this->contratosModel->getContratosActivosLectura($idPeriodo);
+            $data = $this->contratosModel->getContratosActivosLectura(
+                $idPeriodo,
+                $idDepartamento,
+                $idMunicipio,
+                $idDistrito,
+                $idColonia
+            );
 
             return $this->respondSuccess($data);
         } catch (\Throwable $th) {

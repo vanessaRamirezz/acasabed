@@ -146,7 +146,13 @@ class ContratoModel extends Model
         ];
     }
 
-    public function getContratosActivosLectura($idPeriodo)
+    public function getContratosActivosLectura(
+        $idPeriodo,
+        $idDepartamento = null,
+        $idMunicipio = null,
+        $idDistrito = null,
+        $idColonia = null
+    )
     {
         $builder = $this->db->table('contratos');
 
@@ -162,6 +168,22 @@ class ContratoModel extends Model
 
         $builder->where('solicitudes.estado', 'APROBADA');
         $builder->where('contratos.estado', 'APROBADO');
+
+        if (!empty($idDepartamento) && $idDepartamento !== '-1') {
+            $builder->where('clientes.id_departamento', $idDepartamento);
+        }
+
+        if (!empty($idMunicipio) && $idMunicipio !== '-1') {
+            $builder->where('clientes.id_municipio', $idMunicipio);
+        }
+
+        if (!empty($idDistrito) && $idDistrito !== '-1') {
+            $builder->where('clientes.id_distrito', $idDistrito);
+        }
+
+        if (!empty($idColonia) && $idColonia !== '-1') {
+            $builder->where('clientes.id_colonia', $idColonia);
+        }
 
         // 🔥 subquery separado (CORRECTO)
         $subQuery = $this->db->table('lecturas')

@@ -258,6 +258,55 @@
             </div>
         </div>
 
+        <div class="modal fade" id="modal-filtro-contratos-direccion" tabindex="-1" aria-labelledby="modal-filtro-contratos-direccion-label" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-filtro-contratos-direccion-label">Filtro para cargar contratos</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-light border mb-3">
+                            Si no seleccionas dirección, se cargarán todos los contratos pendientes del período activo.
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-departamento-cargar-contratos">Departamento</label>
+                                <select id="filtro-departamento-cargar-contratos" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-municipio-cargar-contratos">Municipio</label>
+                                <select id="filtro-municipio-cargar-contratos" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-distrito-cargar-contratos">Distrito</label>
+                                <select id="filtro-distrito-cargar-contratos" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-colonia-cargar-contratos">Colonia</label>
+                                <select id="filtro-colonia-cargar-contratos" class="form-control">
+                                    <option value="-1">Todos</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <button class="btn btn-primary" id="btn-confirmar-cargar-contratos">Aceptar y cargar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /.container-fluid -->
 </section>
 <!-- /.content -->
