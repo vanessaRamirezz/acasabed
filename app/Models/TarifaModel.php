@@ -10,7 +10,7 @@ class TarifaModel extends Model
     protected $primaryKey = 'id_tarifa';
     protected $allowedFields = ['codigo', 'id_tipo_cliente', 'id_usuario', 'fecha_creacion'];
 
-    public function getTodasTarifas($start, $length, $searchValue = '')
+    public function getTodasTarifas(int $start, int $length, $searchValue = '')
     {
         $builder = $this->db->table('tarifas');
 
@@ -64,10 +64,10 @@ class TarifaModel extends Model
     }
 
     public function insertarNuevaTarifa(
-        $codigo,
-        $tipoCliente,
-        $idUsuario,
-        $fechaCreacion
+        ?string $codigo,
+        ?int $tipoCliente,
+        ?int $idUsuario,
+        ?string $fechaCreacion
     ) {
         $this->insert([
             'codigo' => $codigo,
@@ -80,7 +80,7 @@ class TarifaModel extends Model
     }
 
 
-    public function buscarTarifas($search)
+    public function buscarTarifas(?string $search)
     {
         return $this->select('tarifas.id_tarifa, tarifas.codigo, tipos_de_cliente.nombre')
             ->join('tipos_de_cliente', 'tipos_de_cliente.id_tipo_cliente = tarifas.id_tipo_cliente')

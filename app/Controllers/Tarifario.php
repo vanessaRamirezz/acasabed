@@ -8,9 +8,9 @@ use App\Models\TipoClienteModel;
 
 class Tarifario extends BaseController
 {
-    private $tiposClienteModel;
-    private $tarifasModel;
-    private $tarifaDetalleModel;
+    private TipoClienteModel $tiposClienteModel;
+    private TarifaModel $tarifasModel;
+    private TarifaDetalleModel $tarifaDetalleModel;
 
     public function __construct()
     {
@@ -52,7 +52,7 @@ class Tarifario extends BaseController
         }
     }
 
-    public function getTarifaDetalle($idTarifa)
+    public function getTarifaDetalle(?int $idTarifa)
     {
         $detalles = $this->tarifaDetalleModel
             ->where('id_tarifa', $idTarifa)

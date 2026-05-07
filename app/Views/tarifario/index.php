@@ -1,3 +1,8 @@
+<?php
+
+/** @var array $tipoClientes */
+
+?>
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('title') ?> Tarifario <?= $this->endSection() ?>
 <?= $this->section('styles') ?>
