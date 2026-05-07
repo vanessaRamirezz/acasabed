@@ -2019,7 +2019,7 @@ function cargarSolicitudDesdeURLSoloVer() {
                 setMedidorSeleccionada(d.idMedidor, d.numeroSerie);
                 inputs.direccionMedidor.val(d.direccionMedidor);
 
-                setTarifasSeleccionada(d.idTarifa, d.codigoTarifa + ' desde ' + d.desde + ' hasta ' + d.hasta)
+                setTarifasSeleccionada(d.idTarifa, d.codigoTarifa + ' - ' + d.nombreTarifa)
             }
         });
     }

@@ -306,6 +306,7 @@ class SolicitudModel extends Model
                 contratos.direccion_medidor AS direccionMedidor,
                 tarifas.id_tarifa AS idTarifa,
                 tarifas.codigo AS codigoTarifa,
+                tipos_de_cliente.nombre AS nombreTarifa,
                 contratos.numero_contrato AS numeroContrato
             ", false)
             ->join('clientes', 'clientes.id_cliente = solicitudes.id_cliente', 'left')
@@ -322,6 +323,7 @@ class SolicitudModel extends Model
             ->join('rutas', 'rutas.id_ruta = contratos.id_ruta', 'left')
             ->join('medidores', 'medidores.id_medidor = contratos.id_medidor', 'left')
             ->join('tarifas', 'tarifas.id_tarifa = contratos.id_tarifa', 'left')
+            ->join('tipos_de_cliente', 'tipos_de_cliente.id_tipo_cliente = tarifas.id_tipo_cliente', 'left')
             ->where('solicitudes.id_solicitud', $idSolicitud)
             ->first();
     }
