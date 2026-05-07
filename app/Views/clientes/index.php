@@ -35,7 +35,7 @@
 
                 <div class="d-flex justify-content-end mb-4">
                     <div class="input-group col-md-6">
-                        <input type="text" id="customSearchClientes" placeholder="Buscar código, nombre, tipo cliente" class="form-control">
+                        <input type="text" id="customSearchClientes" placeholder="Buscar código ó nombre" class="form-control">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" id="searchBtnClientes" type="button">
                                 <i class="fas fa-search"></i>
@@ -52,7 +52,7 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Nombre / Razón social</th>
-                                <th>Tipo cliente</th>
+                                <!-- <th>Tipo cliente</th> -->
                                 <th>DUI</th>
                                 <th>NIT</th>
                                 <th>NRC</th>
@@ -223,20 +223,6 @@
                                         <label for="actividad-economica">Actividad Económica</label>
                                         <select id="actividad-economica" class="form-control">
                                             <option value="">Seleccione...</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="tipo-cliente">Tipo de Cliente</label>
-                                        <select class="form-control select2" style="width: 100%;" id="tipo-cliente">
-                                            <option value="">Seleccione</option>
-                                            <?php
-                                            foreach ($tipoClientes as $tipoCliente) {
-                                                echo '<option value="' . $tipoCliente['id_tipo_cliente'] . '">' . $tipoCliente['nombre'] . '</option>';
-                                            }
-
-                                            ?>
                                         </select>
                                     </div>
                                 </div>

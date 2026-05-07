@@ -8,9 +8,9 @@ use App\Models\TipoClienteModel;
 
 class Clientes extends BaseController
 {
-    private $tiposClientesModel;
-    private $actividadesModel;
-    private $clientesModel;
+    private TipoClienteModel $tiposClientesModel;
+    private ActividadEconomicaModel $actividadesModel;
+    private ClienteModel $clientesModel;
 
     public function __construct()
     {
@@ -21,8 +21,7 @@ class Clientes extends BaseController
 
     public function index()
     {
-        $data['tipoClientes'] = $this->tiposClientesModel->findAll();
-        return view('clientes/index', $data);
+        return view('clientes/index');
     }
 
     public function getActividades()
@@ -72,7 +71,6 @@ class Clientes extends BaseController
             $actividadEconomica = $this->request->getPost('actividadEconomica');
             $actividadEconomica = !empty($actividadEconomica) ? $actividadEconomica : null;
 
-            $tipoCliente = $this->request->getPost('tipoCliente') ?: null;
             $contactoNombre = $this->request->getPost('contactoNombre') ?: null;
             $contactoDui = $this->request->getPost('contactoDui') ?: null;
             $contactoTelefonos = $this->request->getPost('contactoTelefonos') ?: null;
@@ -195,7 +193,6 @@ class Clientes extends BaseController
                 $nit,
                 $nrc,
                 $actividadEconomica,
-                $tipoCliente,
                 $contactoNombre,
                 $contactoDui,
                 $contactoTelefonos,
@@ -230,6 +227,7 @@ class Clientes extends BaseController
                 if ($errorDB['code'] == 1062) {
 
                     $mensaje = $errorDB['message'];
+                    $error = '';
 
                     if (strpos($mensaje, 'codigo') !== false) {
                         $error = 'El código de cliente ya existe';
@@ -360,8 +358,6 @@ class Clientes extends BaseController
             ) {
                 $actividadEconomica = null;
             }
-
-            $tipoCliente = $this->request->getPost('tipoCliente') ?: null;
 
             $contactoNombre = $this->request->getPost('contactoNombre') ?: null;
             $contactoDui = $this->request->getPost('contactoDui') ?: null;
@@ -496,7 +492,6 @@ class Clientes extends BaseController
                 $nit,
                 $nrc,
                 $actividadEconomica,
-                $tipoCliente,
                 $contactoNombre,
                 $contactoDui,
                 $contactoTelefonos,

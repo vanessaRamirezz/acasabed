@@ -24,20 +24,16 @@ class ReporteClientesPDF extends \TCPDF
 
 class ReporteClientes extends BaseController
 {
-    private $clientesModel;
-    private $tiposClientesModel;
+    private ClienteModel $clientesModel;
 
     public function __construct()
     {
         $this->clientesModel = new ClienteModel();
-        $this->tiposClientesModel = new TipoClienteModel();
     }
 
     public function index()
     {
-        return view('reportes/reporte_clientes', [
-            'tiposCliente' => $this->tiposClientesModel->findAll()
-        ]);
+        return view('reportes/reporte_clientes');
     }
 
     public function generarPDF()
@@ -46,14 +42,12 @@ class ReporteClientes extends BaseController
         $idMunicipio = $this->request->getGet('municipio');
         $idDistrito = $this->request->getGet('distrito');
         $idColonia = $this->request->getGet('colonia');
-        $idTipoCliente = $this->request->getGet('tipoCliente');
 
         $clientes = $this->clientesModel->getReporteClientesPorDireccion(
             $idDepartamento,
             $idMunicipio,
             $idDistrito,
-            $idColonia,
-            $idTipoCliente
+            $idColonia
         );
 
         if (ob_get_length()) {
@@ -89,10 +83,6 @@ class ReporteClientes extends BaseController
 
             if (!empty($idColonia) && $idColonia !== '-1' && !empty($primero['colonia'])) {
                 $filtrosAplicados[] = 'Colonia: ' . $primero['colonia'];
-            }
-
-            if (!empty($idTipoCliente) && $idTipoCliente !== '-1' && !empty($primero['tipo_cliente'])) {
-                $filtrosAplicados[] = 'Tipo de cliente: ' . $primero['tipo_cliente'];
             }
         }
 
@@ -150,7 +140,6 @@ class ReporteClientes extends BaseController
                     <th align="left">DUI</th>
                     <th align="left">NIT</th>
                     <th align="left">Teléfono</th>
-                    <th align="left">Tipo</th>
                 </tr>
             </thead>
             <tbody>';
@@ -175,13 +164,11 @@ class ReporteClientes extends BaseController
                 $html .= '
                     <tr>
                         <td align="left">' . $numero++ . '</td>
-                        <td align="left">' . esc($cliente['codigo'] ?? '-') . '</td>
-                        <td align="left">' . esc($cliente['nombre_completo'] ?? '-') . '</td>
-                        <td align="left">' . esc($cliente['dui'] ?? '-') . '</td>
-                        <td align="left">' . esc($cliente['nit'] ?? '-') . '</td>
-                        <td align="left">' . esc($cliente['telefono'] ?? '-') . '</td>
-                        <td align="left">' . esc($cliente['tipo_cliente'] ?? '-') . '</td>
-
+                        <td align="left">' . esc((string) $cliente['codigo'] ?? '-') . '</td>
+                        <td align="left">' . esc((string) $cliente['nombre_completo'] ?? '-') . '</td>
+                        <td align="left">' . esc((string) $cliente['dui'] ?? '-') . '</td>
+                        <td align="left">' . esc((string) $cliente['nit'] ?? '-') . '</td>
+                        <td align="left">' . esc((string) $cliente['telefono'] ?? '-') . '</td>
                     </tr>';
             }
         }

@@ -55,15 +55,6 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-3">
-                        <label>Tipo de cliente</label>
-                        <select id="tipo-cliente" class="form-control">
-                            <option value="-1">Todos</option>
-                            <?php foreach (($tiposCliente ?? []) as $tipo): ?>
-                                <option value="<?= esc((string)$tipo['id_tipo_cliente']) ?>"><?= esc((string)$tipo['nombre']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
                     <div class="col-md-3 ml-auto">
                         <button id="btnGenerarReporteClientes" class="btn btn-primary btn-block">
                             Generar reporte

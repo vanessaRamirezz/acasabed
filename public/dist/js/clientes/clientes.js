@@ -22,7 +22,6 @@ const inputs = {
     nit: $("#nit"),
     nrc: $("#nrc"),
     actividadEconomica: $("#actividad-economica"),
-    tipoCliente: $("#tipo-cliente"),
     contactoNombre: $("#contacto-nombre"),
     contactoDui: $("#contacto-dui"),
     contactoTelefonos: $("#contacto-telefono"),
@@ -64,7 +63,6 @@ function getData() {
     formData.append('nit', inputs.nit.val().trim());
     formData.append('nrc', inputs.nrc.val().trim());
     formData.append('actividadEconomica', inputs.actividadEconomica.val());
-    formData.append('tipoCliente', inputs.tipoCliente.val());
     formData.append('contactoNombre', inputs.contactoNombre.val().trim());
     formData.append('contactoDui', inputs.contactoDui.val().trim());
     formData.append('contactoTelefonos', inputs.contactoTelefonos.val().trim());
@@ -118,7 +116,6 @@ function limpiarFormulario() {
     inputs.nit.val('');
     inputs.nrc.val('');
     inputs.actividadEconomica.val(null).trigger('change');
-    inputs.tipoCliente.val('');
     inputs.contactoNombre.val('');
     inputs.contactoDui.val('');
     inputs.contactoTelefonos.val('');
@@ -382,9 +379,6 @@ function cargarClientes() {
                 data: 'nombre'
             },
             {
-                data: 'nombre_tipo_cliente'
-            },
-            {
                 data: 'numero_de_dui'
             },
             {
@@ -494,9 +488,6 @@ function abrirModalEditarCliente(elemento) {
         dataClientes.id_actividad_economica,
         dataClientes.nombre_actividad_economica
     );
-    $('#tipo-cliente')
-        .val(dataClientes.id_tipo_cliente || '')
-        .trigger('change');
     $('#contacto-nombre').val(dataClientes.nombre_de_contacto);
     $('#contacto-dui').val(dataClientes.numero_de_dui_contacto);
     $('#contacto-telefono').val(dataClientes.numeros_de_telefonos);

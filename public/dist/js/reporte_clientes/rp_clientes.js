@@ -137,7 +137,6 @@ function generarReporte() {
         municipio: $("#municipio").val() || "-1",
         distrito: $("#distrito").val() || "-1",
         colonia: $("#colonia").val() || "-1",
-        tipoCliente: $("#tipo-cliente").val() || "-1"
     });
 
     const iframe = document.getElementById("visorPDF");

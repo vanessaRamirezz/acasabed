@@ -29,7 +29,6 @@ class ClienteModel extends Model
         'complemento_direccion',
         'telefono',
         'fecha_vencimiento_dui',
-        'id_tipo_cliente',
         'fecha_nacimiento',
         'lugar_nacimiento',
         'lugar_de_trabajo',
@@ -46,40 +45,39 @@ class ClienteModel extends Model
     ];
 
     public function insertarNuevoCliente(
-        $codigo,
-        $nombre,
-        $edad,
-        $sexo,
-        $ocupacion,
-        $estadoFamiliar,
-        $numeroGrupoFamiliar,
-        $lugarNacimiento,
-        $fechaDeNacimiento,
-        $lugarDeTrabajo,
-        $telefonos,
-        $correo,
-        $dui,
-        $extendido,
-        $fecha,
-        $nit,
-        $nrc,
-        $actividadEconomica,
-        $tipoCliente,
-        $contactoNombre,
-        $contactoDui,
-        $contactoTelefonos,
-        $departamentos,
-        $municipios,
-        $distritos,
-        $colonia,
-        $complementoDireccion,
-        $fechaDeVencimientoDui,
-        $rutaFrontalDB,
-        $rutaReversaDB,
-        $comentarios,
-        $idUsuario,
-        $fechaCreacion,
-        $foto
+        ?string $codigo,
+        ?string $nombre,
+        ?int $edad,
+        ?string $sexo,
+        ?string $ocupacion,
+        ?string $estadoFamiliar,
+        ?int $numeroGrupoFamiliar,
+        ?string $lugarNacimiento,
+        ?string $fechaDeNacimiento,
+        ?string $lugarDeTrabajo,
+        ?string $telefonos,
+        ?string $correo,
+        ?string $dui,
+        ?string $extendido,
+        ?string $fecha,
+        ?string $nit,
+        ?string $nrc,
+        ?int $actividadEconomica,
+        ?string $contactoNombre,
+        ?string $contactoDui,
+        ?string $contactoTelefonos,
+        ?int $departamentos,
+        ?int $municipios,
+        ?int $distritos,
+        ?int $colonia,
+        ?string $complementoDireccion,
+        ?string $fechaDeVencimientoDui,
+        ?string $rutaFrontalDB,
+        ?string $rutaReversaDB,
+        ?string $comentarios,
+        ?int $idUsuario,
+        ?string $fechaCreacion,
+        ?string $foto
     ) {
 
         return $this->insert([
@@ -101,7 +99,6 @@ class ClienteModel extends Model
             'nit' => $nit,
             'nrc' => $nrc,
             'id_actividad_economica' => $actividadEconomica,
-            'id_tipo_cliente' => $tipoCliente,
             'contacto' => $contactoNombre,
             'contacto_dui' => $contactoDui,
             'contacto_telefono' => $contactoTelefonos,
@@ -120,17 +117,11 @@ class ClienteModel extends Model
         ]);
     }
 
-    public function getTodosClientes($start, $length, $searchValue = '')
+    public function getTodosClientes(int $start, int $length, $searchValue = '')
     {
         $builder = $this->db->table('clientes');
 
         // JOIN desde el inicio
-        $builder->join(
-            'tipos_de_cliente',
-            'clientes.id_tipo_cliente = tipos_de_cliente.id_tipo_cliente',
-            'left'
-        );
-
         $builder->join(
             'actividades_economicas',
             'clientes.id_actividad_economica = actividades_economicas.id_actividad_economica',
@@ -173,7 +164,6 @@ class ClienteModel extends Model
             $builder->groupStart()
                 ->like('clientes.codigo', $searchValue)
                 ->orLike('clientes.nombre_completo', $searchValue)
-                ->orLike('tipos_de_cliente.nombre', $searchValue)
                 ->groupEnd();
         }
 
@@ -207,8 +197,6 @@ class ClienteModel extends Model
                 clientes.nrc AS numero_de_nrc,
                 actividades_economicas.id_actividad_economica,
                 actividades_economicas.nombre as nombre_actividad_economica,
-                tipos_de_cliente.id_tipo_cliente,
-                tipos_de_cliente.nombre AS nombre_tipo_cliente,
                 clientes.contacto AS nombre_de_contacto,
                 clientes.contacto_dui AS numero_de_dui_contacto,
                 clientes.contacto_telefono AS numeros_de_telefonos,
@@ -235,7 +223,7 @@ class ClienteModel extends Model
         ];
     }
 
-    public function obtenerClientePorId($idCliente)
+    public function obtenerClientePorId(?int $idCliente)
     {
         return $this
             ->where('id_cliente', $idCliente)
@@ -243,38 +231,37 @@ class ClienteModel extends Model
     }
 
     public function actualizarCliente(
-        $nombre,
-        $edad,
-        $sexo,
-        $ocupacion,
-        $estadoFamiliar,
-        $numeroGrupoFamiliar,
-        $lugarNacimiento,
-        $fechaDeNacimiento,
-        $lugarDeTrabajo,
-        $telefonos,
-        $correo,
-        $dui,
-        $extendido,
-        $fecha,
-        $nit,
-        $nrc,
-        $actividadEconomica,
-        $tipoCliente,
-        $contactoNombre,
-        $contactoDui,
-        $contactoTelefonos,
-        $departamentos,
-        $municipios,
-        $distritos,
-        $colonia,
-        $complementoDireccion,
-        $fechaDeVencimientoDui,
-        $rutaFrontalDB,
-        $rutaReversaDB,
-        $comentarios,
-        $foto,
-        $idCliente
+        ?string $nombre,
+        ?int $edad,
+        ?string $sexo,
+        ?string $ocupacion,
+        ?string $estadoFamiliar,
+        ?int $numeroGrupoFamiliar,
+        ?string $lugarNacimiento,
+        ?string $fechaDeNacimiento,
+        ?string $lugarDeTrabajo,
+        ?string $telefonos,
+        ?string $correo,
+        ?string $dui,
+        ?string $extendido,
+        ?string $fecha,
+        ?string $nit,
+        ?string $nrc,
+        ?int $actividadEconomica,
+        ?string $contactoNombre,
+        ?string $contactoDui,
+        ?string $contactoTelefonos,
+        ?int $departamentos,
+        ?int $municipios,
+        ?int $distritos,
+        ?int $colonia,
+        ?string $complementoDireccion,
+        ?string $fechaDeVencimientoDui,
+        ?string $rutaFrontalDB,
+        ?string $rutaReversaDB,
+        ?string $comentarios,
+        ?string $foto,
+        ?int $idCliente
     ) {
 
         $data = [
@@ -295,7 +282,6 @@ class ClienteModel extends Model
             'nit' => $nit,
             'nrc' => $nrc,
             'id_actividad_economica' => $actividadEconomica,
-            'id_tipo_cliente' => $tipoCliente,
             'contacto' => $contactoNombre,
             'contacto_dui' => $contactoDui,
             'contacto_telefono' => $contactoTelefonos,
@@ -325,7 +311,7 @@ class ClienteModel extends Model
         return $this->update($idCliente, $data);
     }
 
-    public function buscarClientes($search)
+    public function buscarClientes(?string $search)
     {
         return $this->select("
                 clientes.id_cliente,
@@ -359,7 +345,7 @@ class ClienteModel extends Model
             ->findAll();
     }
 
-    public function getReporteClientesPorDireccion($idDepartamento = null, $idMunicipio = null, $idDistrito = null, $idColonia = null, $idTipoCliente = null)
+    public function getReporteClientesPorDireccion($idDepartamento = null, $idMunicipio = null, $idDistrito = null, $idColonia = null)
     {
         $builder = $this->db->table('clientes');
 
@@ -367,7 +353,6 @@ class ClienteModel extends Model
         $builder->join('municipios', 'clientes.id_municipio = municipios.id_municipio', 'left');
         $builder->join('distritos', 'clientes.id_distrito = distritos.id_distrito', 'left');
         $builder->join('colonias', 'clientes.id_colonia = colonias.id_colonia', 'left');
-        $builder->join('tipos_de_cliente', 'clientes.id_tipo_cliente = tipos_de_cliente.id_tipo_cliente', 'left');
 
         if (!empty($idDepartamento) && $idDepartamento !== '-1') {
             $builder->where('clientes.id_departamento', $idDepartamento);
@@ -385,10 +370,6 @@ class ClienteModel extends Model
             $builder->where('clientes.id_colonia', $idColonia);
         }
 
-        if (!empty($idTipoCliente) && $idTipoCliente !== '-1') {
-            $builder->where('clientes.id_tipo_cliente', $idTipoCliente);
-        }
-
         return $builder
             ->select("
                 clientes.codigo,
@@ -397,7 +378,6 @@ class ClienteModel extends Model
                 clientes.nit,
                 clientes.telefono,
                 clientes.correo,
-                tipos_de_cliente.nombre AS tipo_cliente,
                 departamentos.nombre AS departamento,
                 municipios.nombre AS municipio,
                 distritos.nombre AS distrito,
