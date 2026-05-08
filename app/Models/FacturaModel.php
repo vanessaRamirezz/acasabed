@@ -434,11 +434,10 @@ class FacturaModel extends Model
             ->select("
                 COUNT(DISTINCT f.id_factura) AS total_facturas,
                 COALESCE(SUM(f.total), 0) AS total_facturado,
-                COALESCE(SUM(f.saldo_pendiente), 0) AS saldo_pendiente_total,
-                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA', 'PAGADA VENCIDA') THEN 1 ELSE 0 END), 0) AS facturas_pagadas,
-                COALESCE(SUM(CASE WHEN f.estado NOT IN ('PAGADA', 'PAGADA VENCIDA') THEN 1 ELSE 0 END), 0) AS facturas_no_pagadas,
-                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA', 'PAGADA VENCIDA') THEN f.total ELSE 0 END), 0) AS monto_pagado,
-                COALESCE(SUM(CASE WHEN f.estado NOT IN ('PAGADA', 'PAGADA VENCIDA') THEN f.total ELSE 0 END), 0) AS monto_no_pagado
+                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA') THEN 1 ELSE 0 END), 0) AS facturas_pagadas,
+                COALESCE(SUM(CASE WHEN f.estado NOT IN ('NO PAGADA') THEN 1 ELSE 0 END), 0) AS facturas_no_pagadas,
+                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA') THEN f.total ELSE 0 END), 0) AS monto_pagado,
+                COALESCE(SUM(CASE WHEN f.estado NOT IN ('NO PAGADA') THEN f.total ELSE 0 END), 0) AS monto_no_pagado
             ", false)
             ->get()
             ->getRowArray();
@@ -457,8 +456,7 @@ class FacturaModel extends Model
             ->select("
                 f.estado,
                 COUNT(DISTINCT f.id_factura) AS cantidad_facturas,
-                COALESCE(SUM(f.total), 0) AS total_facturado,
-                COALESCE(SUM(f.saldo_pendiente), 0) AS saldo_pendiente
+                COALESCE(SUM(f.total), 0) AS total_facturado
             ", false)
             ->groupBy('f.estado')
             ->get()
@@ -478,8 +476,7 @@ class FacturaModel extends Model
             ->select("
                 COALESCE(f.tipo, 'SIN TIPO') AS tipo,
                 COUNT(DISTINCT f.id_factura) AS cantidad_facturas,
-                COALESCE(SUM(f.total), 0) AS total_facturado,
-                COALESCE(SUM(f.saldo_pendiente), 0) AS saldo_pendiente
+                COALESCE(SUM(f.total), 0) AS total_facturado
             ", false)
             ->groupBy('f.tipo')
             ->get()
@@ -521,17 +518,11 @@ class FacturaModel extends Model
             $builderMora->where('f.tipo', $tipo);
         }
 
-        $mora = $builderMora
-            ->select('COALESCE(SUM(fd.mora), 0) AS total_mora', false)
-            ->get()
-            ->getRowArray();
-
         return [
             'general' => $resumenGeneral ?: [],
             'estados' => $resumenEstados,
             'tipos' => $resumenTipos,
-            'servicios' => $resumenServicios,
-            'mora' => $mora ?: ['total_mora' => 0]
+            'servicios' => $resumenServicios
         ];
     }
 

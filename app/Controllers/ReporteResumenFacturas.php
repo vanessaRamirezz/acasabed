@@ -57,12 +57,8 @@ class ReporteResumenFacturas extends BaseController
     {
         $orden = [
             'PAGADA' => 1,
-            'PAGADA VENCIDA' => 2,
-            'PENDIENTE' => 3,
-            'NO PAGADA' => 4,
-            'VENCIDA' => 5,
-            'SALDO TRASLADADO' => 6,
-            'CANCELADA' => 7
+            'PENDIENTE' => 2,
+            'NO PAGADA' => 3,
         ];
 
         usort($estados, static function ($a, $b) use ($orden) {
@@ -87,15 +83,6 @@ class ReporteResumenFacturas extends BaseController
         $estados = $this->ordenarEstados($resumen['estados'] ?? []);
         $tipos = $resumen['tipos'] ?? [];
         $servicios = $resumen['servicios'] ?? [];
-        $totalMora = (float)($resumen['mora']['total_mora'] ?? 0);
-
-        if ($totalMora > 0 || empty($servicios)) {
-            $servicios[] = [
-                'servicio' => 'MORA',
-                'subtotal_servicio' => $totalMora,
-                'cantidad_facturas' => 0
-            ];
-        }
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -174,13 +161,11 @@ class ReporteResumenFacturas extends BaseController
         <table cellpadding="5">
             <tr>
                 <td class="box"><b>Total de facturas</b><br>' . number_format((float)($general['total_facturas'] ?? 0), 0) . '</td>
-                <td class="box"><b>Total facturado</b><br>$ ' . number_format((float)($general['total_facturado'] ?? 0), 2) . '</td>
-                <td class="box"><b>Saldo pendiente</b><br>$ ' . number_format((float)($general['saldo_pendiente_total'] ?? 0), 2) . '</td>
-                <td class="box"><b>Total mora</b><br>$ ' . number_format($totalMora, 2) . '</td>
-            </tr>
-            <tr>
                 <td class="box"><b>Facturas pagadas</b><br>' . number_format((float)($general['facturas_pagadas'] ?? 0), 0) . '</td>
                 <td class="box"><b>Facturas no pagadas</b><br>' . number_format((float)($general['facturas_no_pagadas'] ?? 0), 0) . '</td>
+            </tr>
+            <tr>
+                <td class="box"><b>Total facturado</b><br>$ ' . number_format((float)($general['total_facturado'] ?? 0), 2) . '</td>
                 <td class="box"><b>Monto pagado</b><br>$ ' . number_format((float)($general['monto_pagado'] ?? 0), 2) . '</td>
                 <td class="box"><b>Monto no pagado</b><br>$ ' . number_format((float)($general['monto_no_pagado'] ?? 0), 2) . '</td>
             </tr>
@@ -193,7 +178,6 @@ class ReporteResumenFacturas extends BaseController
                     <th>Estado</th>
                     <th class="center">Cantidad</th>
                     <th class="right">Total facturado</th>
-                    <th class="right">Saldo pendiente</th>
                 </tr>
             </thead>
             <tbody>';
@@ -204,10 +188,9 @@ class ReporteResumenFacturas extends BaseController
             foreach ($estados as $estado) {
                 $html .= '
                 <tr>
-                    <td>' . esc($estado['estado'] ?? '-') . '</td>
+                    <td>' . esc((string)$estado['estado'] ?? '-') . '</td>
                     <td class="center">' . number_format((float)($estado['cantidad_facturas'] ?? 0), 0) . '</td>
                     <td class="right">$ ' . number_format((float)($estado['total_facturado'] ?? 0), 2) . '</td>
-                    <td class="right">$ ' . number_format((float)($estado['saldo_pendiente'] ?? 0), 2) . '</td>
                 </tr>';
             }
         }
@@ -223,7 +206,6 @@ class ReporteResumenFacturas extends BaseController
                     <th>Tipo</th>
                     <th class="center">Cantidad</th>
                     <th class="right">Total facturado</th>
-                    <th class="right">Saldo pendiente</th>
                 </tr>
             </thead>
             <tbody>';
@@ -234,10 +216,9 @@ class ReporteResumenFacturas extends BaseController
             foreach ($tipos as $filaTipo) {
                 $html .= '
                 <tr>
-                    <td>' . esc($filaTipo['tipo'] ?? '-') . '</td>
+                    <td>' . esc((string)$filaTipo['tipo'] ?? '-') . '</td>
                     <td class="center">' . number_format((float)($filaTipo['cantidad_facturas'] ?? 0), 0) . '</td>
                     <td class="right">$ ' . number_format((float)($filaTipo['total_facturado'] ?? 0), 2) . '</td>
-                    <td class="right">$ ' . number_format((float)($filaTipo['saldo_pendiente'] ?? 0), 2) . '</td>
                 </tr>';
             }
         }
@@ -263,7 +244,7 @@ class ReporteResumenFacturas extends BaseController
             foreach ($servicios as $servicio) {
                 $html .= '
                 <tr>
-                    <td>' . esc($servicio['servicio'] ?? '-') . '</td>
+                    <td>' . esc((string)$servicio['servicio'] ?? '-') . '</td>
                     <td class="center">' . number_format((float)($servicio['cantidad_facturas'] ?? 0), 0) . '</td>
                     <td class="right">$ ' . number_format((float)($servicio['subtotal_servicio'] ?? 0), 2) . '</td>
                 </tr>';
