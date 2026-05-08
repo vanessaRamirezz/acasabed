@@ -586,20 +586,22 @@ class CobrosInstalacion extends BaseController
 
         // TOTALES
         $pdf->SetXY($x, $yDetalle); // 👈 sin +19
+        $totalConMora = $total + 2;
+        $totalConMoraFormateado = number_format($totalConMora,2);
 
         // izquierda
         $pdf->SetTextColor(0, 51, 153);
         $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW * 2.5, 6, 'SI UD. NO PAGA A TIEMPO PAGARÁ', 'TB', 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colW * 0.5, 6, '$' . $total + 2, 'TB', 0, 'R');
+        $pdf->Cell($colW * 0.5, 6, '$' . $totalConMoraFormateado, 'TB', 0, 'R');
 
         // derecha
         $pdf->SetTextColor(0, 51, 153);
         $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW, 6, 'TOTAL:', 'TB', 0, 'R');
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colW, 6, '$ ' . $total, 'TB', 1, 'R');
+        $pdf->Cell($colW, 6, '$ ' . number_format($total,2), 'TB', 1, 'R');
 
         // FOOTER
         $currentY = $pdf->GetY();
@@ -843,7 +845,7 @@ class CobrosInstalacion extends BaseController
             $mapServicios = [];
 
             foreach ($servicios as $s) {
-                $mapServicios[strtoupper($s['nombre'])] = $s['id_servicio'];
+                $mapServicios[strtoupper($s['codigo'])] = $s['id_servicio'];
             }
 
             log_message('info', 'Servicios cargados: ' . print_r($mapServicios, true));
@@ -1103,7 +1105,7 @@ class CobrosInstalacion extends BaseController
                     $concepto .= ' de ' . count($facturasNoPagadas) . ' factura(s) no pagadas';
 
                     $detalle[] = [
-                        'id_servicio' => $mapServicios['DERECHO DE CONEXION'],
+                        'id_servicio' => $mapServicios['00002'],
                         'concepto' => $concepto,
                         'mora' => 0,
                         'monto' => $totalDeudaAnterior,
@@ -1115,7 +1117,7 @@ class CobrosInstalacion extends BaseController
 
                 if ($totalMora > 0) {
                     $detalle[] = [
-                        'id_servicio' => $mapServicios['MORA'],
+                        'id_servicio' => $mapServicios['00014'],
                         'concepto' => 'Mora acumulada por facturas pendientes',
                         'mora' => $totalMora,
                         'monto' => 0,
@@ -1132,7 +1134,7 @@ class CobrosInstalacion extends BaseController
                         : 'Cuota instalación #' . $cuotaNueva->numero_cuota . ' de ' . count($cuotas);
 
                     $detalle[] = [
-                        'id_servicio' => $mapServicios['DERECHO DE CONEXION'],
+                        'id_servicio' => $mapServicios['00004'],
                         'concepto' => $conceptoCuota,
                         'mora' => 0,
                         'monto' => $cuotaNueva->monto_cuota,

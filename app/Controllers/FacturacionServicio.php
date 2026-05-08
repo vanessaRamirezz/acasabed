@@ -297,20 +297,22 @@ class FacturacionServicio extends BaseController
 
         // TOTALES
         $pdf->SetXY($x, $yDetalle); // 👈 sin +19
+        $totalConMora = $total + 2;
+        $totalConMoraFormateado = number_format($totalConMora,2);
 
         // izquierda
         $pdf->SetTextColor(0, 51, 153);
         $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW * 2.5, 6, 'SI UD. NO PAGA A TIEMPO PAGARÁ', 'TB', 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colW * 0.5, 6, '$' . $total + 2, 'TB', 0, 'R');
+        $pdf->Cell($colW * 0.5, 6, '$' . $totalConMoraFormateado, 'TB', 0, 'R');
 
         // derecha
         $pdf->SetTextColor(0, 51, 153);
         $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW, 6, 'TOTAL:', 'TB', 0, 'R');
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colW, 6, '$ ' . $total, 'TB', 1, 'R');
+        $pdf->Cell($colW, 6, '$ ' . number_format($total,2), 'TB', 1, 'R');
 
         // FOOTER
         $currentY = $pdf->GetY();
@@ -427,19 +429,19 @@ class FacturacionServicio extends BaseController
             return 0;
         }
 
-        // 🟡 PRIMERA LECTURA
-        if ($lecturaAnterior === null) {
-            log_message('info', 'Sin lectura anterior → consumo = 0 (aplicará mínimo en tarifa)');
-            return 0;
-        }
+        return $lecturaActual - $lecturaAnterior;
+
+        // PRIMERA LECTURA
+        // if ($lecturaAnterior === null) {
+        //     log_message('info', 'Sin lectura anterior → consumo = 0 (aplicará mínimo en tarifa)');
+        //     return 0;
+        // }
 
         // error de lectura preguntar aca?
-        if ($lecturaActual < $lecturaAnterior) {
-            log_message('error', 'Lectura actual menor a anterior');
-            return 0;
-        }
-
-        return $lecturaActual - $lecturaAnterior;
+        // if ($lecturaActual < $lecturaAnterior) {
+        //     log_message('error', 'Lectura actual menor a anterior');
+        //     return 0;
+        // }
     }
 
     private function buscarColumna($header, $palabra)
@@ -751,45 +753,35 @@ class FacturacionServicio extends BaseController
             throw new \Exception("Tarifa sin configuración");
         }
 
-        // 🔥 CASO CLAVE: consumo = 0 → aplicar mínimo del primer rango
-        if ($consumo == 0) {
-            $primerRango = $rangos[0];
-            $minimo = (float)$primerRango->pago_minimo;
+        // consumo cero
+        if ($consumo <= 0) {
 
-            return round($minimo, 2);
+            $primerRango = $rangos[0];
+
+            return round((float)$primerRango->pago_minimo, 2);
         }
 
-        $total = 0;
+        foreach ($rangos as $rango) {
 
-        foreach ($rangos as $index => $rango) {
-
-            $desde = (float)$rango->desde_n_metros;
-            $hasta = (float)$rango->hasta_n_metros;
+            $desde  = (float)$rango->desde_n_metros;
+            $hasta  = (float)$rango->hasta_n_metros;
             $precio = (float)$rango->valor_metro_cubico;
             $minimo = (float)$rango->pago_minimo;
 
-            if ($consumo <= $desde) {
-                continue;
+            if ($consumo >= $desde && $consumo <= $hasta) {
+
+                $total = $consumo * $precio;
+
+                // aplicar mínimo si existe
+                if ($minimo > 0) {
+                    $total = max($total, $minimo);
+                }
+
+                return round($total, 2);
             }
-
-            $limite = min($consumo, $hasta);
-            $metros = $limite - $desde;
-
-            if ($metros <= 0) {
-                continue;
-            }
-
-            $subtotal = $metros * $precio;
-
-            // 🔥 mínimo solo en primer rango (cuando sí hay consumo)
-            if ($index === 0 && $minimo > 0) {
-                $subtotal = max($subtotal, $minimo);
-            }
-
-            $total += $subtotal;
         }
 
-        return round($total, 2);
+        throw new \Exception("No se encontró rango para el consumo");
     }
 
     public function generarFacturasServicio()
@@ -809,7 +801,7 @@ class FacturacionServicio extends BaseController
             $servicios = $this->serviciosModel->findAll();
             $mapServicios = [];
             foreach ($servicios as $s) {
-                $mapServicios[strtoupper($s['nombre'])] = $s['id_servicio'];
+                $mapServicios[strtoupper($s['codigo'])] = $s['id_servicio'];
             }
             log_message('info', 'Servicios cargados: ' . print_r($mapServicios, true));
 
@@ -919,7 +911,7 @@ class FacturacionServicio extends BaseController
                 if ($totalDeudaAnterior > 0) {
 
                     $detalle[] = [
-                        'id_servicio' => $mapServicios['SALDO ANTERIOR'],
+                        'id_servicio' => $mapServicios['00002'],
                         'concepto' => 'Saldo pendiente de facturas anteriores (' . $cantidadFacturas . ')',
                         'monto' => $totalDeudaAnterior,
                         'mora' => 0
@@ -932,7 +924,7 @@ class FacturacionServicio extends BaseController
                 if ($totalMora > 0) {
 
                     $detalle[] = [
-                        'id_servicio' => $mapServicios['MORA'],
+                        'id_servicio' => $mapServicios['00014'],
                         'concepto' => 'Mora acumulada por facturas pendientes',
                         'mora' => $totalMora,
                         'monto' => 0
@@ -997,22 +989,22 @@ class FacturacionServicio extends BaseController
                 log_message('info', 'valor del servicio ' . $montoServicio);
 
                 $detalle[] = [
-                    'id_servicio' => 'AGUA',
+                    'id_servicio' => $mapServicios['00001'],
                     'concepto' => 'SERVICIO DOMICILIAR',
                     'monto' => $montoServicio,
                     'mora' => 0
                 ];
 
                 $detalle[] = [
-                    'id_servicio' => 'TREN DE ASEO',
+                    'id_servicio' => $mapServicios['00015'],
                     'concepto' => 'TREN DE ASEO',
                     'monto' => $trenAseo,
                     'mora' => 0
                 ];
 
                 $detalle[] = [
-                    'id_servicio' => 'ALUMBRADO PUBLICO',
-                    'concepto' => 'ALUMBRADO PU',
+                    'id_servicio' => $mapServicios['00016'],
+                    'concepto' => 'ALUMBRADO PUBLICO',
                     'monto' => $alumbrado,
                     'mora' => 0
                 ];
