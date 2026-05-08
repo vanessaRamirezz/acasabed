@@ -730,6 +730,7 @@ class CargarGenerarPlantillas extends BaseController
             }
 
             $facturasRevertir = [];
+            $facturasQueRestauranSolicitud = [];
 
             foreach ($facturasPeriodo as $factura) {
                 $facturasRevertir[$factura['id_factura']] = $factura;
@@ -751,10 +752,12 @@ class CargarGenerarPlantillas extends BaseController
                     );
 
                 if ($esFacturaPagadaEnImportacion && !empty($fechaPagoFactura)) {
+                    $facturasQueRestauranSolicitud[$factura['id_factura']] = true;
+
                     $facturasAnteriores = $this->facturasModel
                         ->where('id_contrato', $factura['id_contrato'])
                         ->where('id_factura <', $factura['id_factura'])
-                        ->where('estado', 'NO PAGADA')
+                        ->where('estado', 'CANCELADA')
                         ->where('fecha_de_pago', $fechaPagoFactura)
                         ->findAll();
 
@@ -765,6 +768,7 @@ class CargarGenerarPlantillas extends BaseController
 
                         if (!$tienePagoRegistrado) {
                             $facturasRevertir[$facturaAnterior['id_factura']] = $facturaAnterior;
+                            $facturasQueRestauranSolicitud[$facturaAnterior['id_factura']] = true;
                         }
                     }
                 }
@@ -804,7 +808,10 @@ class CargarGenerarPlantillas extends BaseController
                         );
                     }
 
-                    if ($esCapitalInstalacion) {
+                    if (
+                        $esCapitalInstalacion
+                        && isset($facturasQueRestauranSolicitud[$factura['id_factura']])
+                    ) {
                         $montoCapital += (float)($detalle['monto'] ?? 0);
                     }
                 }
