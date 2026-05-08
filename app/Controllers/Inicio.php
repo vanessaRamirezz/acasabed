@@ -49,7 +49,7 @@ class Inicio extends BaseController
                 ->countAllResults(),
             'totalSolicitudesActivas' => $this->solicitudesModel
                 ->groupStart()
-                ->where('estado', 'CREADA')
+                // ->where('estado', 'CREADA')
                 ->orWhere('estado', 'APROBADA')
                 ->groupEnd()
                 ->countAllResults(),
