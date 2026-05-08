@@ -431,17 +431,24 @@ class CargarGenerarPlantillas extends BaseController
                         $fechaPago = date('Y-m-d');
                     }
 
-                    $this->registrarImportacionFactura(
-                        $facturaId,
-                        $periodo,
-                        $tiraje,
-                        $correlativo,
-                        $referencia,
-                        'PAGADA',
-                        (float)$montoPagado,
-                        $fechaPago,
-                        $file->getName()
-                    );
+                    // evitar duplicado
+                    $existePago = $this->pagosFacturaModel
+                        ->where('id_factura', $facturaId)
+                        ->first();
+
+                    if (!$existePago) {
+                        $this->registrarImportacionFactura(
+                            $facturaId,
+                            $periodo,
+                            $tiraje,
+                            $correlativo,
+                            $referencia,
+                            'PAGADA',
+                            (float)$montoPagado,
+                            $fechaPago,
+                            $file->getName()
+                        );
+                    }
 
                     // actualizar factura actual
                     $this->facturasModel->update($facturaId, [
@@ -704,7 +711,7 @@ class CargarGenerarPlantillas extends BaseController
                 $facturasPeriodo = $this->facturasModel
                     ->where('id_periodo', $periodo['id_periodo'])
                     ->groupStart()
-                    ->whereIn('estado', ['PAGADA', 'PAGADA VENCIDA', 'NO PAGADA'])
+                    ->whereIn('estado', ['PAGADA', 'NO PAGADA'])
                     ->orWhere('fecha_de_pago IS NOT NULL', null, false)
                     ->groupEnd()
                     ->findAll();
@@ -739,7 +746,7 @@ class CargarGenerarPlantillas extends BaseController
                 $esFacturaPagadaEnImportacion = in_array($estadoImportado, ['PAGADA', 'PAGO', 'PAGÓ'], true)
                     || (
                         empty($estadoImportado)
-                        && in_array($estadoFactura, ['PAGADA', 'PAGADA VENCIDA'], true)
+                        && in_array($estadoFactura, ['PAGADA'], true)
                         && !empty($fechaPagoFactura)
                     );
 
@@ -747,9 +754,8 @@ class CargarGenerarPlantillas extends BaseController
                     $facturasAnteriores = $this->facturasModel
                         ->where('id_contrato', $factura['id_contrato'])
                         ->where('id_factura <', $factura['id_factura'])
-                        ->where('estado', 'CANCELADA')
+                        ->where('estado', 'NO PAGADA')
                         ->where('fecha_de_pago', $fechaPagoFactura)
-                        ->where('saldo_pendiente', 0)
                         ->findAll();
 
                     foreach ($facturasAnteriores as $facturaAnterior) {
@@ -815,8 +821,7 @@ class CargarGenerarPlantillas extends BaseController
                     $factura['id_factura'],
                     [
                         'estado' => 'PENDIENTE',
-                        'fecha_de_pago' => null,
-                        'saldo_pendiente' => (float)($factura['total'] ?? 0)
+                        'fecha_de_pago' => null
                     ]
                 );
 

@@ -17,7 +17,6 @@ class FacturaModel extends Model
         'id_lectura',
         'fecha_emision',
         'fecha_vencimiento',
-        'saldo_pendiente',
         'estado',
         'total',
         'id_usuario',
@@ -40,7 +39,6 @@ class FacturaModel extends Model
             DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fechaVencimiento,
             f.fecha_vencimiento,
             f.total,
-            f.saldo_pendiente,
             f.estado,
             f.fecha_de_pago
         ")
@@ -143,7 +141,6 @@ class FacturaModel extends Model
             f.fecha_vencimiento,
             f.estado,
             f.total,
-            f.saldo_pendiente,
             f.mora,
             medi.numero_serie
         ", false)
