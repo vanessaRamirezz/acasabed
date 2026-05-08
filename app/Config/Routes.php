@@ -169,4 +169,5 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');
     $routes->get('facturas/exportar-excel', 'CargarGenerarPlantillas::exportarExcel');
     $routes->post('facturas/importar-excel', 'CargarGenerarPlantillas::importarExcel');
+    $routes->post('facturas/cancelar-importacion-excel', 'CargarGenerarPlantillas::cancelarImportacionExcelPeriodoActivo');
 });

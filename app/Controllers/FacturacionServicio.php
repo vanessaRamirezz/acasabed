@@ -1072,7 +1072,7 @@ class FacturacionServicio extends BaseController
 
                 $facturasGeneradas++;
             }
-            exit;
+            // exit;
             // limpiar tabla temporal después de usarla
             $db->table('tmp_alcaldia')->truncate();
 

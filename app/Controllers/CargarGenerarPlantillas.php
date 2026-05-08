@@ -42,6 +42,54 @@ class CargarGenerarPlantillas extends BaseController
         return view('cargar_generar_plantillas/index');
     }
 
+    private function pagosFacturaTieneCampo(string $campo): bool
+    {
+        return \Config\Database::connect()->fieldExists($campo, 'pagos_factura');
+    }
+
+    private function registrarImportacionFactura(
+        int $facturaId,
+        array $periodo,
+        string $tiraje,
+        string $correlativo,
+        string $referencia,
+        string $estadoExcel,
+        ?float $montoPagado,
+        ?string $fechaPago,
+        string $archivoOrigen
+    ): void {
+        $payload = [
+            'id_factura' => $facturaId,
+            'tiraje' => $tiraje,
+            'correlativo' => $correlativo,
+            'referencia' => $referencia,
+            'monto_pagado' => $montoPagado,
+            'fecha_pago' => $fechaPago,
+            'fecha_carga' => date('Y-m-d'),
+            'id_usuario' => session()->get('id_usuario'),
+            'archivo_origen' => $archivoOrigen
+        ];
+
+        if ($this->pagosFacturaTieneCampo('id_periodo')) {
+            $payload['id_periodo'] = $periodo['id_periodo'];
+        }
+
+        if ($this->pagosFacturaTieneCampo('estado_excel')) {
+            $payload['estado_excel'] = $estadoExcel;
+        }
+
+        $registroExistente = $this->pagosFacturaModel
+            ->where('id_factura', $facturaId)
+            ->first();
+
+        if ($registroExistente) {
+            $this->pagosFacturaModel->update($registroExistente['id_pago_factura'], $payload);
+            return;
+        }
+
+        $this->pagosFacturaModel->insert($payload);
+    }
+
     private function aplicarEstiloEncabezado($sheet, $range)
     {
         $sheet->getStyle($range)->applyFromArray([
@@ -238,10 +286,19 @@ class CargarGenerarPlantillas extends BaseController
     {
         $file = $this->request->getFile('excel');
 
+        $periodo = $this->periodosModel->getPeriodoActivo();
+
         if (!$file || !$file->isValid()) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Archivo no recibido o inválido'
+            ]);
+        }
+
+        if (!$periodo) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No hay periodo activo para importar'
             ]);
         }
 
@@ -374,23 +431,17 @@ class CargarGenerarPlantillas extends BaseController
                         $fechaPago = date('Y-m-d');
                     }
 
-                    // evitar duplicado
-                    $existePago = $this->pagosFacturaModel
-                        ->where('id_factura', $facturaId)
-                        ->first();
-
-                    if (!$existePago) {
-                        $this->pagosFacturaModel->insert([
-                            'id_factura' => $facturaId,
-                            'tiraje' => $tiraje,
-                            'correlativo' => $correlativo,
-                            'monto_pagado' => $montoPagado,
-                            'fecha_pago' => $fechaPago,
-                            'fecha_carga' => date('Y-m-d'),
-                            'id_usuario' => session()->get('id_usuario'),
-                            'archivo_origen' => $file->getName()
-                        ]);
-                    }
+                    $this->registrarImportacionFactura(
+                        $facturaId,
+                        $periodo,
+                        $tiraje,
+                        $correlativo,
+                        $referencia,
+                        'PAGADA',
+                        (float)$montoPagado,
+                        $fechaPago,
+                        $file->getName()
+                    );
 
                     // actualizar factura actual
                     $this->facturasModel->update($facturaId, [
@@ -507,6 +558,7 @@ class CargarGenerarPlantillas extends BaseController
                      * 3. ACTUALIZAR SOLICITUD
                      * ==========================================
                      */
+                    log_message('info', 'valorde variable monto capital ' . $montoCapital);
                     foreach (array_keys($solicitudesAfectadas) as $idSolicitud) {
 
                         $solicitud = $this->solicitudesModel->find($idSolicitud);
@@ -538,7 +590,20 @@ class CargarGenerarPlantillas extends BaseController
                     // 1. Marcar factura como no pagada
                     $this->facturasModel->update($facturaId, [
                         'estado' => 'NO PAGADA',
+                        'fecha_de_pago' => null,
                     ]);
+
+                    $this->registrarImportacionFactura(
+                        $facturaId,
+                        $periodo,
+                        $tiraje,
+                        $correlativo,
+                        $referencia,
+                        'NO PAGADA',
+                        0,
+                        null,
+                        $file->getName()
+                    );
 
                     log_message('info', 'Factura marcada como NO PAHADA ID: ' . $facturaId);
 
@@ -555,6 +620,7 @@ class CargarGenerarPlantillas extends BaseController
                                 $d['id_cobro_instalacion'],
                                 [
                                     'estado' => 'NO PAGADA',
+                                    'fecha_pago' => null
                                 ]
                             );
                         }
@@ -588,6 +654,219 @@ class CargarGenerarPlantillas extends BaseController
                 'success' => false,
                 'message' => 'Error al procesar archivo',
                 'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function cancelarImportacionExcelPeriodoActivo()
+    {
+        $periodo = $this->periodosModel->getPeriodoActivo();
+
+        if (!$periodo) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No hay periodo activo para revertir'
+            ]);
+        }
+
+        $db = \Config\Database::connect();
+
+        try {
+            $pagosBuilder = $db->table('pagos_factura pf')
+                ->select('pf.id_pago_factura, pf.id_factura, pf.fecha_pago, pf.monto_pagado, f.id_contrato');
+
+            if ($this->pagosFacturaTieneCampo('estado_excel')) {
+                $pagosBuilder->select('pf.estado_excel');
+            }
+
+            $pagosBuilder->join('facturas f', 'f.id_factura = pf.id_factura', 'inner');
+
+            if ($this->pagosFacturaTieneCampo('id_periodo')) {
+                $pagosBuilder->where('pf.id_periodo', $periodo['id_periodo']);
+            } else {
+                $pagosBuilder->where('f.id_periodo', $periodo['id_periodo']);
+            }
+
+            $pagosPeriodo = $pagosBuilder->get()->getResultArray();
+
+            $facturasPeriodo = [];
+            if (!empty($pagosPeriodo)) {
+                $idsFacturasPeriodo = array_values(array_unique(array_column($pagosPeriodo, 'id_factura')));
+
+                if (!empty($idsFacturasPeriodo)) {
+                    $facturasPeriodo = $this->facturasModel
+                        ->whereIn('id_factura', $idsFacturasPeriodo)
+                        ->findAll();
+                }
+            }
+
+            if (empty($facturasPeriodo)) {
+                $facturasPeriodo = $this->facturasModel
+                    ->where('id_periodo', $periodo['id_periodo'])
+                    ->groupStart()
+                    ->whereIn('estado', ['PAGADA', 'PAGADA VENCIDA', 'NO PAGADA'])
+                    ->orWhere('fecha_de_pago IS NOT NULL', null, false)
+                    ->groupEnd()
+                    ->findAll();
+            }
+
+            if (empty($facturasPeriodo) && empty($pagosPeriodo)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'No hay cambios de importacion para revertir en el periodo activo'
+                ]);
+            }
+
+            $pagosPorFactura = [];
+            foreach ($pagosPeriodo as $pago) {
+                $pagosPorFactura[$pago['id_factura']] = $pago;
+            }
+
+            $facturasRevertir = [];
+
+            foreach ($facturasPeriodo as $factura) {
+                $facturasRevertir[$factura['id_factura']] = $factura;
+
+                $estadoFactura = strtoupper((string)($factura['estado'] ?? ''));
+                $fechaPagoFactura = $factura['fecha_de_pago'] ?? null;
+
+                if (!$fechaPagoFactura && isset($pagosPorFactura[$factura['id_factura']])) {
+                    $fechaPagoFactura = $pagosPorFactura[$factura['id_factura']]['fecha_pago'] ?? null;
+                }
+
+                $registroImportacion = $pagosPorFactura[$factura['id_factura']] ?? null;
+                $estadoImportado = strtoupper(trim((string)($registroImportacion['estado_excel'] ?? '')));
+                $esFacturaPagadaEnImportacion = in_array($estadoImportado, ['PAGADA', 'PAGO', 'PAGÓ'], true)
+                    || (
+                        empty($estadoImportado)
+                        && in_array($estadoFactura, ['PAGADA', 'PAGADA VENCIDA'], true)
+                        && !empty($fechaPagoFactura)
+                    );
+
+                if ($esFacturaPagadaEnImportacion && !empty($fechaPagoFactura)) {
+                    $facturasAnteriores = $this->facturasModel
+                        ->where('id_contrato', $factura['id_contrato'])
+                        ->where('id_factura <', $factura['id_factura'])
+                        ->where('estado', 'CANCELADA')
+                        ->where('fecha_de_pago', $fechaPagoFactura)
+                        ->where('saldo_pendiente', 0)
+                        ->findAll();
+
+                    foreach ($facturasAnteriores as $facturaAnterior) {
+                        $tienePagoRegistrado = $this->pagosFacturaModel
+                            ->where('id_factura', $facturaAnterior['id_factura'])
+                            ->first();
+
+                        if (!$tienePagoRegistrado) {
+                            $facturasRevertir[$facturaAnterior['id_factura']] = $facturaAnterior;
+                        }
+                    }
+                }
+            }
+
+            $solicitudesAjuste = [];
+            $facturasRevertidas = 0;
+
+            $db->transStart();
+
+            foreach ($facturasRevertir as $factura) {
+                $detalles = $this->facturaDetalleModel
+                    ->where('id_factura', $factura['id_factura'])
+                    ->findAll();
+
+                $contrato = $this->contratosModel
+                    ->where('id_contrato', $factura['id_contrato'])
+                    ->first();
+
+                $idSolicitud = $contrato['id_solicitud'] ?? null;
+                $montoCapital = 0;
+
+                foreach ($detalles as $detalle) {
+                    $concepto = strtolower((string)($detalle['concepto'] ?? ''));
+                    $esCapitalInstalacion = (
+                        !empty($detalle['id_cobro_instalacion'])
+                        || str_contains($concepto, 'cuota')
+                    ) && !str_contains($concepto, 'mora');
+
+                    if (!empty($detalle['id_cobro_instalacion'])) {
+                        $this->cobrosContratoModel->update(
+                            $detalle['id_cobro_instalacion'],
+                            [
+                                'estado' => 'PENDIENTE',
+                                'fecha_pago' => null
+                            ]
+                        );
+                    }
+
+                    if ($esCapitalInstalacion) {
+                        $montoCapital += (float)($detalle['monto'] ?? 0);
+                    }
+                }
+
+                if ($idSolicitud && $montoCapital > 0) {
+                    if (!isset($solicitudesAjuste[$idSolicitud])) {
+                        $solicitudesAjuste[$idSolicitud] = 0;
+                    }
+
+                    $solicitudesAjuste[$idSolicitud] += $montoCapital;
+                }
+
+                $this->facturasModel->update(
+                    $factura['id_factura'],
+                    [
+                        'estado' => 'PENDIENTE',
+                        'fecha_de_pago' => null,
+                        'saldo_pendiente' => (float)($factura['total'] ?? 0)
+                    ]
+                );
+
+                $facturasRevertidas++;
+            }
+
+            foreach ($solicitudesAjuste as $idSolicitud => $montoAjuste) {
+                $solicitud = $this->solicitudesModel->find($idSolicitud);
+
+                if (!$solicitud) {
+                    continue;
+                }
+
+                $this->solicitudesModel->update(
+                    $idSolicitud,
+                    [
+                        'saldo_pendiente' => (float)($solicitud['saldo_pendiente'] ?? 0) + $montoAjuste
+                    ]
+                );
+            }
+
+            if (!empty($pagosPeriodo)) {
+                $idsPagos = array_column($pagosPeriodo, 'id_pago_factura');
+                $db->table('pagos_factura')
+                    ->whereIn('id_pago_factura', $idsPagos)
+                    ->delete();
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'No se pudieron revertir los cambios de la importacion'
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Se revirtieron los cambios de la importacion del periodo activo',
+                'facturas_revertidas' => $facturasRevertidas,
+                'pagos_eliminados' => count($pagosPeriodo)
+            ]);
+        } catch (\Throwable $th) {
+            log_message('error', 'Error al cancelar importacion Excel: ' . $th->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Error al revertir la importacion del Excel',
+                'error' => $th->getMessage()
             ]);
         }
     }

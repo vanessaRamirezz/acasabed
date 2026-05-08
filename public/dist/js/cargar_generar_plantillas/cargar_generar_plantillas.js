@@ -77,6 +77,60 @@ function eventosUsuarios() {
             });
 
     });
+
+    $("#btnCancelarImportacionExcel").on("click", function () {
+        Swal.fire({
+            icon: "warning",
+            title: "Cancelar importacion",
+            html: `
+                <p>Se revertiran los cambios hechos por la importacion del Excel en el periodo activo.</p>
+                <p class="mb-0"><b>Esto restaurara estados de facturas, pagos y cobros relacionados.</b></p>
+            `,
+            showCancelButton: true,
+            confirmButtonText: "Si, cancelar importacion",
+            cancelButtonText: "No"
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            fetch(baseURL + 'facturas/cancelar-importacion-excel', {
+                method: 'POST'
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error en la respuesta del servidor');
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data.success) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'No se pudo revertir',
+                            text: data.message || 'No fue posible cancelar la importacion'
+                        });
+                        return;
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Importacion revertida',
+                        html: `
+                            <p><b>Facturas revertidas:</b> ${data.facturas_revertidas ?? 0}</p>
+                            <p class="mb-0"><b>Pagos eliminados:</b> ${data.pagos_eliminados ?? 0}</p>
+                        `
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error inesperado',
+                        text: 'No se pudieron revertir los cambios de la importacion'
+                    });
+                });
+        });
+    });
 }
 
 function iniciarTodo() {
