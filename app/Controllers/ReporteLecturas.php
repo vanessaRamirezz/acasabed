@@ -67,6 +67,10 @@ class ReporteLecturas extends BaseController
         $periodo = (!empty($idPeriodo) && $idPeriodo !== '-1') ? $this->periodosModel->find($idPeriodo) : null;
         $contrato = (!empty($idContrato) && $idContrato !== '-1') ? $this->contratosModel->find($idContrato) : null;
         $instalador = (!empty($idInstalador) && $idInstalador !== '-1') ? $this->instaladoresModel->find($idInstalador) : null;
+        $mostrarPeriodo = empty($idPeriodo) || $idPeriodo === '-1';
+        $mostrarContrato = empty($idContrato) || $idContrato === '-1';
+        $mostrarInstalador = empty($idInstalador) || $idInstalador === '-1';
+        $vistaContrato = !$mostrarContrato;
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -166,35 +170,67 @@ class ReporteLecturas extends BaseController
             <thead>
                 <tr>
                     <th align="left">No.</th>
-                    <th align="left">Período</th>
-                    <th align="left">Contrato</th>
+                    ' . ($mostrarPeriodo ? '<th align="left">Período</th>' : '') . '
+                    ' . ($mostrarContrato ? '<th align="left">Contrato</th>' : '') . '
                     <th align="left">Cliente</th>
-                    <th align="left">Instalador</th>
+                    ' . ($mostrarInstalador ? '<th align="left">Instalador</th>' : '') . '
                     <th align="left">Fecha</th>
-                    <th align="left">Lectura</th>
+                    ' . ($vistaContrato
+                        ? '<th align="left">Lectura anterior</th><th align="left">Lectura actual</th><th align="left">Consumo</th>'
+                        : '<th align="left">Lectura actual</th>') . '
                 </tr>
             </thead>
             <tbody>';
 
         if (empty($lecturas)) {
+            $columnas = 3;
+            if ($mostrarPeriodo) {
+                $columnas++;
+            }
+            if ($mostrarContrato) {
+                $columnas++;
+            }
+            if ($mostrarInstalador) {
+                $columnas++;
+            }
+            $columnas += $vistaContrato ? 3 : 1;
+
             $html .= '
                 <tr>
-                    <td colspan="8" class="center">No hay lecturas para los filtros seleccionados.</td>
+                    <td colspan="' . $columnas . '" class="center">No hay lecturas para los filtros seleccionados.</td>
                 </tr>';
         } else {
             $numero = 1;
 
             foreach ($lecturas as $lectura) {
-                $html .= '
-                    <tr>
-                        <td>' . $numero++ . '</td>
-                        <td>' . esc($lectura['periodo'] ?? '-') . '</td>
-                        <td>' . esc($lectura['numero_contrato'] ?? '-') . '</td>
-                        <td>' . esc($lectura['cliente'] ?? '-') . '</td>
-                        <td>' . esc($lectura['instalador'] ?? '-') . '</td>
-                        <td>' . esc($lectura['fecha_lectura'] ?? '-') . '</td>
-                        <td class="right">' . number_format((float)($lectura['valor'] ?? 0), 2) . '</td>
-                    </tr>';
+                $html .= '<tr>';
+                $html .= '<td align="left">' . $numero++ . '</td>';
+
+                if ($mostrarPeriodo) {
+                    $html .= '<td align="left">' . esc((string)$lectura['periodo'] ?? '-') . '</td>';
+                }
+
+                if ($mostrarContrato) {
+                    $html .= '<td align="left">' . esc((string)$lectura['numero_contrato'] ?? '-') . '</td>';
+                }
+
+                $html .= '<td align="left">' . esc((string)$lectura['cliente'] ?? '-') . '</td>';
+
+                if ($mostrarInstalador) {
+                    $html .= '<td align="left">' . esc((string)$lectura['instalador'] ?? '-') . '</td>';
+                }
+
+                $html .= '<td align="left">' . esc((string)$lectura['fecha_lectura'] ?? '-') . '</td>';
+
+                if ($vistaContrato) {
+                    $html .= '<td align="left">' . number_format((float)($lectura['lectura_anterior'] ?? 0), 0) . '</td>';
+                    $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
+                    $html .= '<td align="left">' . number_format((float)($lectura['consumo_factura'] ?? 0), 0) . '</td>';
+                } else {
+                    $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
+                }
+
+                $html .= '</tr>';
             }
         }
 

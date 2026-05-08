@@ -204,6 +204,24 @@ class LecturaModel extends Model
                 instaladores.nombre_completo AS instalador,
                 DATE_FORMAT(lecturas.fecha, '%d-%m-%Y') AS fecha_lectura,
                 lecturas.valor,
+                lecturas.valor AS lectura_actual,
+                COALESCE((
+                    SELECT l2.valor
+                    FROM lecturas l2
+                    WHERE l2.id_contrato = lecturas.id_contrato
+                    AND l2.id_periodo < lecturas.id_periodo
+                    ORDER BY l2.id_periodo DESC, l2.id_lectura DESC
+                    LIMIT 1
+                ), 0) AS lectura_anterior,
+                COALESCE((
+                    SELECT f2.consumo
+                    FROM facturas f2
+                    WHERE f2.id_contrato = lecturas.id_contrato
+                    AND f2.id_periodo = lecturas.id_periodo
+                    AND f2.tipo = 'Consumo'
+                    ORDER BY f2.id_factura DESC
+                    LIMIT 1
+                ), 0) AS consumo_factura,
                 departamentos.nombre AS departamento,
                 municipios.nombre AS municipio,
                 distritos.nombre AS distrito,
