@@ -418,6 +418,123 @@ class FacturaModel extends Model
             ->getRowArray();
     }
 
+    public function getResumenContableFacturas($idPeriodo = null, $tipo = 'Todos')
+    {
+        $builderGeneral = $this->db->table('facturas f');
+
+        if (!empty($idPeriodo)) {
+            $builderGeneral->where('f.id_periodo', $idPeriodo);
+        }
+
+        if (!empty($tipo) && $tipo !== 'Todos') {
+            $builderGeneral->where('f.tipo', $tipo);
+        }
+
+        $resumenGeneral = $builderGeneral
+            ->select("
+                COUNT(DISTINCT f.id_factura) AS total_facturas,
+                COALESCE(SUM(f.total), 0) AS total_facturado,
+                COALESCE(SUM(f.saldo_pendiente), 0) AS saldo_pendiente_total,
+                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA', 'PAGADA VENCIDA') THEN 1 ELSE 0 END), 0) AS facturas_pagadas,
+                COALESCE(SUM(CASE WHEN f.estado NOT IN ('PAGADA', 'PAGADA VENCIDA') THEN 1 ELSE 0 END), 0) AS facturas_no_pagadas,
+                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA', 'PAGADA VENCIDA') THEN f.total ELSE 0 END), 0) AS monto_pagado,
+                COALESCE(SUM(CASE WHEN f.estado NOT IN ('PAGADA', 'PAGADA VENCIDA') THEN f.total ELSE 0 END), 0) AS monto_no_pagado
+            ", false)
+            ->get()
+            ->getRowArray();
+
+        $builderEstados = $this->db->table('facturas f');
+
+        if (!empty($idPeriodo)) {
+            $builderEstados->where('f.id_periodo', $idPeriodo);
+        }
+
+        if (!empty($tipo) && $tipo !== 'Todos') {
+            $builderEstados->where('f.tipo', $tipo);
+        }
+
+        $resumenEstados = $builderEstados
+            ->select("
+                f.estado,
+                COUNT(DISTINCT f.id_factura) AS cantidad_facturas,
+                COALESCE(SUM(f.total), 0) AS total_facturado,
+                COALESCE(SUM(f.saldo_pendiente), 0) AS saldo_pendiente
+            ", false)
+            ->groupBy('f.estado')
+            ->get()
+            ->getResultArray();
+
+        $builderTipos = $this->db->table('facturas f');
+
+        if (!empty($idPeriodo)) {
+            $builderTipos->where('f.id_periodo', $idPeriodo);
+        }
+
+        if (!empty($tipo) && $tipo !== 'Todos') {
+            $builderTipos->where('f.tipo', $tipo);
+        }
+
+        $resumenTipos = $builderTipos
+            ->select("
+                COALESCE(f.tipo, 'SIN TIPO') AS tipo,
+                COUNT(DISTINCT f.id_factura) AS cantidad_facturas,
+                COALESCE(SUM(f.total), 0) AS total_facturado,
+                COALESCE(SUM(f.saldo_pendiente), 0) AS saldo_pendiente
+            ", false)
+            ->groupBy('f.tipo')
+            ->get()
+            ->getResultArray();
+
+        $builderServicios = $this->db->table('facturas f');
+        $builderServicios->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
+        $builderServicios->join('servicios s', 's.id_servicio = fd.id_servicio', 'left');
+
+        if (!empty($idPeriodo)) {
+            $builderServicios->where('f.id_periodo', $idPeriodo);
+        }
+
+        if (!empty($tipo) && $tipo !== 'Todos') {
+            $builderServicios->where('f.tipo', $tipo);
+        }
+
+        $builderServicios->where('fd.id_servicio IS NOT NULL', null, false);
+
+        $resumenServicios = $builderServicios
+            ->select("
+                COALESCE(s.nombre, 'OTROS SERVICIOS') AS servicio,
+                COALESCE(SUM(fd.monto), 0) AS subtotal_servicio,
+                COUNT(DISTINCT f.id_factura) AS cantidad_facturas
+            ", false)
+            ->groupBy('s.id_servicio, s.nombre')
+            ->orderBy('s.nombre', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $builderMora = $this->db->table('facturas f');
+        $builderMora->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
+
+        if (!empty($idPeriodo)) {
+            $builderMora->where('f.id_periodo', $idPeriodo);
+        }
+
+        if (!empty($tipo) && $tipo !== 'Todos') {
+            $builderMora->where('f.tipo', $tipo);
+        }
+
+        $mora = $builderMora
+            ->select('COALESCE(SUM(fd.mora), 0) AS total_mora', false)
+            ->get()
+            ->getRowArray();
+
+        return [
+            'general' => $resumenGeneral ?: [],
+            'estados' => $resumenEstados,
+            'tipos' => $resumenTipos,
+            'servicios' => $resumenServicios,
+            'mora' => $mora ?: ['total_mora' => 0]
+        ];
+    }
+
     public function getFacturasConsumoPorPeriodoYDireccion(
         int $idPeriodo,
         $idDepartamento = null,
