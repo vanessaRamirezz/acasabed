@@ -38,6 +38,76 @@ class CobrosInstalacion extends BaseController
         return view('cobrosInstalacion/index');
     }
 
+    private function numeroEnteroALetras(int $numero): string
+    {
+        $unidades = [
+            0 => 'CERO', 1 => 'UNO', 2 => 'DOS', 3 => 'TRES', 4 => 'CUATRO',
+            5 => 'CINCO', 6 => 'SEIS', 7 => 'SIETE', 8 => 'OCHO', 9 => 'NUEVE',
+            10 => 'DIEZ', 11 => 'ONCE', 12 => 'DOCE', 13 => 'TRECE', 14 => 'CATORCE',
+            15 => 'QUINCE', 16 => 'DIECISEIS', 17 => 'DIECISIETE', 18 => 'DIECIOCHO',
+            19 => 'DIECINUEVE', 20 => 'VEINTE', 21 => 'VEINTIUNO', 22 => 'VEINTIDOS',
+            23 => 'VEINTITRES', 24 => 'VEINTICUATRO', 25 => 'VEINTICINCO',
+            26 => 'VEINTISEIS', 27 => 'VEINTISIETE', 28 => 'VEINTIOCHO', 29 => 'VEINTINUEVE'
+        ];
+
+        $decenas = [
+            30 => 'TREINTA', 40 => 'CUARENTA', 50 => 'CINCUENTA',
+            60 => 'SESENTA', 70 => 'SETENTA', 80 => 'OCHENTA', 90 => 'NOVENTA'
+        ];
+
+        $centenas = [
+            100 => 'CIEN', 200 => 'DOSCIENTOS', 300 => 'TRESCIENTOS', 400 => 'CUATROCIENTOS',
+            500 => 'QUINIENTOS', 600 => 'SEISCIENTOS', 700 => 'SETECIENTOS',
+            800 => 'OCHOCIENTOS', 900 => 'NOVECIENTOS'
+        ];
+
+        if ($numero < 30) {
+            return $unidades[$numero];
+        }
+
+        if ($numero < 100) {
+            $decena = (int)(floor($numero / 10) * 10);
+            $resto = $numero % 10;
+            return $resto === 0 ? $decenas[$decena] : $decenas[$decena] . ' Y ' . $this->numeroEnteroALetras($resto);
+        }
+
+        if ($numero < 1000) {
+            if ($numero === 100) {
+                return 'CIEN';
+            }
+
+            $centena = (int)(floor($numero / 100) * 100);
+            $resto = $numero % 100;
+            $prefijo = $numero < 200 ? 'CIENTO' : $centenas[$centena];
+            return $resto === 0 ? $prefijo : $prefijo . ' ' . $this->numeroEnteroALetras($resto);
+        }
+
+        if ($numero < 1000000) {
+            $miles = (int)floor($numero / 1000);
+            $resto = $numero % 1000;
+            $prefijo = $miles === 1 ? 'MIL' : $this->numeroEnteroALetras($miles) . ' MIL';
+            return $resto === 0 ? $prefijo : $prefijo . ' ' . $this->numeroEnteroALetras($resto);
+        }
+
+        $millones = (int)floor($numero / 1000000);
+        $resto = $numero % 1000000;
+        $prefijo = $millones === 1 ? 'UN MILLON' : $this->numeroEnteroALetras($millones) . ' MILLONES';
+        return $resto === 0 ? $prefijo : $prefijo . ' ' . $this->numeroEnteroALetras($resto);
+    }
+
+    private function montoALetras(float $monto): string
+    {
+        $entero = (int)floor($monto);
+        $centavos = (int)round(($monto - $entero) * 100);
+
+        if ($centavos === 100) {
+            $entero++;
+            $centavos = 0;
+        }
+
+        return $this->numeroEnteroALetras($entero) . ' DOLARES CON ' . str_pad((string)$centavos, 2, '0', STR_PAD_LEFT) . '/100';
+    }
+
     public function getCobrosRealizados()
     {
         try {
@@ -362,7 +432,7 @@ class CobrosInstalacion extends BaseController
     function dibujarComprobante(\TCPDF $pdf, int $x, int $y, string $titulo, array $factura, array $detalle)
     {
         $w = 95; // aca se mide lo ancho del cuadro principal
-        $h = 150; // aca se mide lo largo del cuadro principal
+        $h = 165; // aca se mide lo largo del cuadro principal
 
         // Marco
         $pdf->SetDrawColor(0, 51, 153);
@@ -581,11 +651,18 @@ class CobrosInstalacion extends BaseController
             $pdf->Cell($colW * 3, 7, '', 'L', 0);
             $pdf->Cell($colW, 7, '', 'LR', 1);
 
-            $yDetalle += 5;
+            $yDetalle += 7;
         }
 
+        $textoTotalLetras = $this->montoALetras((float)$total);
+
+        $pdf->SetXY($x, $yDetalle);
+        $pdf->SetTextColor(0, 51, 153);
+        $pdf->SetFont('helvetica', '', 5.5);
+        $pdf->Cell($colW * 5, 5, 'Total en letras: ' . $textoTotalLetras, 'TB', 1, 'L');
+
         // TOTALES
-        $pdf->SetXY($x, $yDetalle); // 👈 sin +19
+        $pdf->SetXY($x, $yDetalle + 5);
         $totalConMora = $total + 2;
         $totalConMoraFormateado = number_format($totalConMora,2);
 
