@@ -171,6 +171,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // PLANTILLAS
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');
     $routes->get('facturas/exportar-excel', 'CargarGenerarPlantillas::exportarExcel');
+    $routes->get('facturas/exportar-excel-alcaldia', 'CargarGenerarPlantillas::exportarExcelAlcaldia');
     $routes->post('facturas/importar-excel', 'CargarGenerarPlantillas::importarExcel');
     $routes->post('facturas/cancelar-importacion-excel', 'CargarGenerarPlantillas::cancelarImportacionExcelPeriodoActivo');
 });

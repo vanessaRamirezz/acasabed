@@ -7,6 +7,10 @@ function eventosUsuarios() {
         window.location.href = baseURL + 'facturas/exportar-excel';
     });
 
+    $("#btnExportarExcelAlcaldia").on("click", function () {
+        window.location.href = baseURL + 'facturas/exportar-excel-alcaldia';
+    });
+
     // IMPORTAR
     $("#btnImportarExcel").on("click", function () {
 

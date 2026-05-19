@@ -282,6 +282,215 @@ class CargarGenerarPlantillas extends BaseController
         exit;
     }
 
+    public function exportarExcelAlcaldia()
+    {
+        $periodo = $this->periodosModel->getPeriodoActivo();
+
+        if (!$periodo) {
+            return $this->response
+                ->setStatusCode(400)
+                ->setBody('No hay periodo activo');
+        }
+
+        $facturas = $this->facturasModel->getFacturasConsumoAlcaldiaPorPeriodo($periodo['id_periodo']);
+
+        if (empty($facturas)) {
+            return $this->response
+                ->setStatusCode(400)
+                ->setBody('No hay facturas de consumo en el periodo activo');
+        }
+
+        $pagadas = [];
+        $noPagadas = [];
+        $resumenPorDia = [];
+
+        foreach ($facturas as $factura) {
+            $aseo = (float)($factura['aseo'] ?? 0);
+            $alumbrado = (float)($factura['alumbrado'] ?? 0);
+            $total = $aseo + $alumbrado;
+
+            $factura['aseo'] = $aseo;
+            $factura['alumbrado'] = $alumbrado;
+            $factura['total_alcaldia'] = $total;
+            $factura['estado_alcaldia'] = strtoupper((string)($factura['estado'] ?? '')) === 'PAGADA' ? 'Pagó' : 'No pagó';
+            $factura['activo_alcaldia'] = strtoupper((string)($factura['estado_contrato'] ?? '')) === 'APROBADO' ? 'ACTIVO' : 'INACTIVO';
+
+            if (strtoupper((string)($factura['estado'] ?? '')) === 'PAGADA') {
+                $pagadas[] = $factura;
+
+                $fechaPagoKey = $factura['fecha_de_pago'] ?: $factura['fecha_emision'];
+
+                if (!isset($resumenPorDia[$fechaPagoKey])) {
+                    $resumenPorDia[$fechaPagoKey] = [
+                        'fecha_pago' => $fechaPagoKey,
+                        'aseo' => 0,
+                        'alumbrado' => 0,
+                        'fecha_emision' => $factura['fecha_emision'],
+                        'fecha_vencimiento' => $factura['fecha_vencimiento']
+                    ];
+                }
+
+                $resumenPorDia[$fechaPagoKey]['aseo'] += $aseo;
+                $resumenPorDia[$fechaPagoKey]['alumbrado'] += $alumbrado;
+            } else {
+                $noPagadas[] = $factura;
+            }
+        }
+
+        ksort($resumenPorDia);
+
+        $spreadsheet = new Spreadsheet();
+
+        // =========================
+        // HOJA 1: PAGO A DETALLE
+        // =========================
+        $sheetDetalle = $spreadsheet->getActiveSheet();
+        $sheetDetalle->setTitle('PAGO A DETALLE');
+        $sheetDetalle->setCellValue('A2', 'control de Pagos ' . strtoupper($periodo['nombre']));
+        $sheetDetalle->mergeCells('A2:I2');
+        $sheetDetalle->fromArray([
+            'FECHA',
+            'FICHA ALCALDIA',
+            'NUMERO Cliente',
+            'Nombre o Razon Social',
+            'ASEO PUBLICO',
+            'alumbrado',
+            'Total Pagado',
+            'Fecha de emision',
+            'Fecha de Vencimiento'
+        ], null, 'A3');
+
+        $row = 4;
+        foreach ($pagadas as $factura) {
+            $sheetDetalle->fromArray([
+                $factura['fecha_de_pago'] ?: null,
+                $factura['ficha_alcaldia'],
+                $factura['numero_cliente'],
+                $factura['cliente'],
+                $factura['aseo'],
+                $factura['alumbrado'],
+                $factura['total_alcaldia'],
+                $factura['fecha_emision'] ?: null,
+                $factura['fecha_vencimiento'] ?: null
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $lastDetalle = max($row - 1, 3);
+        $this->aplicarEstiloEncabezado($sheetDetalle, 'A3:I3');
+        $this->aplicarBordesTabla($sheetDetalle, 'A3:I' . $lastDetalle);
+        $this->autoSizeColumnas($sheetDetalle, 'A', 'I');
+        $sheetDetalle->getStyle('A2:I2')->getFont()->setBold(true)->setSize(14);
+        $sheetDetalle->getStyle('A2:I2')->getAlignment()->setHorizontal('center');
+        if ($lastDetalle >= 4) {
+            $sheetDetalle->getStyle('A4:A' . $lastDetalle)->getNumberFormat()->setFormatCode('dd-mm-yyyy');
+            $sheetDetalle->getStyle('H4:I' . $lastDetalle)->getNumberFormat()->setFormatCode('dd-mm-yyyy');
+            $sheetDetalle->getStyle('E4:G' . $lastDetalle)->getNumberFormat()->setFormatCode('#,##0.00');
+        }
+
+        // =========================
+        // HOJA 2: PAGO POR DIA
+        // =========================
+        $sheetDia = $spreadsheet->createSheet();
+        $sheetDia->setTitle('PAGO POR DIA');
+        $sheetDia->setCellValue('B2', 'control de Pagos ' . strtoupper($periodo['nombre']));
+        $sheetDia->mergeCells('B2:G2');
+        $sheetDia->fromArray([
+            '',
+            'FECHA',
+            'ASEO PUBLICO',
+            'alumbrado',
+            'Total Pagado',
+            'Fecha de emision',
+            'Fecha de Vencimiento'
+        ], null, 'A3');
+
+        $row = 4;
+        foreach ($resumenPorDia as $dia) {
+            $totalDia = (float)$dia['aseo'] + (float)$dia['alumbrado'];
+
+            $sheetDia->fromArray([
+                '',
+                $dia['fecha_pago'] ?: null,
+                $dia['aseo'],
+                $dia['alumbrado'],
+                $totalDia,
+                $dia['fecha_emision'] ?: null,
+                $dia['fecha_vencimiento'] ?: null
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $sheetDia->setCellValue('B' . $row, 'TOTALES:');
+        $sheetDia->setCellValue('C' . $row, '=SUM(C4:C' . ($row - 1) . ')');
+        $sheetDia->setCellValue('D' . $row, '=SUM(D4:D' . ($row - 1) . ')');
+        $sheetDia->setCellValue('E' . $row, '=SUM(E4:E' . ($row - 1) . ')');
+
+        $lastDia = max($row, 3);
+        $this->aplicarEstiloEncabezado($sheetDia, 'A3:G3');
+        $this->aplicarBordesTabla($sheetDia, 'A3:G' . $lastDia);
+        $this->autoSizeColumnas($sheetDia, 'A', 'G');
+        $sheetDia->getStyle('B2:G2')->getFont()->setBold(true)->setSize(14);
+        $sheetDia->getStyle('B2:G2')->getAlignment()->setHorizontal('center');
+        if ($lastDia >= 4) {
+            $sheetDia->getStyle('B4:B' . $lastDia)->getNumberFormat()->setFormatCode('dd-mm-yyyy');
+            $sheetDia->getStyle('F4:G' . $lastDia)->getNumberFormat()->setFormatCode('dd-mm-yyyy');
+            $sheetDia->getStyle('C4:E' . $lastDia)->getNumberFormat()->setFormatCode('#,##0.00');
+        }
+
+        // =========================
+        // HOJA 3: NO PAGARON
+        // =========================
+        $sheetNoPagaron = $spreadsheet->createSheet();
+        $sheetNoPagaron->setTitle('NO PAGARON');
+        $sheetNoPagaron->fromArray([
+            '# CLIENTE',
+            'No DE FICHA ALCALDIA',
+            'NOMBRE DEL USUARIO',
+            'Aseo',
+            'ALUMBRADO ',
+            'TOTAL CARGO ALCALDIA',
+            'ESTATUTOS',
+            'ACTIVO'
+        ], null, 'A1');
+
+        $row = 2;
+        foreach ($noPagadas as $factura) {
+            $sheetNoPagaron->fromArray([
+                $factura['numero_cliente'],
+                $factura['ficha_alcaldia'],
+                $factura['cliente'],
+                $factura['aseo'],
+                $factura['alumbrado'],
+                $factura['total_alcaldia'],
+                'No pagó',
+                $factura['activo_alcaldia']
+            ], null, 'A' . $row);
+            $row++;
+        }
+
+        $lastNoPagaron = max($row - 1, 1);
+        $this->aplicarEstiloEncabezado($sheetNoPagaron, 'A1:H1');
+        $this->aplicarBordesTabla($sheetNoPagaron, 'A1:H' . $lastNoPagaron);
+        $this->autoSizeColumnas($sheetNoPagaron, 'A', 'H');
+        if ($lastNoPagaron >= 2) {
+            $sheetNoPagaron->getStyle('D2:F' . $lastNoPagaron)->getNumberFormat()->setFormatCode('#,##0.00');
+        }
+
+        $spreadsheet->setActiveSheetIndexByName('PAGO A DETALLE');
+
+        $nombrePeriodo = strtoupper(str_replace(['/', '\\'], '-', trim($periodo['nombre'] ?? 'PERIODO')));
+        $filename = "01-REPORTE DE PAGO DE ACEO Y ALUMBRADO-FACTURACION ALCALDIA-{$nombrePeriodo}.xlsx";
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
     public function importarExcel()
     {
         $file = $this->request->getFile('excel');

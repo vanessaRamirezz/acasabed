@@ -55,7 +55,33 @@
             </div>
 
             <!-- TARJETA 2 -->
-            <div class="col-md-8 d-flex">
+            <div class="col-md-4 d-flex">
+                <div class="card shadow-sm border-0 w-100 h-100">
+                    <div class="card-body text-center d-flex flex-column justify-content-between">
+
+                        <div>
+                            <div class="mb-3">
+                                <i class="fas fa-city fa-3x text-warning"></i>
+                            </div>
+
+                            <h5 class="card-title">Exportar Alcaldía</h5>
+
+                            <p class="card-text text-muted">
+                                Genera el reporte de aseo y alumbrado del período activo usando facturas de consumo.
+                            </p>
+                        </div>
+
+                        <button id="btnExportarExcelAlcaldia" class="btn btn-warning mt-3">
+                            <i class="fas fa-file-export"></i>
+                            Generar
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETA 3 -->
+            <div class="col-md-4 d-flex">
                 <div class="card shadow-sm border-0 w-100 h-100">
                     <div class="card-body text-center d-flex flex-column justify-content-between">
 
