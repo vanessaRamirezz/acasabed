@@ -91,7 +91,7 @@ class Medidores extends BaseController
             $numeroSerie = $this->request->getPost('numero');
 
             $fechaInstalacion = $this->request->getPost('fecha');
-            $fechaInstalacion = !empty($fechaInstalacion) ? $fechaInstalacion : null;
+            $fechaInstalacion = !empty($fechaInstalacion) ? $fechaInstalacion : date('Y-m-d');
 
             $idContrato = $this->request->getPost('contrato');
             $idContrato = !empty($idContrato) ? $idContrato : null;
@@ -108,6 +108,8 @@ class Medidores extends BaseController
             }
 
             $estadoNuevo = 'ACTIVO';
+            $fechaActivacion = $fechaInstalacion;
+            $fechaDesactivacion = null;
 
             // INICIAR TRANSACCIÓN
             $db = $this->medidoresModel->db;
@@ -116,6 +118,8 @@ class Medidores extends BaseController
             $resultado = $this->medidoresModel->insertarNuevoMedidor(
                 $numeroSerie,
                 $fechaInstalacion,
+                $fechaActivacion,
+                $fechaDesactivacion,
                 $idContrato,
                 $idInstalador,
                 $idUsuario,
@@ -196,13 +200,56 @@ class Medidores extends BaseController
                 $estadoNuevo = 'INACTIVO';
             }
 
+            $medidorActual = $this->medidoresModel->find($idMedidor);
+
+            if (!$medidorActual) {
+                return $this->respondError('No se encontró el medidor a editar');
+            }
+
+            $fechaBase = !empty($fechaInstalacion) ? $fechaInstalacion : null;
+            $estadoAnterior = $medidorActual['estado'] ?? null;
+            $estadoCambio = $estadoAnterior !== $estadoNuevo;
+
+            $fechaActivacionActual = $medidorActual['fecha_activacion'] ?? null;
+            $fechaDesactivacionActual = $medidorActual['fecha_desactivacion'] ?? null;
+            $fechaInstalacionActual = $medidorActual['fecha_instalacion'] ?? null;
+
+            $fechaInstalacionFinal = $fechaInstalacionActual;
+            $fechaActivacion = $fechaActivacionActual;
+            $fechaDesactivacion = $fechaDesactivacionActual;
+
+            if ($estadoNuevo === 'ACTIVO') {
+                if ($estadoCambio) {
+                    $fechaActivacion = $fechaBase ?: date('Y-m-d');
+                    $fechaDesactivacion = null;
+                } else {
+                    $fechaVisibleActual = $fechaActivacionActual ?: $fechaInstalacionActual;
+
+                    if ($fechaBase && $fechaBase !== $fechaVisibleActual) {
+                        $fechaActivacion = $fechaBase;
+                    }
+                }
+            } else {
+                if ($estadoCambio) {
+                    $fechaDesactivacion = $fechaBase ?: date('Y-m-d');
+                } else {
+                    $fechaVisibleActual = $fechaDesactivacionActual ?: ($fechaActivacionActual ?: $fechaInstalacionActual);
+
+                    if ($fechaBase && $fechaBase !== $fechaVisibleActual) {
+                        $fechaDesactivacion = $fechaBase;
+                    }
+                }
+            }
+
             // INICIAR TRANSACCIÓN
             $db = $this->medidoresModel->db;
             $db->transBegin();
 
             $resultado = $this->medidoresModel->actualizarMedidor(
                 $numeroSerie,
-                $fechaInstalacion,
+                $fechaInstalacionFinal,
+                $fechaActivacion,
+                $fechaDesactivacion,
                 $idContrato,
                 $idInstalador,
                 $idMedidor,

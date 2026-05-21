@@ -52,7 +52,8 @@
                             <tr>
                                 <th>Número de serie</th>
                                 <th>Estado</th>
-                                <th>Fecha de Instalación</th>
+                                <th>Fecha de activación</th>
+                                <th>Fecha de desactivación</th>
                                 <th>Código de contrato</th>
                                 <th>Instalador</th>
                                 <th>Operaciones</th>
@@ -92,7 +93,7 @@
                                 </div>
                                 <div class="col-sm-5">
                                     <div class="form-group">
-                                        <label for="fecha">Fecha instalación</label>
+                                        <label for="fecha" id="label-fecha-medidor">Fecha de activación</label>
                                         <div class="input-group mb-3">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text"><i></i></span>

@@ -108,10 +108,12 @@ class ReporteMedidores extends BaseController
             <table>
                 <thead>
                     <tr>
-                        <th  width="30%" align="left">No. de serie</th>
-                        <th  width="20%" align="left">Fecha instalacion</th>
-                        <th  width="10%" align="left">Contrato</th>
-                        <th  width="30%" align="left">Instalador</th>';
+                        <th  width="20%" align="left">No. de serie</th>
+                        <th  width="10%" align="left">Fecha instalacion</th>
+                        <th  width="10%" align="left">Fecha activado</th>
+                        <th  width="10%" align="left">Fecha inactivo</th>
+                        <th  width="15%" align="left">Contrato</th>
+                        <th  width="35%" align="left">Instalador</th>';
 
         if ($mostrarEstado) {
             $html .= '<th width="10%" align="left">Estado</th>';
@@ -127,10 +129,12 @@ class ReporteMedidores extends BaseController
             $colorEstado = ($c['estado'] === 'INACTIVO') ? 'red' : 'green';
 
             $html .= '<tr>
-            <td width="30%" align="left">' . $c['numero_serie'] . '</td>
-            <td width="20%" align="left">' . $c['fecha_instalacion'] . '</td>
-            <td width="10%" align="left">' . $c['numero_contrato'] . '</td>
-            <td width="30%" align="left">' . $c['nombre_completo'] . '</td>';
+            <td width="20%" align="left">' . $c['numero_serie'] . '</td>
+            <td width="10%" align="left">' . $c['fecha_de_instalacion_texto'] . '</td>
+            <td width="10%" align="left">' . $c['fecha_de_activacion_texto'] . '</td>
+            <td width="10%" align="left">' . $c['fecha_de_desactivacion_texto'] . '</td>
+            <td width="15%" align="left">' . $c['numero_contrato'] . '</td>
+            <td width="35%" align="left">' . $c['nombre_completo'] . '</td>';
 
             if ($mostrarEstado) {
                 $html .= '<td width="10%" align="left" style="color:' . $colorEstado . '">'

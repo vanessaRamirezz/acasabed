@@ -5,6 +5,7 @@ let tablaMedidores;
 const inputs = {
     numero: $('#numero'),
     fecha: $('#fecha'),
+    labelFecha: $('#label-fecha-medidor'),
     contrato: $('#contrato'),
     instalador: $('#instalador'),
     idMedidor: $("#id-medidor"),
@@ -38,6 +39,12 @@ function limpiarFormulario() {
 
     $('input[name="estado"]').prop('checked', false);
     $('#estado-activo').prop('checked', true);
+    inputs.labelFecha.text('Fecha de activación');
+}
+
+function actualizarLabelFechaPorEstado() {
+    const estado = $('input[name="estado"]:checked').val();
+    inputs.labelFecha.text(estado === '0' ? 'Fecha de desactivación' : 'Fecha de activación');
 }
 
 function cargarContratos() {
@@ -134,10 +141,12 @@ function abrirModalEditarMedidor(elemento) {
 
     if (dataMedidor.status == 'ACTIVO') {
         $('#estado-activo').prop('checked', true);
+        $('#fecha').val(dataMedidor.fecha_de_activacion || dataMedidor.fecha_de_instalacion);
     } else {
         $('#estado-inactivo').prop('checked', true);
+        $('#fecha').val(dataMedidor.fecha_de_desactivacion || dataMedidor.fecha_de_activacion || dataMedidor.fecha_de_instalacion);
     }
-
+    actualizarLabelFechaPorEstado();
     $('#id-medidor').val(dataMedidor.id);
 
     eliminarColorYfocus(inputs.numero[0]);
@@ -176,7 +185,16 @@ function cargarMedidores() {
                 }
             },
             {
-                data: 'fecha_de_instalacion_texto'
+                data: 'fecha_de_activacion_texto',
+                render: function (data) {
+                    return data || '-';
+                }
+            },
+            {
+                data: 'fecha_de_desactivacion_texto',
+                render: function (data) {
+                    return data || '-';
+                }
             },
             {
                 data: 'codigo_de_contrato'
@@ -277,6 +295,10 @@ function eventosUsuarios() {
 
     $("#tbl-medidores tbody").on("click", '.btn-ver-opciones', function () {
         abrirModalEditarMedidor(this);
+    });
+
+    $('input[name="estado"]').on('change', function () {
+        actualizarLabelFechaPorEstado();
     });
 }
 

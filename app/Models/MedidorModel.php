@@ -9,7 +9,7 @@ class MedidorModel extends Model
 {
     protected $table = 'medidores';
     protected $primaryKey = 'id_medidor';
-    protected $allowedFields = ['numero_serie', 'fecha_instalacion', 'id_contrato', 'id_instalador', 'id_usuario', 'fecha_creacion', 'estado'];
+    protected $allowedFields = ['numero_serie', 'fecha_instalacion', 'fecha_activacion', 'fecha_desactivacion', 'id_contrato', 'id_instalador', 'id_usuario', 'fecha_creacion', 'estado'];
 
     public function getTodosMedidores(int $start, int $length, string $searchValue = '')
     {
@@ -63,6 +63,10 @@ class MedidorModel extends Model
                 medidores.estado AS status,
                 medidores.fecha_instalacion AS fecha_de_instalacion,
                 DATE_FORMAT(medidores.fecha_instalacion, "%d-%m-%Y") AS fecha_de_instalacion_texto,
+                medidores.fecha_activacion AS fecha_de_activacion,
+                DATE_FORMAT(medidores.fecha_activacion, "%d-%m-%Y") AS fecha_de_activacion_texto,
+                medidores.fecha_desactivacion AS fecha_de_desactivacion,
+                DATE_FORMAT(medidores.fecha_desactivacion, "%d-%m-%Y") AS fecha_de_desactivacion_texto,
                 contratos.id_contrato AS id_de_contrato,
                 contratos.numero_contrato AS codigo_de_contrato,
                 instaladores.id_instalador AS id_de_instalador,
@@ -83,6 +87,8 @@ class MedidorModel extends Model
     public function insertarNuevoMedidor(
         ?string $numeroSerie,
         ?string $fechaInstalacion,
+        ?string $fechaActivacion,
+        ?string $fechaDesactivacion,
         ?int $idContrato,
         ?int $idInstalador,
         ?int $idUsuario,
@@ -92,6 +98,8 @@ class MedidorModel extends Model
         return $this->insert([
             'numero_serie' => $numeroSerie,
             'fecha_instalacion' => $fechaInstalacion,
+            'fecha_activacion' => $fechaActivacion,
+            'fecha_desactivacion' => $fechaDesactivacion,
             'id_contrato' => $idContrato,
             'id_instalador' => $idInstalador,
             'id_usuario' => $idUsuario,
@@ -103,6 +111,8 @@ class MedidorModel extends Model
     public function actualizarMedidor(
         ?string $numeroSerie,
         ?string $fechaInstalacion,
+        ?string $fechaActivacion,
+        ?string $fechaDesactivacion,
         ?int $idContrato,
         ?int $idInstalador,
         ?int $idMedidor,
@@ -111,6 +121,8 @@ class MedidorModel extends Model
         return $this->update($idMedidor, [
             'numero_serie' => $numeroSerie,
             'fecha_instalacion' => $fechaInstalacion,
+            'fecha_activacion' => $fechaActivacion,
+            'fecha_desactivacion' => $fechaDesactivacion,
             'id_contrato' => $idContrato,
             'id_instalador' => $idInstalador,
             'estado' => $estado,
@@ -131,6 +143,11 @@ class MedidorModel extends Model
         $builder->select('
             m.numero_serie,
             m.fecha_instalacion,
+            DATE_FORMAT(m.fecha_instalacion, "%d-%m-%Y") AS fecha_de_instalacion_texto,
+            m.fecha_activacion,
+            DATE_FORMAT(m.fecha_activacion, "%d-%m-%Y") AS fecha_de_activacion_texto,
+            m.fecha_desactivacion,
+            DATE_FORMAT(m.fecha_desactivacion, "%d-%m-%Y") AS fecha_de_desactivacion_texto,
             c.numero_contrato,
             i.nombre_completo,
             m.estado
