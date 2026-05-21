@@ -35,6 +35,34 @@ class ContratoModel extends Model
             ->findAll();
     }
 
+    public function buscarContratosFacturacionOtro(string $search = '')
+    {
+        $builder = $this->db->table('contratos c')
+            ->select("
+                c.id_contrato,
+                c.numero_contrato,
+                c.id_cliente,
+                cl.nombre_completo,
+                CONCAT(c.numero_contrato, ' - ', cl.nombre_completo) AS text
+            ", false)
+            ->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left')
+            ->where('c.estado', 'APROBADO');
+
+        if ($search !== '') {
+            $builder->groupStart()
+                ->like('c.numero_contrato', $search)
+                ->orLike('cl.nombre_completo', $search)
+                ->groupEnd();
+        }
+
+        return $builder
+            ->orderBy('cl.nombre_completo', 'ASC')
+            ->orderBy('c.numero_contrato', 'ASC')
+            ->limit(20)
+            ->get()
+            ->getResultArray();
+    }
+
     public function insertarContrato(
         $idSolicitud,
         $numeroContrato,

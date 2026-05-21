@@ -229,9 +229,10 @@ class Clientes extends BaseController
 
                     if (strpos($mensaje, 'codigo') !== false) {
                         $error = 'El código de cliente ya existe';
-                    } elseif (strpos($mensaje, 'dui') !== false) {
-                        $error = 'El DUI ya está registrado';
-                    }
+                    } 
+                    // elseif (strpos($mensaje, 'dui') !== false) {
+                    //     $error = 'El DUI ya está registrado';
+                    // }
 
                     $db->transRollback();
                     return $this->respondError($error);
@@ -524,9 +525,9 @@ class Clientes extends BaseController
 
                     $mensaje = $errorDB['message'];
 
-                    if (strpos($mensaje, 'dui') !== false) {
-                        return $this->respondError('El DUI ya está registrado');
-                    }
+                    // if (strpos($mensaje, 'dui') !== false) {
+                    //     return $this->respondError('El DUI ya está registrado');
+                    // }
 
                     if (strpos($mensaje, 'codigo') !== false) {
                         return $this->respondError('El código ya existe');

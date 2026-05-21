@@ -178,7 +178,7 @@ class FacturaModel extends Model
         $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
         $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
 
-        $builder->where('f.tipo', 'Consumo');
+        $builder->whereIn('f.tipo', ['Consumo', 'OTRO']);
 
         // CLAVE PARA EVITAR DUPLICADOS
         $builder->distinct();
@@ -202,6 +202,7 @@ class FacturaModel extends Model
             ->select("
             f.id_factura AS id,
             f.correlativo,
+            f.tipo,
             c.numero_contrato,
             cl.nombre_completo AS cliente,
             p.nombre AS periodo,

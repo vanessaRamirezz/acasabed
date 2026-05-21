@@ -37,6 +37,14 @@ function renderEstado(estado) {
     return `<span class="badge badge-warning">${estado || "-"}</span>`;
 }
 
+function renderTipo(tipo) {
+    if (tipo === "OTRO") {
+        return `<span class="badge badge-info">${tipo}</span>`;
+    }
+
+    return `<span class="badge badge-primary">${tipo || "-"}</span>`;
+}
+
 
 function cargarTablaFacturas() {
     tablaFacturacionServicio = $("#tbl-facturacion-servicio").DataTable({
@@ -55,6 +63,10 @@ function cargarTablaFacturas() {
         },
         columns: [
             { data: "correlativo" },
+            {
+                data: "tipo",
+                render: data => renderTipo(data)
+            },
             { data: "numero_contrato" },
             { data: "cliente" },
             { data: "periodo" },
@@ -113,6 +125,192 @@ function cargarTablaFacturas() {
     $("#clearSearchBtnFacturasServicio").off("click").on("click", function () {
         $("#customSearchFacturasServicio").val("");
         tablaFacturacionServicio.draw();
+    });
+}
+
+function cargarSelectContratoFacturaOtro() {
+    $("#select-contrato-factura-otro").select2({
+        placeholder: "Busque cliente o contrato",
+        allowClear: true,
+        theme: "bootstrap4",
+        ajax: {
+            url: baseURL + "getContratosFacturacionOtro",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return { q: params.term };
+            },
+            processResults: function (response) {
+                return {
+                    results: response.data || []
+                };
+            },
+            cache: true
+        }
+    });
+}
+
+function inicializarSelectServicio($select) {
+    $select.select2({
+        placeholder: "Seleccione un servicio",
+        allowClear: true,
+        theme: "bootstrap4",
+        width: "100%",
+        ajax: {
+            url: baseURL + "getServiciosFacturacionOtro",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return { q: params.term };
+            },
+            processResults: function (response) {
+                return {
+                    results: response.data || []
+                };
+            },
+            cache: true
+        }
+    });
+
+    $select.on("select2:select", function (e) {
+        const data = e.params.data || {};
+        const $row = $(this).closest("tr");
+        const $concepto = $row.find(".concepto-factura-otro");
+
+        if (!$concepto.val().trim()) {
+            const nombre = data.nombre || data.text || "";
+            $concepto.val(nombre.replace(/^[^-]+-\s*/, "").trim());
+        }
+    });
+}
+
+function recalcularTotalFacturaOtro() {
+    let total = 0;
+
+    $("#factura-otro-detalle-body .monto-factura-otro").each(function () {
+        const monto = parseFloat($(this).val() || 0);
+        total += monto > 0 ? monto : 0;
+    });
+
+    $("#total-factura-otro").text(total.toFixed(2));
+}
+
+function agregarFilaFacturaOtro(data = {}) {
+    const template = document.getElementById("template-fila-factura-otro");
+    const clone = template.content.cloneNode(true);
+    const $row = $(clone).find("tr");
+
+    $("#factura-otro-detalle-body").append($row);
+
+    const $selectServicio = $row.find(".servicio-factura-otro");
+    const $concepto = $row.find(".concepto-factura-otro");
+    const $monto = $row.find(".monto-factura-otro");
+
+    inicializarSelectServicio($selectServicio);
+
+    if (data.id_servicio && data.text) {
+        const option = new Option(data.text, data.id_servicio, true, true);
+        $selectServicio.append(option).trigger("change");
+    }
+
+    if (data.concepto) {
+        $concepto.val(data.concepto);
+    }
+
+    if (data.monto) {
+        $monto.val(data.monto);
+    }
+
+    recalcularTotalFacturaOtro();
+}
+
+function obtenerDetalleFacturaOtro() {
+    const items = [];
+
+    $("#factura-otro-detalle-body .fila-factura-otro").each(function () {
+        const $row = $(this);
+        const idServicio = $row.find(".servicio-factura-otro").val();
+        const concepto = $row.find(".concepto-factura-otro").val().trim();
+        const monto = parseFloat($row.find(".monto-factura-otro").val() || 0);
+
+        if (idServicio) {
+            items.push({
+                id_servicio: idServicio,
+                concepto,
+                monto
+            });
+        }
+    });
+
+    return items;
+}
+
+function limpiarFacturaOtro() {
+    $("#select-contrato-factura-otro").val(null).trigger("change");
+    $("#factura-otro-detalle-body").empty();
+    agregarFilaFacturaOtro();
+    recalcularTotalFacturaOtro();
+}
+
+function crearFacturaOtro() {
+    const idContrato = $("#select-contrato-factura-otro").val();
+    const items = obtenerDetalleFacturaOtro();
+
+    if (!idContrato) {
+        alertaError("Debes seleccionar un cliente o contrato");
+        return;
+    }
+
+    if (!items.length) {
+        alertaError("Debes agregar al menos un servicio");
+        return;
+    }
+
+    const incompletos = items.some(item => !item.id_servicio || !item.monto || item.monto <= 0);
+    if (incompletos) {
+        alertaError("Revisa que cada fila tenga servicio y monto mayor a 0");
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: baseURL + "crearFacturaOtro",
+        dataType: "json",
+        data: {
+            idContrato,
+            items: JSON.stringify(items)
+        },
+        success: function (response) {
+            if (response.status !== "success") {
+                alertaError(response.mensaje || "No se pudo crear la factura");
+                return;
+            }
+
+            const data = response.data || {};
+            const idFactura = data.id_factura;
+            const mensaje = data.mensaje || "Factura creada correctamente";
+
+            Swal.fire({
+                icon: "success",
+                title: "Factura creada",
+                text: mensaje,
+                showCancelButton: true,
+                confirmButtonText: "Ver PDF",
+                cancelButtonText: "Cerrar"
+            }).then((result) => {
+                if (result.isConfirmed && idFactura) {
+                    window.open(baseURL + "facturaCobroServicio/" + idFactura, "_blank");
+                }
+            });
+
+            limpiarFacturaOtro();
+            if (tablaFacturacionServicio) {
+                tablaFacturacionServicio.draw(false);
+            }
+        },
+        error: function () {
+            alertaError("Ocurrió un error al crear la factura tipo OTRO");
+        }
     });
 }
 
@@ -450,6 +648,28 @@ function eventosUsuarios() {
         imprimirFacturasPeriodoActivo();
     });
 
+    $("#btn-agregar-servicio-factura-otro").on("click", function () {
+        agregarFilaFacturaOtro();
+    });
+
+    $("#btn-crear-factura-otro").on("click", function () {
+        crearFacturaOtro();
+    });
+
+    $(document).on("click", ".btn-eliminar-fila-factura-otro", function () {
+        $(this).closest("tr").remove();
+
+        if (!$("#factura-otro-detalle-body .fila-factura-otro").length) {
+            agregarFilaFacturaOtro();
+        }
+
+        recalcularTotalFacturaOtro();
+    });
+
+    $(document).on("input", ".monto-factura-otro", function () {
+        recalcularTotalFacturaOtro();
+    });
+
     inputs.filtroDepartamentoImpresion.on("change", function () {
         cargarMunicipiosImpresion($(this).val());
     });
@@ -467,6 +687,8 @@ function iniciarTodo() {
     eventosUsuarios();
     cargarTablaFacturas();
     cargarDepartamentosImpresion();
+    cargarSelectContratoFacturaOtro();
+    agregarFilaFacturaOtro();
 }
 
 document.addEventListener("DOMContentLoaded", iniciarTodo);

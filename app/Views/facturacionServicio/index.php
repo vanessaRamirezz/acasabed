@@ -87,6 +87,59 @@
 
         <div id="accordion-facturacion-servicio">
             <div class="card">
+                <div class="card-header" id="headingFacturaOtro">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFacturaOtro" aria-expanded="false" aria-controls="collapseFacturaOtro">
+                            Facturación manual tipo OTRO
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseFacturaOtro" class="collapse" aria-labelledby="headingFacturaOtro" data-parent="#accordion-facturacion-servicio">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-6 mb-3">
+                                <label for="select-contrato-factura-otro">Cliente / Contrato</label>
+                                <select id="select-contrato-factura-otro" class="form-control"></select>
+                                <small class="text-muted">Busca por nombre de cliente o número de contrato.</small>
+                            </div>
+                            <div class="col-lg-6 mb-3 d-flex align-items-end">
+                                <button type="button" id="btn-agregar-servicio-factura-otro" class="btn btn-outline-primary">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    Agregar servicio
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" id="tbl-factura-otro-detalle">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 45%;">Servicio</th>
+                                        <th style="width: 30%;">Concepto</th>
+                                        <th style="width: 15%;">Monto</th>
+                                        <th style="width: 10%;">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="factura-otro-detalle-body"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mt-3">
+                            <div class="font-weight-bold">
+                                Total: $<span id="total-factura-otro">0.00</span>
+                            </div>
+
+                            <button type="button" id="btn-crear-factura-otro" class="btn btn-success">
+                                <i class="fas fa-file-invoice mr-1"></i>
+                                Crear factura OTRO
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
                 <div class="card-header" id="headingHistorialServicio">
                     <h5 class="mb-0">
                         <button class="btn btn-link" data-toggle="collapse" data-target="#collapseHistorialServicio" aria-expanded="true" aria-controls="collapseHistorialServicio">
@@ -116,6 +169,7 @@
                                 <thead>
                                     <tr>
                                         <th>Correlativo</th>
+                                        <th>Tipo</th>
                                         <th>Contrato</th>
                                         <th>Cliente</th>
                                         <th>Periodo</th>
@@ -132,6 +186,25 @@
                 </div>
             </div>
         </div>
+
+        <template id="template-fila-factura-otro">
+            <tr class="fila-factura-otro">
+                <td>
+                    <select class="form-control servicio-factura-otro"></select>
+                </td>
+                <td>
+                    <input type="text" class="form-control concepto-factura-otro" placeholder="Concepto">
+                </td>
+                <td>
+                    <input type="number" min="0.01" step="0.01" class="form-control monto-factura-otro" placeholder="0.00">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-fila-factura-otro">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        </template>
 
         <div class="modal fade" id="modal-imprimir-facturas-direccion" tabindex="-1" aria-labelledby="modal-imprimir-facturas-direccion-label" aria-hidden="true" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog modal-lg">

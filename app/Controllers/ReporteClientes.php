@@ -134,12 +134,12 @@ class ReporteClientes extends BaseController
         <table>
             <thead>
                 <tr>
-                    <th align="left">No.</th>
-                    <th align="left">Código</th>
-                    <th align="left">Cliente</th>
-                    <th align="left">DUI</th>
-                    <th align="left">NIT</th>
-                    <th align="left">Teléfono</th>
+                    <th  width="10%" align="left">No.</th>
+                    <th  width="10%" align="left">Código</th>
+                    <th  width="40%" align="left">Cliente</th>
+                    <th  width="10%" align="left">DUI</th>
+                    <th  width="20%" align="left">NIT</th>
+                    <th  width="10%" align="left">Teléfono</th>
                 </tr>
             </thead>
             <tbody>';
@@ -163,12 +163,12 @@ class ReporteClientes extends BaseController
 
                 $html .= '
                     <tr>
-                        <td align="left">' . $numero++ . '</td>
-                        <td align="left">' . esc((string) $cliente['codigo'] ?? '-') . '</td>
-                        <td align="left">' . esc((string) $cliente['nombre_completo'] ?? '-') . '</td>
-                        <td align="left">' . esc((string) $cliente['dui'] ?? '-') . '</td>
-                        <td align="left">' . esc((string) $cliente['nit'] ?? '-') . '</td>
-                        <td align="left">' . esc((string) $cliente['telefono'] ?? '-') . '</td>
+                        <td  width="10%" align="left">' . $numero++ . '</td>
+                        <td  width="10%" align="left">' . esc((string) $cliente['codigo'] ?? '-') . '</td>
+                        <td  width="40%" align="left">' . esc((string) $cliente['nombre_completo'] ?? '-') . '</td>
+                        <td  width="10%" align="left">' . esc((string) $cliente['dui'] ?? '-') . '</td>
+                        <td  width="20%" align="left">' . esc((string) $cliente['nit'] ?? '-') . '</td>
+                        <td  width="10%" align="left">' . esc((string) $cliente['telefono'] ?? '-') . '</td>
                     </tr>';
             }
         }

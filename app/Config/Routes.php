@@ -133,8 +133,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // FACTURACION DEL SERVICIO
     $routes->get('facturacion_servicio', 'FacturacionServicio::index');
     $routes->get('getFacturasServicio', 'FacturacionServicio::getFacturasServicio');
+    $routes->get('getContratosFacturacionOtro', 'FacturacionServicio::getContratosFacturacionOtro');
+    $routes->get('getServiciosFacturacionOtro', 'FacturacionServicio::getServiciosFacturacionOtro');
     $routes->get('facturaCobroServicio/(:num)', 'FacturacionServicio::facturaCobroServicio/$1');
     $routes->post('generarFacturasServicio', 'FacturacionServicio::generarFacturasServicio');
+    $routes->post('crearFacturaOtro', 'FacturacionServicio::crearFacturaOtro');
     $routes->post('cargarExcelAlcaldia', 'FacturacionServicio::cargarExcelAlcaldia');
     $routes->get('imprimirFacturasConsumoPeriodoActivo', 'FacturacionServicio::imprimirFacturasConsumoPeriodoActivo');
 

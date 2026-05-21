@@ -109,6 +109,173 @@ class FacturacionServicio extends BaseController
         return $this->numeroEnteroALetras($entero) . ' DOLARES CON ' . str_pad((string)$centavos, 2, '0', STR_PAD_LEFT) . '/100';
     }
 
+    public function getContratosFacturacionOtro()
+    {
+        try {
+            $search = trim((string)($this->request->getVar('q') ?? ''));
+            return $this->respondSuccess($this->contratosModel->buscarContratosFacturacionOtro($search));
+        } catch (\Throwable $th) {
+            log_message('error', $th->getMessage());
+            return $this->respondError('No se pudieron cargar los contratos');
+        }
+    }
+
+    public function getServiciosFacturacionOtro()
+    {
+        try {
+            $search = trim((string)($this->request->getVar('q') ?? ''));
+            return $this->respondSuccess($this->serviciosModel->buscarServiciosActivos($search));
+        } catch (\Throwable $th) {
+            log_message('error', $th->getMessage());
+            return $this->respondError('No se pudieron cargar los servicios');
+        }
+    }
+
+    public function crearFacturaOtro()
+    {
+        $db = \Config\Database::connect();
+        $db->transBegin();
+
+        try {
+            $idContrato = (int)($this->request->getPost('idContrato') ?? 0);
+            $itemsJson = $this->request->getPost('items');
+
+            if ($idContrato <= 0) {
+                return $this->respondError('Debes seleccionar un cliente o contrato');
+            }
+
+            if (empty($itemsJson)) {
+                return $this->respondError('Debes agregar al menos un servicio');
+            }
+
+            $items = json_decode($itemsJson, true);
+
+            if (!is_array($items) || empty($items)) {
+                return $this->respondError('Los servicios enviados no son válidos');
+            }
+
+            $periodoActivo = $this->periodosModel->getPeriodoActivo();
+            if (!$periodoActivo) {
+                return $this->respondError('No hay periodo activo');
+            }
+
+            $contrato = $this->db->table('contratos c')
+                ->select('c.id_contrato, c.numero_contrato, c.estado, c.id_cliente')
+                ->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left')
+                ->where('c.id_contrato', $idContrato)
+                ->where('c.estado', 'APROBADO')
+                ->get()
+                ->getRowArray();
+
+            if (!$contrato) {
+                return $this->respondError('El contrato seleccionado no está disponible para facturar');
+            }
+
+            $serviciosIds = [];
+            foreach ($items as $item) {
+                $idServicio = (int)($item['id_servicio'] ?? 0);
+                if ($idServicio > 0) {
+                    $serviciosIds[] = $idServicio;
+                }
+            }
+
+            $serviciosIds = array_values(array_unique($serviciosIds));
+
+            if (empty($serviciosIds)) {
+                return $this->respondError('Debes seleccionar servicios válidos');
+            }
+
+            $servicios = $this->serviciosModel
+                ->whereIn('id_servicio', $serviciosIds)
+                ->findAll();
+
+            $serviciosMap = [];
+            foreach ($servicios as $servicio) {
+                $serviciosMap[(int)$servicio['id_servicio']] = $servicio;
+            }
+
+            $detalle = [];
+            $totalFactura = 0;
+
+            foreach ($items as $item) {
+                $idServicio = (int)($item['id_servicio'] ?? 0);
+                $monto = round((float)($item['monto'] ?? 0), 2);
+
+                if ($idServicio <= 0 || !isset($serviciosMap[$idServicio])) {
+                    throw new \Exception('Hay servicios no válidos en la factura');
+                }
+
+                if ($monto <= 0) {
+                    throw new \Exception('Todos los servicios deben tener un monto mayor a 0');
+                }
+
+                $concepto = trim((string)($item['concepto'] ?? ''));
+                if ($concepto === '') {
+                    $concepto = $serviciosMap[$idServicio]['nombre'];
+                }
+
+                $detalle[] = [
+                    'id_servicio' => $idServicio,
+                    'concepto' => $concepto,
+                    'monto' => $monto,
+                    'mora' => 0
+                ];
+
+                $totalFactura += $monto;
+            }
+
+            if (empty($detalle)) {
+                return $this->respondError('No hay detalle para facturar');
+            }
+
+            $dataCorrelativo = $this->rangoFacturasModel->obtenerCorrelativoFactura($db);
+            if (!$dataCorrelativo) {
+                return $this->respondError('No hay correlativos disponibles para facturar');
+            }
+
+            $fechaEmision = date('Y-m-d');
+            $fechaVencimiento = date('Y-m-03', strtotime('first day of next month'));
+
+            $this->facturaModel->insert([
+                'id_rango_factura' => $dataCorrelativo['id_rango_factura'],
+                'correlativo' => $dataCorrelativo['correlativo'],
+                'tiraje' => $dataCorrelativo['tiraje'],
+                'id_contrato' => $idContrato,
+                'id_periodo' => $periodoActivo['id_periodo'],
+                'id_lectura' => null,
+                'fecha_emision' => $fechaEmision,
+                'fecha_vencimiento' => $fechaVencimiento,
+                'estado' => 'PENDIENTE',
+                'total' => round($totalFactura, 2),
+                'id_usuario' => session()->get('id_usuario'),
+                'tipo' => 'OTRO'
+            ]);
+
+            $idFactura = $this->facturaModel->insertID();
+
+            foreach ($detalle as $d) {
+                $this->facturaDetalleModel->insert([
+                    'id_factura' => $idFactura,
+                    'id_servicio' => $d['id_servicio'],
+                    'concepto' => $d['concepto'],
+                    'monto' => $d['monto'],
+                    'mora' => 0
+                ]);
+            }
+
+            $db->transCommit();
+
+            return $this->respondSuccess([
+                'mensaje' => 'Factura tipo OTRO creada correctamente',
+                'id_factura' => $idFactura
+            ]);
+        } catch (\Throwable $th) {
+            $db->transRollback();
+            log_message('error', $th->getMessage());
+            return $this->respondError($th->getMessage());
+        }
+    }
+
     public function getFacturasServicio()
     {
         try {
@@ -316,6 +483,7 @@ class FacturacionServicio extends BaseController
 
         // 1. Mostrar los registros reales
         $total = 0;
+        $totalSinMora = 0;
         foreach ($detalle as $item) {
             $pdf->SetTextColor(0, 0, 0);
             $pdf->SetFont('helvetica', '', 7);
@@ -349,6 +517,7 @@ class FacturacionServicio extends BaseController
             $yDetalle += $alturaFila;
 
             $total += $item['monto'] + $item['mora'];
+            $totalSinMora += $item['monto'];
         }
 
         // 2. Rellenar filas vacías hasta 10
@@ -365,7 +534,7 @@ class FacturacionServicio extends BaseController
             $yDetalle += 7;
         }
 
-        $textoTotalLetras = $this->montoALetras((float)$total);
+        $textoTotalLetras = $this->montoALetras((float)$totalSinMora);
 
         $pdf->SetXY($x, $yDetalle);
         $pdf->SetTextColor(0, 51, 153);
