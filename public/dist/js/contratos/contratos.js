@@ -44,6 +44,9 @@ function cargarContratos() {
                 data: 'fechaTexto'
             },
             {
+                data: 'fecha_suspencion_texto'
+            },
+            {
                 data: 'estadoContrato',
                 render: function (data, type, row) {
                     if (data == 'APROBADO') {
@@ -65,9 +68,10 @@ function cargarContratos() {
                             <div class="dropdown-menu">
 
                                 <a class="dropdown-item dropdown-item-custom btn-ver-contrato-pdf" href="#"
-                                    data-id="${row.id}">
+                                    data-id="${row.id}"
+                                    data-contrato="${row.id_contrato}">
                                     <i class="fas fa-file-contract text-danger"></i> Contrato pdf
-                                </a> 
+                                </a>
 
                                 <a class="dropdown-item dropdown-item-custom btn-suspender-contrato" href="#"
                                     data-contrato="${encodeURIComponent(JSON.stringify(row))}">
@@ -181,16 +185,20 @@ function eventosUsuarios() {
     $(document).on("click", ".btn-ver-contrato-pdf", function (e) {
         e.preventDefault();
 
-        const id = $(this).data('id');
-        // console.log("ID:", id); // 👈 clave
+        const idSolicitud = $(this).data('id') || null;
+        const idContrato = $(this).data('contrato') || null;
 
-        if (!id) {
-            alert("ID no válido");
-            return;
-        }
+        const payload = {
+            idSolicitud,
+            idContrato
+        };
 
-        const encoded = btoa(id);
-        window.open(baseURL + 'contratos/contrato?solicitud=' + encoded, '_blank');
+        const encoded = btoa(JSON.stringify(payload));
+
+        window.open(
+            baseURL + 'contratos/contrato?data=' + encoded,
+            '_blank'
+        );
     });
 
 

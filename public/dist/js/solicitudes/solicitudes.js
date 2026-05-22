@@ -1747,7 +1747,7 @@ function cargarSolicitudDesdeURL() {
         $.ajax({
             url: baseURL + 'getSolicitudById',
             type: 'GET',
-            data: { id: id },
+            data: { idSolicitud: id },
             dataType: 'json',
             success: function (response) {
                 // mostrar botón correcto
@@ -1901,7 +1901,7 @@ function cargarSolicitudDesdeURLSoloVer() {
         $.ajax({
             url: baseURL + 'getSolicitudById',
             type: 'GET',
-            data: { id: id },
+            data: { idSolicitud: id },
             dataType: 'json',
             success: function (response) {
                 // mostrar botón correcto
@@ -2171,9 +2171,15 @@ function eventosUsuarios() {
         $.ajax({
             url: baseURL + 'getSolicitudById',
             type: 'GET',
-            data: { id: id },
+            data: {
+                idSolicitud: id
+            },
             success: function (response) {
                 // response debe venir como objeto JSON
+                // console.log('aca resivo null');
+                
+                // console.log(response.data);
+                
                 vistaPrevia(response.data);
             },
             error: function () {

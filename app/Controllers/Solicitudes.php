@@ -171,7 +171,7 @@ class Solicitudes extends BaseController
     public function getSolicitudById()
     {
         try {
-            $idSolicitud = $this->request->getVar('id');
+            $idSolicitud = $this->request->getVar('idSolicitud');
             $infoSolicitud = $this->solicitudesModel->getInfoSolicitudPorId($idSolicitud);
             return $this->respondSuccess($infoSolicitud);
         } catch (\Throwable $th) {
@@ -578,7 +578,9 @@ class Solicitudes extends BaseController
             }
 
             $numero = $this->solicitudesModel->correlativoSolicitud($db);
+            log_message('info', 'correlativo de solicitud ' . $numero);
             $codigoFormateado = str_pad($numero, 5, '0', STR_PAD_LEFT);
+            
 
             $idSolicitud = $this->solicitudesModel->insertarSolicitud(
                 $codigoFormateado,
@@ -740,6 +742,7 @@ class Solicitudes extends BaseController
             if (!$solicitudActualizada) {
                 throw new \Exception('No se actualizaron las relaciones de la solicitud');
             }
+            // exit;
 
             // =========================
             // FINAL

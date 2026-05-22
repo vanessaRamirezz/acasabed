@@ -71,21 +71,28 @@ class Contratos extends BaseController
     public function contrato()
     {
         $request = service('request');
-        $encoded = $request->getGet('solicitud');
+
+        $encoded = $request->getGet('data');
+
         if (!$encoded) {
-            return "ID no recibido";
+            return "Datos no recibidos";
         }
 
-        $id = base64_decode($encoded);
+        $dataDecoded = json_decode(base64_decode($encoded), true);
 
-        log_message('info', 'id de solicitud recibido ' . base64_decode($encoded));
+        $idSolicitud = $dataDecoded['idSolicitud'] ?? null;
+        $idContrato = $dataDecoded['idContrato'] ?? null;
+
+        log_message('info', 'id de solicitud recibido ' . $idSolicitud);
+        log_message('info', 'id de contrato recibido ' . $idContrato);
         // exit;
 
         // traer datos reales aquí
-        $data = $this->solicitudesModel->getInfoSolicitudPorId($id);
+        $data = $this->solicitudesModel
+            ->getInfoSolicitudPorId($idSolicitud, $idContrato);
         log_message('info', 'solicitud data ' . print_r($data, true));
         // exit;
-        $total = $data['monto'] ?? '';
+        $total = $data['monto'] ?? 0;
 
         $fmt = new \NumberFormatter("es_ES", \NumberFormatter::SPELLOUT);
         $montoEntero = floor($total);

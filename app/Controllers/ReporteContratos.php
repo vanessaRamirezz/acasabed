@@ -74,7 +74,7 @@ class ReporteContratos extends BaseController
         table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 8px;
+            font-size: 7px;
         }
         th {
             background-color: #003366;
@@ -108,15 +108,15 @@ class ReporteContratos extends BaseController
     <table>
         <thead>
             <tr>
-                <th  align="left">N° Contrato</th>
-                <th  align="left">Usuario</th>
-                <th  align="left">Ruta</th>
-                <th  align="left">Medidor</th>
-                <th  align="left">Tarifa</th>
-                <th  align="left">Fecha Creación</th>';
+                <th width="10%" align="left">N° Contrato</th>
+                <th width="20%" align="left">Usuario</th>
+                <th width="30%" align="left">Ruta</th>
+                <th width="10%" align="left">Medidor</th>
+                <th width="10%" align="left">Tarifa</th>
+                <th width="10%" align="left">Fecha Creación</th>';
 
         if ($mostrarEstado) {
-            $html .= '<th width="15%" align="left">Estado</th>';
+            $html .= '<th width="10%" align="left">Estado</th>';
         }
 
         $html .= '</tr>
@@ -129,15 +129,15 @@ class ReporteContratos extends BaseController
             $colorEstado = ($c['estado'] === 'aprobado') ? 'red' : 'green';
 
             $html .= '<tr>
-            <td align="left">' . $c['numero_contrato'] . '</td>
-            <td align="left">' . $c['cliente'] . '</td>
-            <td align="left">' . $c['ruta'] . '</td>
-            <td align="left">' . $c['medidor'] . '</td>
-            <td align="left">' . $c['tarifa'] . '</td>
-            <td align="left">' . $c['fechaInicio'] . '</td>';
+            <td width="10%" align="left">' . $c['numero_contrato'] . '</td>
+            <td width="20%" align="left">' . $c['cliente'] . '</td>
+            <td width="30%" align="left">' . $c['ruta'] . '</td>
+            <td width="10%" align="left">' . $c['medidor'] . '</td>
+            <td width="10%" align="left">' . $c['tarifa'] . '</td>
+            <td width="10%" align="left">' . $c['fechaInicio'] . '</td>';
 
             if ($mostrarEstado) {
-                $html .= '<td align="left" style="color:' . $colorEstado . '">'
+                $html .= '<td width="10%" align="left" style="color:' . $colorEstado . '">'
                     . strtoupper($c['estado']) . '</td>';
             }
 

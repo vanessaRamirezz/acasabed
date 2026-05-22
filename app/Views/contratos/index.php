@@ -54,6 +54,7 @@
                                 <th>Numero Contrato</th>
                                 <th>Nombre / Razón social</th>
                                 <th>Fecha Inicio</th>
+                                <th>Fecha Suspención</th>
                                 <th>Estado</th>
                                 <th>Operaciones</th>
                             </tr>

@@ -95,7 +95,7 @@ class ContratoModel extends Model
         ]);
     }
 
-    public function getTodosContratos($start, $length, $searchValue = '')
+    public function getTodosContratos(int $start, int $length, $searchValue = '')
     {
         $builder = $this->db->table('contratos');
 
@@ -156,13 +156,14 @@ class ContratoModel extends Model
                 contratos.estado AS estadoContrato,
                 contratos.motivo_suspension AS motivoSuspencion,
                 contratos.fecha_de_inicio AS fecha,
-                DATE_FORMAT(contratos.fecha_de_inicio, "%d-%m-%Y") AS fechaTexto
+                DATE_FORMAT(contratos.fecha_de_inicio, "%d-%m-%Y") AS fechaTexto,
+                DATE_FORMAT(contratos.fecha_suspension, "%d-%m-%Y") AS fecha_suspencion_texto,
         ')
             ->groupStart()
             ->where('contratos.estado', 'APROBADO')
             ->orWhere('contratos.estado', 'SUSPENDIDO')
             ->groupEnd()
-            ->orderBy('solicitudes.id_solicitud', 'DESC')
+            ->orderBy('contratos.id_contrato', 'DESC')
             ->limit($length, $start)
             ->get()
             ->getResultArray();
