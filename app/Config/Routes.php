@@ -45,6 +45,14 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('nuevoTipoCliente', 'TiposCliente::nuevoTipoCliente');
     $routes->post('editarTipoCliente', 'TiposCliente::editarTipoCliente');
 
+    // SERVICIOS
+    $routes->get('servicios', 'Servicios::index');
+    $routes->get('getServicios', 'Servicios::getServicios');
+    $routes->get('getOperacionesServicio', 'Servicios::getOperacionesServicio');
+    $routes->get('getTipoServicio', 'Servicios::getTipoServicio');
+    $routes->post('nuevoServicio', 'Servicios::nuevoServicio');
+    $routes->post('editarServicio', 'Servicios::editarServicio');
+
     // RUTAS
     $routes->get('rutas', 'Rutas::index');
     $routes->get('getRutas', 'Rutas::getRutas');
