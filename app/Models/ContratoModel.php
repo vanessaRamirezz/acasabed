@@ -177,6 +177,7 @@ class ContratoModel extends Model
 
     public function getContratosActivosLectura(
         $idPeriodo,
+        $idRuta = null,
         $idDepartamento = null,
         $idMunicipio = null,
         $idDistrito = null,
@@ -195,8 +196,12 @@ class ContratoModel extends Model
         $builder->join('solicitudes', 'contratos.id_solicitud = solicitudes.id_solicitud', 'left');
         $builder->join('clientes', 'contratos.id_cliente = clientes.id_cliente', 'left');
 
-        $builder->where('solicitudes.estado', 'APROBADA');
+        // $builder->where('solicitudes.estado', 'APROBADA');
         $builder->where('contratos.estado', 'APROBADO');
+
+        if (!empty($idRuta) && $idRuta !== '-1') {
+            $builder->where('contratos.id_ruta', $idRuta);
+        }
 
         if (!empty($idDepartamento) && $idDepartamento !== '-1') {
             $builder->where('clientes.id_departamento', $idDepartamento);
@@ -224,13 +229,14 @@ class ContratoModel extends Model
         $builder->where("NOT EXISTS ($subQuery)", null, false);
 
         return $builder
-            ->orderBy('contratos.id_contrato', 'ASC')
+            ->orderBy('contratos.id_contrato', 'DESC')
             ->get()
             ->getResultArray();
     }
 
     public function getReporteTomaLecturas(
         $idPeriodo,
+        $idRuta = null,
         $idDepartamento = null,
         $idMunicipio = null,
         $idDistrito = null,
@@ -245,12 +251,14 @@ class ContratoModel extends Model
         $builder->join('municipios', 'clientes.id_municipio = municipios.id_municipio', 'left');
         $builder->join('distritos', 'clientes.id_distrito = distritos.id_distrito', 'left');
         $builder->join('colonias', 'clientes.id_colonia = colonias.id_colonia', 'left');
+        $builder->join('rutas', 'contratos.id_ruta = rutas.id_ruta', 'left');
 
         $builder->select("
             contratos.id_contrato,
             contratos.numero_contrato,
             clientes.nombre_completo,
             medidores.numero_serie,
+            rutas.nombre AS ruta,
             departamentos.nombre AS departamento,
             municipios.nombre AS municipio,
             distritos.nombre AS distrito,
@@ -265,8 +273,12 @@ class ContratoModel extends Model
             ) AS lectura_anterior
         ", false);
 
-        $builder->where('solicitudes.estado', 'APROBADA');
+        // $builder->where('solicitudes.estado', 'APROBADA');
         $builder->where('contratos.estado', 'APROBADO');
+
+        if (!empty($idRuta) && $idRuta !== '-1') {
+            $builder->where('rutas.id_ruta', $idRuta);
+        }
 
         if (!empty($idDepartamento) && $idDepartamento !== '-1') {
             $builder->where('clientes.id_departamento', $idDepartamento);
@@ -293,8 +305,8 @@ class ContratoModel extends Model
         $builder->where("NOT EXISTS ($subQuery)", null, false);
 
         return $builder
-            ->orderBy('clientes.nombre_completo', 'ASC')
-            ->orderBy('contratos.numero_contrato', 'ASC')
+            // ->orderBy('clientes.nombre_completo', 'ASC')
+            ->orderBy('contratos.id_contrato', 'DESC')
             ->get()
             ->getResultArray();
     }

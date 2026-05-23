@@ -12,6 +12,30 @@
         min-width: 180px;
         width: 100% !important;
     }
+
+    #tbl-lecturas-lote .select2-container {
+        min-width: 180px;
+        width: 100% !important;
+    }
+
+    #tbl-lecturas-lote input,
+    #tbl-lecturas-lote select {
+        min-width: 120px;
+    }
+
+    #modal-lecturas-lote .modal-body {
+        overflow: hidden;
+    }
+
+    #modal-lecturas-lote .table-responsive {
+        max-height: 55vh;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    #tbl-lecturas-lote {
+        min-width: 1000px;
+    }
 </style>
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
@@ -225,6 +249,14 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
+                                <label for="filtro-ruta-reporte-lectura">Rutas</label>
+                                <select id="filtro-ruta-reporte-lectura" class="form-control">
+                                    <option value="-1">Todas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label for="filtro-departamento-reporte-lectura">Departamento</label>
                                 <select id="filtro-departamento-reporte-lectura" class="form-control">
                                     <option value="-1">Todos</option>
@@ -272,6 +304,14 @@
                             Si no seleccionas dirección, se cargarán todos los contratos pendientes del período activo.
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="filtro-ruta-cargar-contratos">Ruta</label>
+                                <select id="filtro-ruta-cargar-contratos" class="form-control">
+                                    <option value="-1">Todas</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="filtro-departamento-cargar-contratos">Departamento</label>

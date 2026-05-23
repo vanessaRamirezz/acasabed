@@ -9,10 +9,12 @@ const inputs = {
     valor: $('#valor'),
     instalador: $('#instalador'),
     idLectura: $("#id-lectura"),
+    filtroRutaReporteLectura: $('#filtro-ruta-reporte-lectura'),
     filtroDepartamentoReporteLectura: $('#filtro-departamento-reporte-lectura'),
     filtroMunicipioReporteLectura: $('#filtro-municipio-reporte-lectura'),
     filtroDistritoReporteLectura: $('#filtro-distrito-reporte-lectura'),
     filtroColoniaReporteLectura: $('#filtro-colonia-reporte-lectura'),
+    filtroRutaCargarContratos: $('#filtro-ruta-cargar-contratos'),
     filtroDepartamentoCargarContratos: $('#filtro-departamento-cargar-contratos'),
     filtroMunicipioCargarContratos: $('#filtro-municipio-cargar-contratos'),
     filtroDistritoCargarContratos: $('#filtro-distrito-cargar-contratos'),
@@ -336,6 +338,33 @@ function cargarPeriodosLote() {
     });
 }
 
+function cargarRutasFiltroReporteLectura() {
+    $.ajax({
+        type: 'GET',
+        url: baseURL + 'selectRuta',
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar las rutas');
+                return;
+            }
+
+            inputs.filtroRutaReporteLectura.empty().append('<option value="-1">Todos</option>');
+
+            response.data.forEach(function (rutas) {
+                inputs.filtroRutaReporteLectura.append(
+                    $('<option></option>')
+                        .attr('value', rutas.id_ruta)
+                        .text(rutas.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar las rutas');
+        }
+    });
+}
+
 function cargarDepartamentosReporteLectura() {
     $.ajax({
         type: 'GET',
@@ -463,6 +492,7 @@ function cargarColoniasReporteLectura(idDistrito) {
 }
 
 function reiniciarFiltrosReporteLectura() {
+    inputs.filtroRutaReporteLectura.val('-1');
     inputs.filtroDepartamentoReporteLectura.val('-1');
     resetSelect(inputs.filtroMunicipioReporteLectura, 'Todos');
     resetSelect(inputs.filtroDistritoReporteLectura, 'Todos');
@@ -522,8 +552,78 @@ function limpiarLoteLecturas() {
     $('#tbl-lecturas-lote tbody').empty();
 }
 
+// function cargarContratosLectura(filtros = {}) {
+//     instaladorActualLote = null;
+//     const periodo = $('#periodo-lote').val();
+
+//     if (!periodo) {
+//         alertaError('Debe seleccionar un periodo');
+//         return;
+//     }
+
+//     $.ajax({
+//         url: baseURL + 'getContratosPeriodos',
+//         type: 'GET',
+//         dataType: 'json',
+//         data: {
+//             periodo: periodo,
+//             departamento: filtros.departamento || '-1',
+//             municipio: filtros.municipio || '-1',
+//             distrito: filtros.distrito || '-1',
+//             colonia: filtros.colonia || '-1'
+//         },
+//         success: function (response) {
+
+//             const tbody = $('#tbl-lecturas-lote tbody');
+//             tbody.empty();
+
+//             if (!response.data || response.data.length === 0) {
+//                 tbody.html(`
+//                 <tr>
+//                     <td colspan="4" class="text-center">
+//                         No hay contratos pendientes para este periodo
+//                     </td>
+//                 </tr>
+//             `);
+//                 return;
+//             }
+
+//             response.data.forEach((c, index) => {
+
+//                 tbody.append(`
+//                 <tr data-index="${index}">
+                    
+//                     <td>${c.numero_contrato}</td>
+//                     <td>${c.nombre_completo}</td>
+
+//                    <td>
+//                         <select class="form-control instalador-lote w-100"
+//                                 data-index="${index}"
+//                                 data-id="${c.id_contrato}">
+//                         </select>
+//                     </td>
+
+//                     <td>
+//                         <input type="number"
+//                                 class="form-control lectura-input-lote"
+//                                 data-index="${index}"
+//                                 data-id="${c.id_contrato}">
+//                     </td>
+
+//                 </tr>
+//             `);
+//             });
+
+//             // 🔥 IMPORTANTE: inicializar Select2 DESPUÉS del render
+//             inicializarInstaladoresLote();
+//         }
+//     });
+// }
+
 function cargarContratosLectura(filtros = {}) {
+
     instaladorActualLote = null;
+
     const periodo = $('#periodo-lote').val();
 
     if (!periodo) {
@@ -531,61 +631,95 @@ function cargarContratosLectura(filtros = {}) {
         return;
     }
 
+    const tbody = $('#tbl-lecturas-lote tbody');
+
+    // 🔥 MOSTRAR CARGA
+    tbody.html(`
+        <tr>
+            <td colspan="4" class="text-center py-4">
+                
+                <div class="spinner-border text-primary mb-2" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+
+                <div>
+                    Cargando contratos...
+                </div>
+
+            </td>
+        </tr>
+    `);
+
     $.ajax({
         url: baseURL + 'getContratosPeriodos',
         type: 'GET',
         dataType: 'json',
         data: {
             periodo: periodo,
+            ruta: filtros.ruta || '-1',
             departamento: filtros.departamento || '-1',
             municipio: filtros.municipio || '-1',
             distrito: filtros.distrito || '-1',
             colonia: filtros.colonia || '-1'
         },
+
         success: function (response) {
 
-            const tbody = $('#tbl-lecturas-lote tbody');
             tbody.empty();
 
             if (!response.data || response.data.length === 0) {
+
                 tbody.html(`
-                <tr>
-                    <td colspan="4" class="text-center">
-                        No hay contratos pendientes para este periodo
-                    </td>
-                </tr>
-            `);
+                    <tr>
+                        <td colspan="4" class="text-center">
+                            No hay contratos pendientes para este periodo
+                        </td>
+                    </tr>
+                `);
+
                 return;
             }
 
             response.data.forEach((c, index) => {
 
                 tbody.append(`
-                <tr data-index="${index}">
-                    
-                    <td>${c.numero_contrato}</td>
-                    <td>${c.nombre_completo}</td>
+                    <tr data-index="${index}">
+                        
+                        <td>${c.numero_contrato}</td>
+                        <td>${c.nombre_completo}</td>
 
-                   <td>
-                        <select class="form-control instalador-lote w-100"
-                                data-index="${index}"
-                                data-id="${c.id_contrato}">
-                        </select>
-                    </td>
+                        <td>
+                            <select class="form-control instalador-lote w-100"
+                                    data-index="${index}"
+                                    data-id="${c.id_contrato}">
+                            </select>
+                        </td>
 
-                    <td>
-                        <input type="number"
+                        <td>
+                            <input type="number"
                                 class="form-control lectura-input-lote"
                                 data-index="${index}"
                                 data-id="${c.id_contrato}">
-                    </td>
+                        </td>
 
-                </tr>
-            `);
+                    </tr>
+                `);
+
             });
 
-            // 🔥 IMPORTANTE: inicializar Select2 DESPUÉS del render
             inicializarInstaladoresLote();
+        },
+
+        error: function () {
+
+            tbody.html(`
+                <tr>
+                    <td colspan="4" class="text-center text-danger">
+                        Error al cargar contratos
+                    </td>
+                </tr>
+            `);
+
         }
     });
 }
@@ -674,6 +808,33 @@ function abrirModalNuevaLecturaLote() {
     $('#fecha-lote').val(fecha);
 
     $('#modal-lecturas-lote').modal('show');
+}
+
+function cargarRutaFiltroContratos() {
+    $.ajax({
+        type: 'GET',
+        url: baseURL + 'selectRuta',
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar las rutas');
+                return;
+            }
+
+            inputs.filtroRutaCargarContratos.empty().append('<option value="-1">Todos</option>');
+
+            response.data.forEach(function (rutas) {
+                inputs.filtroRutaCargarContratos.append(
+                    $('<option></option>')
+                        .attr('value', rutas.id_ruta)
+                        .text(rutas.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar las rutas');
+        }
+    });
 }
 
 function cargarDepartamentosFiltroContratos() {
@@ -803,6 +964,7 @@ function cargarColoniasFiltroContratos(idDistrito) {
 }
 
 function reiniciarFiltrosCargaContratos() {
+    inputs.filtroRutaCargarContratos.val('-1');
     inputs.filtroDepartamentoCargarContratos.val('-1');
     resetSelect(inputs.filtroMunicipioCargarContratos, 'Todos');
     resetSelect(inputs.filtroDistritoCargarContratos, 'Todos');
@@ -823,6 +985,7 @@ function abrirModalFiltroContratos() {
 
 function confirmarCargaContratosConFiltro() {
     const filtros = {
+        ruta: inputs.filtroRutaCargarContratos.val(),
         departamento: inputs.filtroDepartamentoCargarContratos.val(),
         municipio: inputs.filtroMunicipioCargarContratos.val(),
         distrito: inputs.filtroDistritoCargarContratos.val(),
@@ -857,10 +1020,15 @@ function generarPDFReporteLecturas() {
         periodo
     });
 
+    const ruta = inputs.filtroRutaReporteLectura.val();
     const departamento = inputs.filtroDepartamentoReporteLectura.val();
     const municipio = inputs.filtroMunicipioReporteLectura.val();
     const distrito = inputs.filtroDistritoReporteLectura.val();
     const colonia = inputs.filtroColoniaReporteLectura.val();
+
+    if (ruta && ruta !== '-1') {
+        params.append('ruta', ruta);
+    }
 
     if (departamento && departamento !== '-1') {
         params.append('departamento', departamento);
@@ -1005,6 +1173,10 @@ function eventosUsuarios() {
         cargarMunicipiosFiltroContratos($(this).val());
     });
 
+    // inputs.filtroRutaCargarContratos.on('change', function () {
+    //     cargarRutaFiltroContratos($(this).val());
+    // });
+
     inputs.filtroMunicipioCargarContratos.on('change', function () {
         cargarDistritosFiltroContratos($(this).val());
     });
@@ -1021,8 +1193,9 @@ function iniciarTodo() {
     cargarContratos();
     cargarInstaladores();
     cargarLecturas();
+    cargarRutasFiltroReporteLectura();
     cargarDepartamentosReporteLectura();
-    cargarDepartamentosFiltroContratos();
+    cargarRutaFiltroContratos();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

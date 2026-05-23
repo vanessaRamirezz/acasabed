@@ -157,4 +157,19 @@ class Rutas extends BaseController
             return $this->respondError('Error al actualizada la ruta');
         }
     }
+
+    public function selectRuta()
+    {
+        try {
+            $rutas = $this->rutasModel->findAll();
+
+            return $this->respondSuccess($rutas);
+        } catch (\Throwable $th) {
+            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
+            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
+            log_message('error', $errorMessage);
+
+            return $this->respondError('Error al obtener las rutas');
+        }
+    }
 }

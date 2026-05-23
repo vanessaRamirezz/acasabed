@@ -58,6 +58,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getRutas', 'Rutas::getRutas');
     $routes->post('nuevaRuta', 'Rutas::nuevaRuta');
     $routes->post('editarRuta', 'Rutas::editarRuta');
+    $routes->get('selectRuta', 'Rutas::selectRuta');
 
     // INSTALADORES
     $routes->get('instaladores', 'Instaladores::index');

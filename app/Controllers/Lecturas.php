@@ -251,6 +251,7 @@ class Lecturas extends BaseController
     {
         try {
             $idPeriodo = $this->request->getVar('periodo');
+            $idRuta = $this->request->getVar('ruta');
             $idDepartamento = $this->request->getVar('departamento');
             $idMunicipio = $this->request->getVar('municipio');
             $idDistrito = $this->request->getVar('distrito');
@@ -262,6 +263,7 @@ class Lecturas extends BaseController
 
             $data = $this->contratosModel->getContratosActivosLectura(
                 $idPeriodo,
+                $idRuta,
                 $idDepartamento,
                 $idMunicipio,
                 $idDistrito,
@@ -357,6 +359,7 @@ class Lecturas extends BaseController
     {
         try {
             $idPeriodo = $this->request->getGet('periodo');
+            $idRuta = $this->request->getGet('ruta');
             $idDepartamento = $this->request->getGet('departamento');
             $idMunicipio = $this->request->getGet('municipio');
             $idDistrito = $this->request->getGet('distrito');
@@ -374,6 +377,7 @@ class Lecturas extends BaseController
 
             $contratos = $this->contratosModel->getReporteTomaLecturas(
                 $idPeriodo,
+                $idRuta,
                 $idDepartamento,
                 $idMunicipio,
                 $idDistrito,
@@ -401,6 +405,10 @@ class Lecturas extends BaseController
 
             if (!empty($contratos)) {
                 $primero = $contratos[0];
+
+                if (!empty($idRuta) && $idRuta !== '-1' && !empty($primero['ruta'])) {
+                    $filtrosAplicados[] = 'Ruta: ' . $primero['ruta'];
+                }
 
                 if (!empty($idDepartamento) && $idDepartamento !== '-1' && !empty($primero['departamento'])) {
                     $filtrosAplicados[] = 'Departamento: ' . $primero['departamento'];
