@@ -159,7 +159,7 @@ class FacturacionServicio extends BaseController
                 return $this->respondError('No hay periodo activo');
             }
 
-            $contrato = $this->db->table('contratos c')
+            $contrato = $db->table('contratos c')
                 ->select('c.id_contrato, c.numero_contrato, c.estado, c.id_cliente')
                 ->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left')
                 ->where('c.id_contrato', $idContrato)
@@ -185,9 +185,18 @@ class FacturacionServicio extends BaseController
                 return $this->respondError('Debes seleccionar servicios válidos');
             }
 
-            $servicios = $this->serviciosModel
+            $servicios = $db->table('servicios s')
+                ->select("
+                    s.id_servicio,
+                    s.nombre,
+                    s.valor,
+                    s.id_operacion,
+                    COALESCE(o.nombre, 'SUMA') AS operacion
+                ", false)
+                ->join('operaciones o', 'o.id_operacion = s.id_operacion', 'left')
                 ->whereIn('id_servicio', $serviciosIds)
-                ->findAll();
+                ->get()
+                ->getResultArray();
 
             $serviciosMap = [];
             foreach ($servicios as $servicio) {
@@ -199,13 +208,13 @@ class FacturacionServicio extends BaseController
 
             foreach ($items as $item) {
                 $idServicio = (int)($item['id_servicio'] ?? 0);
-                $monto = round((float)($item['monto'] ?? 0), 2);
+                $montoIngresado = round((float)($item['monto'] ?? 0), 2);
 
                 if ($idServicio <= 0 || !isset($serviciosMap[$idServicio])) {
                     throw new \Exception('Hay servicios no válidos en la factura');
                 }
 
-                if ($monto <= 0) {
+                if ($montoIngresado <= 0) {
                     throw new \Exception('Todos los servicios deben tener un monto mayor a 0');
                 }
 
@@ -214,18 +223,29 @@ class FacturacionServicio extends BaseController
                     $concepto = $serviciosMap[$idServicio]['nombre'];
                 }
 
+                $operacion = strtoupper(trim((string)($serviciosMap[$idServicio]['operacion'] ?? 'SUMA')));
+                $montoAplicado = $operacion === 'RESTA'
+                    ? round($montoIngresado * -1, 2)
+                    : $montoIngresado;
+
                 $detalle[] = [
                     'id_servicio' => $idServicio,
                     'concepto' => $concepto,
-                    'monto' => $monto,
+                    'monto' => $montoAplicado,
                     'mora' => 0
                 ];
 
-                $totalFactura += $monto;
+                $totalFactura += $montoAplicado;
             }
 
             if (empty($detalle)) {
                 return $this->respondError('No hay detalle para facturar');
+            }
+
+            $totalFactura = round($totalFactura, 2);
+
+            if ($totalFactura <= 0) {
+                return $this->respondError('El total final de la factura debe ser mayor a 0');
             }
 
             $dataCorrelativo = $this->rangoFacturasModel->obtenerCorrelativoFactura($db);
@@ -246,7 +266,7 @@ class FacturacionServicio extends BaseController
                 'fecha_emision' => $fechaEmision,
                 'fecha_vencimiento' => $fechaVencimiento,
                 'estado' => 'PENDIENTE',
-                'total' => round($totalFactura, 2),
+                'total' => $totalFactura,
                 'id_usuario' => session()->get('id_usuario'),
                 'tipo' => 'OTRO'
             ]);

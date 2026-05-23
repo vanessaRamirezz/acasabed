@@ -133,6 +133,7 @@ function cargarSelectContratoFacturaOtro() {
         placeholder: "Busque cliente o contrato",
         allowClear: true,
         theme: "bootstrap4",
+        width: "100%",
         ajax: {
             url: baseURL + "getContratosFacturacionOtro",
             dataType: "json",
@@ -141,8 +142,16 @@ function cargarSelectContratoFacturaOtro() {
                 return { q: params.term };
             },
             processResults: function (response) {
+                const results = (response.data || []).map(function (item) {
+                    return {
+                        ...item,
+                        id: item.id ?? item.id_contrato,
+                        text: item.text ?? `${item.numero_contrato || ""} - ${item.nombre_completo || ""}`.trim()
+                    };
+                });
+
                 return {
-                    results: response.data || []
+                    results
                 };
             },
             cache: true
@@ -164,8 +173,16 @@ function inicializarSelectServicio($select) {
                 return { q: params.term };
             },
             processResults: function (response) {
+                const results = (response.data || []).map(function (item) {
+                    return {
+                        ...item,
+                        id: item.id ?? item.id_servicio,
+                        text: item.text ?? `${item.codigo || ""} - ${item.nombre || ""}`.trim()
+                    };
+                });
+
                 return {
-                    results: response.data || []
+                    results
                 };
             },
             cache: true
@@ -176,20 +193,43 @@ function inicializarSelectServicio($select) {
         const data = e.params.data || {};
         const $row = $(this).closest("tr");
         const $concepto = $row.find(".concepto-factura-otro");
+        const $monto = $row.find(".monto-factura-otro");
+        const operacion = (data.operacion || "SUMA").toUpperCase();
+
+        $row.attr("data-operacion", operacion);
 
         if (!$concepto.val().trim()) {
             const nombre = data.nombre || data.text || "";
             $concepto.val(nombre.replace(/^[^-]+-\s*/, "").trim());
         }
+
+        if ((!$monto.val() || Number($monto.val()) <= 0) && Number(data.valor || 0) > 0) {
+            $monto.val(Number(data.valor).toFixed(2));
+        }
+
+        recalcularTotalFacturaOtro();
+    });
+
+    $select.on("select2:clear", function () {
+        const $row = $(this).closest("tr");
+        $row.attr("data-operacion", "SUMA");
+        recalcularTotalFacturaOtro();
     });
 }
 
 function recalcularTotalFacturaOtro() {
     let total = 0;
 
-    $("#factura-otro-detalle-body .monto-factura-otro").each(function () {
-        const monto = parseFloat($(this).val() || 0);
-        total += monto > 0 ? monto : 0;
+    $("#factura-otro-detalle-body .fila-factura-otro").each(function () {
+        const $row = $(this);
+        const monto = parseFloat($row.find(".monto-factura-otro").val() || 0);
+        const operacion = String($row.attr("data-operacion") || "SUMA").toUpperCase();
+
+        if (monto <= 0) {
+            return;
+        }
+
+        total += operacion === "RESTA" ? (monto * -1) : monto;
     });
 
     $("#total-factura-otro").text(total.toFixed(2));
@@ -205,6 +245,8 @@ function agregarFilaFacturaOtro(data = {}) {
     const $selectServicio = $row.find(".servicio-factura-otro");
     const $concepto = $row.find(".concepto-factura-otro");
     const $monto = $row.find(".monto-factura-otro");
+
+    $row.attr("data-operacion", String(data.operacion || "SUMA").toUpperCase());
 
     inicializarSelectServicio($selectServicio);
 
@@ -255,6 +297,7 @@ function limpiarFacturaOtro() {
 function crearFacturaOtro() {
     const idContrato = $("#select-contrato-factura-otro").val();
     const items = obtenerDetalleFacturaOtro();
+    const totalFinal = parseFloat($("#total-factura-otro").text() || 0);
 
     if (!idContrato) {
         alertaError("Debes seleccionar un cliente o contrato");
@@ -269,6 +312,11 @@ function crearFacturaOtro() {
     const incompletos = items.some(item => !item.id_servicio || !item.monto || item.monto <= 0);
     if (incompletos) {
         alertaError("Revisa que cada fila tenga servicio y monto mayor a 0");
+        return;
+    }
+
+    if (totalFinal <= 0) {
+        alertaError("El total final de la factura debe ser mayor a 0");
         return;
     }
 

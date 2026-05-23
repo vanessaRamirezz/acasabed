@@ -70,19 +70,30 @@ class ServicioModel extends Model
 
     public function buscarServiciosActivos(string $search = '')
     {
-        $builder = $this->select('id_servicio AS id, codigo, nombre, CONCAT(codigo, " - ", nombre) AS text')
-            ->where('estado', 'Activo');
+        $builder = $this->db->table('servicios s')
+            ->select("
+                s.id_servicio AS id,
+                s.codigo,
+                s.nombre,
+                s.valor,
+                s.id_operacion,
+                COALESCE(o.nombre, 'SUMA') AS operacion,
+                CONCAT(s.codigo, ' - ', s.nombre, ' (', COALESCE(o.nombre, 'SUMA'), ')') AS text
+            ", false)
+            ->join('operaciones o', 'o.id_operacion = s.id_operacion', 'left')
+            ->where('s.estado', 'Activo');
 
         if ($search !== '') {
             $builder->groupStart()
-                ->like('codigo', $search)
-                ->orLike('nombre', $search)
+                ->like('s.codigo', $search)
+                ->orLike('s.nombre', $search)
                 ->groupEnd();
         }
 
         return $builder
-            ->orderBy('nombre', 'ASC')
+            ->orderBy('s.nombre', 'ASC')
             ->limit(20)
-            ->findAll();
+            ->get()
+            ->getResultArray();
     }
 }

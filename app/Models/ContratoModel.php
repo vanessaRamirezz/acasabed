@@ -39,6 +39,7 @@ class ContratoModel extends Model
     {
         $builder = $this->db->table('contratos c')
             ->select("
+                c.id_contrato AS id,
                 c.id_contrato,
                 c.numero_contrato,
                 c.id_cliente,
