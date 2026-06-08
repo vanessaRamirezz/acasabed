@@ -117,7 +117,7 @@
         <span>
             <strong>DOLORES FRANCO MENJIVAR</strong>, pescador, de <?= $edadRepresentante ?? '' ?> años de edad, del domicilio del Caserío El Coyolito de
             Cantón Quitasol del Municipio de Tejutla del Departamento de Chalatenango, con documento único de
-            identidad personal número 0144459-1, actuando en calidad de representante legal de la ASOCIACION
+            identidad personal número 01444596-1, actuando en calidad de representante legal de la ASOCIACION
             COMUNAL ADMINISTRADORA DEL SISTEMA DE AGUA POTABLE DEL CANTÓN EL COYOLITO DEL
             MUNICIPIO DE TEJUTLA Y DEPARTAMENTO DE CHALATENANGO. BENDICION DE DIOS. (ACASABED)
             con publicación en DIARIO OFICIAL de fecha viernes 12 de Julio 2013, NUMERO 128 TOMO NUMERO
