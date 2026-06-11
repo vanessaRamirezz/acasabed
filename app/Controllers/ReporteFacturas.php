@@ -53,6 +53,9 @@ class ReporteFacturas extends BaseController
 
     public function generarPDF()
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(0);
+
         $idPeriodo = $this->request->getGet('periodo');
         $idPeriodo = !empty($idPeriodo) ? $idPeriodo : null;
         $tipo = $this->request->getGet('tipo') ?? 'Todos';
@@ -138,14 +141,14 @@ class ReporteFacturas extends BaseController
         <table>
             <thead>
                 <tr>
-                    <th align="left">No.</th>
-                    <th align="left">Correlativo</th>
-                    <th align="left">Tipo</th>
-                    <th align="left">Contrato</th>
-                    <th align="left">Cliente</th>
-                    <th align="left">Total</th>
-                    <th align="left">F. pago</th>
-                    <th align="left">Estado</th>
+                    <th width="10%" align="left">No.</th>
+                    <th width="10%" align="left">Correlativo</th>
+                    <th width="10%" align="left">Tipo</th>
+                    <th width="10%" align="left">Contrato</th>
+                    <th width="30%" align="left">Cliente</th>
+                    <th width="10%" align="left">Total</th>
+                    <th width="10%" align="left">F. pago</th>
+                    <th width="10%" align="left">Estado</th>
                 </tr>
             </thead>
             <tbody>';
@@ -164,14 +167,14 @@ class ReporteFacturas extends BaseController
 
                 $html .= '
                     <tr>
-                        <td>' . $numero++ . '</td>
-                        <td>' . esc($correlativo) . '</td>
-                        <td>' . esc($factura['tipo_factura'] ?? '-') . '</td>
-                        <td>' . esc($factura['numero_contrato'] ?? '-') . '</td>
-                        <td>' . esc($factura['cliente'] ?? '-') . '</td>
-                        <td>$ ' . number_format((float)($factura['total'] ?? 0), 2) . '</td>
-                        <td>' . esc($factura['fecha_pago'] ?? '-') . '</td>
-                        <td>' . esc($factura['estado'] ?? '-') . '</td>
+                        <td width="10%">' . $numero++ . '</td>
+                        <td width="10%">' . esc($correlativo) . '</td>
+                        <td width="10%">' . esc($factura['tipo_factura'] ?? '-') . '</td>
+                        <td width="10%">' . esc($factura['numero_contrato'] ?? '-') . '</td>
+                        <td width="30%">' . esc($factura['cliente'] ?? '-') . '</td>
+                        <td width="10%">$ ' . number_format((float)($factura['total'] ?? 0), 2) . '</td>
+                        <td width="10%">' . esc($factura['fecha_pago'] ?? '-') . '</td>
+                        <td width="10%">' . esc($factura['estado'] ?? '-') . '</td>
                     </tr>';
             }
 

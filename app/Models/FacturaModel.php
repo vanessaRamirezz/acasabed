@@ -222,6 +222,110 @@ class FacturaModel extends Model
         ];
     }
 
+    public function getFacturasConsumoCompletaPorPeriodoYDireccion(
+        int $idPeriodo,
+        $idRuta = null,
+        $idDepartamento = null,
+        $idMunicipio = null,
+        $idDistrito = null,
+        $idColonia = null
+    ) {
+
+        $builder = $this->db->table('facturas f');
+
+        $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
+        $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
+        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+        $builder->join('medidores medi', 'medi.id_medidor = c.id_medidor', 'left');
+        $builder->join('departamentos d', 'd.id_departamento = cl.id_departamento', 'left');
+        $builder->join('municipios m', 'm.id_municipio = cl.id_municipio', 'left');
+        $builder->join('distritos ds', 'ds.id_distrito = cl.id_distrito', 'left');
+        $builder->join('colonias col', 'col.id_colonia = cl.id_colonia', 'left');
+        $builder->join('lecturas lec', 'lec.id_lectura = f.id_lectura', 'left');
+        $builder->join('tarifas tari', 'tari.id_tarifa = c.id_tarifa', 'left');
+        $builder->join('rutas r', 'r.id_ruta = c.id_ruta', 'left');
+
+        $builder->where('f.id_periodo', $idPeriodo);
+        $builder->where('f.tipo', 'Consumo');
+
+        if (!empty($idRuta) && $idRuta !== '-1') {
+            $builder->where('r.id_ruta', $idRuta);
+        }
+
+        if (!empty($idDepartamento) && $idDepartamento !== '-1') {
+            $builder->where('cl.id_departamento', $idDepartamento);
+        }
+
+        if (!empty($idMunicipio) && $idMunicipio !== '-1') {
+            $builder->where('cl.id_municipio', $idMunicipio);
+        }
+
+        if (!empty($idDistrito) && $idDistrito !== '-1') {
+            $builder->where('cl.id_distrito', $idDistrito);
+        }
+
+        if (!empty($idColonia) && $idColonia !== '-1') {
+            $builder->where('cl.id_colonia', $idColonia);
+        }
+
+        $facturas = $builder
+            ->select("
+            f.id_factura,
+            f.correlativo,
+            s.codigo_solicitud,
+            c.numero_contrato,
+            cl.nombre_completo AS cliente,
+            CONCAT_WS(', ',
+                d.nombre,
+                m.nombre,
+                ds.nombre,
+                col.nombre,
+                cl.complemento_direccion
+            ) AS direccion,
+            DATE_FORMAT(lec.fecha, '%d-%m-%Y') AS fechaLectura,
+            DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fechaVencimiento,
+            tari.codigo AS codigoTarifa,
+            medi.numero_serie,
+            lec.valor AS lecturaActual,
+            (
+                SELECT l2.valor
+                FROM lecturas l2
+                WHERE l2.id_contrato = f.id_contrato
+                AND l2.id_periodo < f.id_periodo
+                ORDER BY l2.id_periodo DESC, l2.id_lectura DESC
+                LIMIT 1
+            ) AS lecturaAnterior,
+            f.consumo
+        ", false)
+            ->orderBy('f.id_factura', 'ASC')
+            ->limit('10')
+            ->get()
+            ->getResultArray();
+
+        if (empty($facturas)) {
+            return [];
+        }
+
+        $ids = array_column($facturas, 'id_factura');
+
+        $detalles = $this->db->table('facturas_detalle')
+            ->whereIn('id_factura', $ids)
+            ->get()
+            ->getResultArray();
+
+        $detallesAgrupados = [];
+
+        foreach ($detalles as $detalle) {
+            $detallesAgrupados[$detalle['id_factura']][] = $detalle;
+        }
+
+        foreach ($facturas as &$factura) {
+            $factura['detalle'] = $detallesAgrupados[$factura['id_factura']] ?? [];
+        }
+
+        return $facturas;
+    }
+
     public function getFacturaResumenPorId(int $idFactura)
     {
         $builder = $this->db->table('facturas f');
@@ -411,6 +515,8 @@ class FacturaModel extends Model
                 'fd.id_factura = f.id_factura',
                 'left'
             )
+            ->join('periodos p', 'p.id_periodo = f.id_periodo')
+            ->where('p.estado', 'ACTIVO')
             ->where('f.estado', 'PAGADA')
             ->get()
             ->getRowArray();
@@ -431,11 +537,43 @@ class FacturaModel extends Model
         $resumenGeneral = $builderGeneral
             ->select("
                 COUNT(DISTINCT f.id_factura) AS total_facturas,
+
                 COALESCE(SUM(f.total), 0) AS total_facturado,
-                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA') THEN 1 ELSE 0 END), 0) AS facturas_pagadas,
-                COALESCE(SUM(CASE WHEN f.estado NOT IN ('NO PAGADA') THEN 1 ELSE 0 END), 0) AS facturas_no_pagadas,
-                COALESCE(SUM(CASE WHEN f.estado IN ('PAGADA') THEN f.total ELSE 0 END), 0) AS monto_pagado,
-                COALESCE(SUM(CASE WHEN f.estado NOT IN ('NO PAGADA') THEN f.total ELSE 0 END), 0) AS monto_no_pagado
+
+                COALESCE(SUM(
+                    CASE
+                        WHEN f.estado = 'PAGADA' THEN 1
+                        ELSE 0
+                    END
+                ), 0) AS facturas_pagadas,
+
+                COALESCE(SUM(
+                    CASE
+                        WHEN f.estado IS NULL
+                        OR TRIM(f.estado) = ''
+                        OR f.estado <> 'PAGADA'
+                        THEN 1
+                        ELSE 0
+                    END
+                ), 0) AS facturas_no_pagadas,
+
+                COALESCE(SUM(
+                    CASE
+                        WHEN f.estado = 'PAGADA'
+                        THEN f.total
+                        ELSE 0
+                    END
+                ), 0) AS monto_pagado,
+
+                COALESCE(SUM(
+                    CASE
+                        WHEN f.estado IS NULL
+                        OR TRIM(f.estado) = ''
+                        OR f.estado <> 'PAGADA'
+                        THEN f.total
+                        ELSE 0
+                    END
+                ), 0) AS monto_no_pagado
             ", false)
             ->get()
             ->getRowArray();
@@ -526,6 +664,7 @@ class FacturaModel extends Model
 
     public function getFacturasConsumoPorPeriodoYDireccion(
         int $idPeriodo,
+        $idRuta = null,
         $idDepartamento = null,
         $idMunicipio = null,
         $idDistrito = null,
@@ -536,9 +675,14 @@ class FacturaModel extends Model
         $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
         $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
         $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+        $builder->join('rutas r', 'r.id_ruta = c.id_ruta', 'left');
 
         $builder->where('f.id_periodo', $idPeriodo);
         $builder->where('f.tipo', 'Consumo');
+
+        if (!empty($idRuta) && $idRuta !== '-1') {
+            $builder->where('r.id_ruta', $idRuta);
+        }
 
         if (!empty($idDepartamento) && $idDepartamento !== '-1') {
             $builder->where('cl.id_departamento', $idDepartamento);

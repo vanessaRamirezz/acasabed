@@ -42,24 +42,58 @@ class FacturacionServicio extends BaseController
     private function numeroEnteroALetras(int $numero): string
     {
         $unidades = [
-            0 => 'CERO', 1 => 'UNO', 2 => 'DOS', 3 => 'TRES', 4 => 'CUATRO',
-            5 => 'CINCO', 6 => 'SEIS', 7 => 'SIETE', 8 => 'OCHO', 9 => 'NUEVE',
-            10 => 'DIEZ', 11 => 'ONCE', 12 => 'DOCE', 13 => 'TRECE', 14 => 'CATORCE',
-            15 => 'QUINCE', 16 => 'DIECISEIS', 17 => 'DIECISIETE', 18 => 'DIECIOCHO',
-            19 => 'DIECINUEVE', 20 => 'VEINTE', 21 => 'VEINTIUNO', 22 => 'VEINTIDOS',
-            23 => 'VEINTITRES', 24 => 'VEINTICUATRO', 25 => 'VEINTICINCO',
-            26 => 'VEINTISEIS', 27 => 'VEINTISIETE', 28 => 'VEINTIOCHO', 29 => 'VEINTINUEVE'
+            0 => 'CERO',
+            1 => 'UNO',
+            2 => 'DOS',
+            3 => 'TRES',
+            4 => 'CUATRO',
+            5 => 'CINCO',
+            6 => 'SEIS',
+            7 => 'SIETE',
+            8 => 'OCHO',
+            9 => 'NUEVE',
+            10 => 'DIEZ',
+            11 => 'ONCE',
+            12 => 'DOCE',
+            13 => 'TRECE',
+            14 => 'CATORCE',
+            15 => 'QUINCE',
+            16 => 'DIECISEIS',
+            17 => 'DIECISIETE',
+            18 => 'DIECIOCHO',
+            19 => 'DIECINUEVE',
+            20 => 'VEINTE',
+            21 => 'VEINTIUNO',
+            22 => 'VEINTIDOS',
+            23 => 'VEINTITRES',
+            24 => 'VEINTICUATRO',
+            25 => 'VEINTICINCO',
+            26 => 'VEINTISEIS',
+            27 => 'VEINTISIETE',
+            28 => 'VEINTIOCHO',
+            29 => 'VEINTINUEVE'
         ];
 
         $decenas = [
-            30 => 'TREINTA', 40 => 'CUARENTA', 50 => 'CINCUENTA',
-            60 => 'SESENTA', 70 => 'SETENTA', 80 => 'OCHENTA', 90 => 'NOVENTA'
+            30 => 'TREINTA',
+            40 => 'CUARENTA',
+            50 => 'CINCUENTA',
+            60 => 'SESENTA',
+            70 => 'SETENTA',
+            80 => 'OCHENTA',
+            90 => 'NOVENTA'
         ];
 
         $centenas = [
-            100 => 'CIEN', 200 => 'DOSCIENTOS', 300 => 'TRESCIENTOS', 400 => 'CUATROCIENTOS',
-            500 => 'QUINIENTOS', 600 => 'SEISCIENTOS', 700 => 'SETECIENTOS',
-            800 => 'OCHOCIENTOS', 900 => 'NOVECIENTOS'
+            100 => 'CIEN',
+            200 => 'DOSCIENTOS',
+            300 => 'TRESCIENTOS',
+            400 => 'CUATROCIENTOS',
+            500 => 'QUINIENTOS',
+            600 => 'SEISCIENTOS',
+            700 => 'SETECIENTOS',
+            800 => 'OCHOCIENTOS',
+            900 => 'NOVECIENTOS'
         ];
 
         if ($numero < 30) {
@@ -906,6 +940,7 @@ class FacturacionServicio extends BaseController
         $db->transBegin();
 
         try {
+            ini_set('max_execution_time', 0);
             log_message('info', '--------------------------------------------------------------');
 
             $periodoActivo = $this->periodosModel->getPeriodoActivo();
@@ -1232,7 +1267,10 @@ class FacturacionServicio extends BaseController
     public function imprimirFacturasConsumoPeriodoActivo()
     {
         try {
+            ini_set('max_execution_time', 0);
+
             $periodo = $this->periodosModel->getPeriodoActivo();
+            $idRuta = $this->request->getGet('ruta');
             $idDepartamento = $this->request->getGet('departamento');
             $idMunicipio = $this->request->getGet('municipio');
             $idDistrito = $this->request->getGet('distrito');
@@ -1242,8 +1280,9 @@ class FacturacionServicio extends BaseController
                 return $this->responderVentanaImpresionConMensaje('No hay periodo activo para imprimir facturas.', 404);
             }
 
-            $facturas = $this->facturaModel->getFacturasConsumoPorPeriodoYDireccion(
+            $facturas = $this->facturaModel->getFacturasConsumoCompletaPorPeriodoYDireccion(
                 $periodo['id_periodo'],
+                $idRuta,
                 $idDepartamento,
                 $idMunicipio,
                 $idDistrito,
@@ -1265,30 +1304,41 @@ class FacturacionServicio extends BaseController
             // $posicionesY = [5, 150]; // arriba y abajo
             // $index = 0;
 
+            // foreach ($facturas as $factura) {
+            //     $dataFactura = $this->facturaModel->getFacturaResumenPorId($factura['id_factura']);
+
+            //     if (empty($dataFactura['factura'])) {
+            //         continue;
+            //     }
+
+            //     // $posY = $posicionesY[$index % 2];
+
+            //     $this->agregarPaginaFacturaCobro(
+            //         $pdf,
+            //         $imprimir,
+            //         $periodo,
+            //         $dataFactura['factura'],
+            //         $dataFactura['detalle'] ?? [],
+            //         // $posY
+            //     );
+
+            //     // Cada 2 facturas → nueva página
+            //     // if ($index % 2 == 1) {
+            //     //     // opcional: podrías forzar salto aquí si quieres control estricto
+            //     // }
+
+            //     // $index++;
+            // }
+
             foreach ($facturas as $factura) {
-                $dataFactura = $this->facturaModel->getFacturaResumenPorId($factura['id_factura']);
-
-                if (empty($dataFactura['factura'])) {
-                    continue;
-                }
-
-                // $posY = $posicionesY[$index % 2];
 
                 $this->agregarPaginaFacturaCobro(
                     $pdf,
                     $imprimir,
                     $periodo,
-                    $dataFactura['factura'],
-                    $dataFactura['detalle'] ?? [],
-                    // $posY
+                    $factura,
+                    $factura['detalle']
                 );
-
-                // Cada 2 facturas → nueva página
-                // if ($index % 2 == 1) {
-                //     // opcional: podrías forzar salto aquí si quieres control estricto
-                // }
-
-                // $index++;
             }
 
             if ($pdf->getNumPages() === 0) {

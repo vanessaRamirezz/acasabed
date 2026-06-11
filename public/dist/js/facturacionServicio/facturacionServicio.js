@@ -3,6 +3,7 @@ import { alertaError, alertaOk, alertEnSweet } from "../metodos/metodos.js";
 let tablaFacturacionServicio;
 
 const inputs = {
+    filtroRutaImpresion: $("#filtro-ruta-impresion"),
     filtroDepartamentoImpresion: $("#filtro-departamento-impresion"),
     filtroMunicipioImpresion: $("#filtro-municipio-impresion"),
     filtroDistritoImpresion: $("#filtro-distrito-impresion"),
@@ -487,6 +488,33 @@ function generarFacturasServicio() {
     });
 }
 
+function cargarRutasFiltroReporteLectura() {
+    $.ajax({
+        type: 'GET',
+        url: baseURL + 'selectRuta',
+        dataType: 'json',
+        success: function (response) {
+            if (response.status !== 'success') {
+                alertaError(response.mensaje || 'No se pudieron cargar las rutas');
+                return;
+            }
+
+            inputs.filtroRutaImpresion.empty().append('<option value="-1">Todos</option>');
+
+            response.data.forEach(function (rutas) {
+                inputs.filtroRutaImpresion.append(
+                    $('<option></option>')
+                        .attr('value', rutas.id_ruta)
+                        .text(rutas.nombre)
+                );
+            });
+        },
+        error: function () {
+            alertaError('Error al cargar las rutas');
+        }
+    });
+}
+
 function cargarDepartamentosImpresion() {
     $.ajax({
         type: "GET",
@@ -618,6 +646,7 @@ function resetSelect(selector, placeholder = "Todos") {
 }
 
 function reiniciarFiltrosImpresion() {
+    inputs.filtroRutaImpresion.val("-1");
     inputs.filtroDepartamentoImpresion.val("-1");
     resetSelect(inputs.filtroMunicipioImpresion, "Todos");
     resetSelect(inputs.filtroDistritoImpresion, "Todos");
@@ -629,10 +658,15 @@ function imprimirFacturasPeriodoActivo() {
         autoPrint: "1"
     });
 
+    const ruta = inputs.filtroRutaImpresion.val();
     const departamento = inputs.filtroDepartamentoImpresion.val();
     const municipio = inputs.filtroMunicipioImpresion.val();
     const distrito = inputs.filtroDistritoImpresion.val();
     const colonia = inputs.filtroColoniaImpresion.val();
+
+    if (ruta && ruta !== "-1") {
+        params.append("ruta", ruta);
+    }
 
     if (departamento && departamento !== "-1") {
         params.append("departamento", departamento);
@@ -663,6 +697,7 @@ function imprimirFacturasPeriodoActivo() {
     // $('#modal-imprimir-facturas-direccion').modal('hide');
     ventana.focus();
 }
+
 
 function eventosUsuarios() {
 
@@ -734,6 +769,7 @@ function eventosUsuarios() {
 function iniciarTodo() {
     eventosUsuarios();
     cargarTablaFacturas();
+    cargarRutasFiltroReporteLectura();
     cargarDepartamentosImpresion();
     cargarSelectContratoFacturaOtro();
     agregarFilaFacturaOtro();

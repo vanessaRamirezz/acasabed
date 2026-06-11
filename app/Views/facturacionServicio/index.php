@@ -222,6 +222,14 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
+                                <label for="filtro-ruta-impresion">Rutas</label>
+                                <select id="filtro-ruta-impresion" class="form-control">
+                                    <option value="-1">Todas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label for="filtro-departamento-impresion">Departamento</label>
                                 <select id="filtro-departamento-impresion" class="form-control">
                                     <option value="-1">Todos</option>

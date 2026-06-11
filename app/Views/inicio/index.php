@@ -270,7 +270,7 @@
                     </div>
 
                     <!-- DESGLOSE -->
-                    <div class="stat-card__breakdown">
+                    <!-- <div class="stat-card__breakdown">
                         <small>
                             Base: $<?= number_format($resumenFacturas['total_sin_mora'] ?? 0, 2) ?>
                         </small>
@@ -278,7 +278,7 @@
                         <small>
                             Mora: $<?= number_format($resumenFacturas['total_mora'] ?? 0, 2) ?>
                         </small>
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="stat-card stat-card--clients">
