@@ -748,6 +748,7 @@
             <button type="button" class="btn btn-primary modal-guardar mr-3" id="guardar-registro">Crear Solicitud</button>
             <button type="button" class="btn btn-danger modal-guardar mr-3" id="anular-solicitud">Anular Solicitud</button>
             <button type="button" class="btn btn-success modal-editar mr-3" id="actualizar-registro">Aprobar Solicitud</button>
+            <button type="button" class="btn btn-warning modal-editar mr-3" id="editar-registro">Actualizar Solicitud</button>
         </div>
 
         <br>

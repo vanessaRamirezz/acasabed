@@ -96,6 +96,18 @@ class ContratoModel extends Model
         ]);
     }
 
+    public function getContratoPorSolicitud($idSolicitud)
+    {
+        return $this->where('id_solicitud', $idSolicitud)
+            ->orderBy('id_contrato', 'DESC')
+            ->first();
+    }
+
+    public function actualizarContrato($idContrato, array $data)
+    {
+        return $this->update($idContrato, $data);
+    }
+
     public function getTodosContratos(int $start, int $length, $searchValue = '')
     {
         $builder = $this->db->table('contratos');

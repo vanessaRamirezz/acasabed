@@ -121,6 +121,46 @@ class CobroContratoModel extends Model
         ];
     }
 
+    public function getCobrosPorContrato($idContrato)
+    {
+        return $this->where('id_contrato', $idContrato)
+            ->orderBy('numero_cuota', 'ASC')
+            ->findAll();
+    }
+
+    public function tieneCobrosConMovimiento($idContrato): bool
+    {
+        $movimientos = $this->where('id_contrato', $idContrato)
+            ->groupStart()
+            ->where('estado !=', 'PENDIENTE')
+            ->orWhere('fecha_pago IS NOT NULL', null, false)
+            ->orWhere('COALESCE(mora, 0) >', 0)
+            ->groupEnd()
+            ->countAllResults();
+
+        if ($movimientos > 0) {
+            return true;
+        }
+
+        $facturas = $this->db->table('contratos_cobros cc')
+            ->join('facturas_detalle fd', 'fd.id_cobro_instalacion = cc.id_cobro_instalacion', 'inner')
+            ->where('cc.id_contrato', $idContrato)
+            ->countAllResults();
+
+        return $facturas > 0;
+    }
+
+    public function reemplazarCobrosContrato($idContrato, array $cuotas): bool
+    {
+        $this->where('id_contrato', $idContrato)->delete();
+
+        if (empty($cuotas)) {
+            return true;
+        }
+
+        return (bool)$this->insertBatch($cuotas);
+    }
+
 
     public function getDetalleCobroPorCliente($idCliente)
     {

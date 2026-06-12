@@ -120,6 +120,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getSolicitudesTabla', 'Solicitudes::getSolicitudesTabla');
     $routes->get('getSolicitudById', 'Solicitudes::getSolicitudById');
     $routes->get('getSolicitudesTablaAprobadas', 'Solicitudes::getSolicitudesTablaAprobadas');
+    $routes->post('editarSolicitudAprobada', 'Solicitudes::editarSolicitudAprobada');
 
 
     // CONTRATOS

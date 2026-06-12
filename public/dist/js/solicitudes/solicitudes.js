@@ -589,6 +589,7 @@ function getDataForPDF() {
 function vistaPrevia(dataObj) {
     // e.preventDefault();
     // console.log(dataObj);
+    
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'pt', 'letter');
@@ -1149,18 +1150,18 @@ function vistaPrevia(dataObj) {
     // =========================
     // FIRMAS
     // =========================
-    setFont("normal", 8);
+    setFont("normal", 7);
     const firmantes = [
         { nombre: dataObj.nombre || '', puesto: 'Persona Solicitante' || '' },
-        { nombre: dataObj.nombreFirmante1 || '', puesto: dataObj.puestoFirmante1 || '' },
-        { nombre: dataObj.nombreFirmante2 || '', puesto: dataObj.puestoFirmante2 || '' },
-        { nombre: dataObj.nombreFirmante3 || '', puesto: dataObj.puestoFirmante3 || '' }
+        { nombre: dataObj.nombreFirmante1 || '', puesto: dataObj.puestoFirmante1 || dataObj.rolFirmante1 || ''},
+        { nombre: dataObj.nombreFirmante2 || '', puesto: dataObj.puestoFirmante2 || dataObj.rolFirmante2 || '' },
+        { nombre: dataObj.nombreFirmante3 || '', puesto: dataObj.puestoFirmante3 || dataObj.rolFirmante3 || '' }
     ];
 
-    setFont("normal", 8);
+    setFont("normal", 7);
 
-    const lineWidth = 150;
-    const espacioY = 70; // espacio vertical entre filas
+    const lineWidth = 170;
+    const espacioY = 70; // espacio vertical entre filas espacio entre firmas
     const inicioY = y;
 
     const mitad = pageWidth / 2;
@@ -1170,7 +1171,7 @@ function vistaPrevia(dataObj) {
             const fila = Math.floor(index / 2); // 0 o 1
             const col = index % 2; // 0 izquierda, 1 derecha
 
-            let xBase = col === 0 ? margin : mitad + 20;
+            let xBase = col === 0 ? margin + 30 : mitad + 50;
             let yBase = inicioY + (fila * espacioY);
 
             // Línea
@@ -1633,6 +1634,11 @@ function cargarSolicitudesAprobadas() {
                                     <i class="fas fa-file-pdf mr-2 text-danger" ></i> Solicitud PDF
                                 </a>
 
+                                <a class="dropdown-item dropdown-item-custom btn-editar-solicitud" href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-edit mr-2 text-warning"></i> editar Solicitud
+                                </a>
+
                             </div>
                         </div>
                         `;
@@ -1677,6 +1683,7 @@ function toggleBotones() {
     if (modo === 'crear') {
         $("#guardar-registro").show();
         $("#actualizar-registro").hide();
+        $("#editar-registro").hide();
         $("#anular-solicitud").hide();
 
         // ocultar botón siguiente final
@@ -1689,6 +1696,7 @@ function toggleBotones() {
     } else if (modo == 'ver') {
         $("#guardar-registro").hide();
         $("#actualizar-registro").hide();
+        $("#editar-registro").hide();
         $("#anular-solicitud").hide();
         $(".btn-vista-previa").show();
         $(".vista-editar").show();
@@ -1708,6 +1716,7 @@ function toggleBotones() {
         $(".btn-vista-contrato").toggle();
         $("#guardar-registro").hide();
         $("#actualizar-registro").show();
+        $("#editar-registro").hide();
         $("#anular-solicitud").show();
 
         // 1. habilitar todo primero
@@ -1731,6 +1740,35 @@ function toggleBotones() {
 
         $(".numero-de-solicitud").show();
         $(".numero-de-contrato").hide();
+    } else if (modo == 'editar_ya_aprobada') {
+
+        $(".btn-vista-contrato").toggle();
+        $("#guardar-registro").hide();
+        $("#actualizar-registro").hide();
+        $("#editar-registro").show();
+        $("#anular-solicitud").hide();
+
+        // 1. habilitar todo primero
+        $("input, select, textarea")
+            .prop("disabled", false)
+            .prop("readonly", false);
+
+        // 2. luego deshabilitar los específicos
+        inputs.selectCliente.prop('disabled', true);
+        inputs.fechaCreacion.prop('disabled', true);
+
+        $("#btn-editar").hide().prop("disabled", false);
+        $("#btn-limpiar").hide().prop("disabled", false);
+
+        // 🔥 select2 fix
+        $('select').trigger('change');
+
+        $("#btn-siguiente-final").show();
+        $(".btn-vista-previa-contrato").show();
+        $(".vista-editar").show();
+
+        $(".numero-de-solicitud").show();
+        $(".numero-de-contrato").show();
     }
 }
 
@@ -2025,27 +2063,212 @@ function cargarSolicitudDesdeURLSoloVer() {
     }
 }
 
-// function enviarDatosContrato() {
-//     let data = getData();
+function editarSolicitudAprobada(tipo_proceso) {
+    const data = getData();
 
-//     // crear form dinámico
-//     let form = document.createElement("form");
-//     form.method = "POST";
-//     form.action = baseURL + "contratos/pdf";
-//     form.target = "_blank"; // abre en nueva pestaña
+    // console.log('baseURL:', baseURL);
+    // console.log('tipo_proceso:', tipo_proceso);
+    // console.log('URL final:', baseURL + tipo_proceso);
 
-//     // convertir FormData a inputs
-//     for (let pair of data.entries()) {
-//         let input = document.createElement("input");
-//         input.type = "hidden";
-//         input.name = pair[0];
-//         input.value = pair[1];
-//         form.appendChild(input);
-//     }
+    if (!data.get('idCliente')) {
+        alertaError('Debe seleccionar un cliente');
+        colorEnInputConFocusSelect(inputs.selectCliente[0]);
+        return false;
+    } else {
+        eliminarColorYfocusSelect(inputs.selectCliente[0]);
+    }
 
-//     document.body.appendChild(form);
-//     form.submit();
-// }
+    const esContado = data.get('contado') === 'true';
+
+    if (!esContado) {
+        let monto = parseFloat(data.get('monto')) || 0;
+        let cantidadDePagos = parseInt(data.get('cantidadDePagos')) || 0;
+        let totalCuota = parseFloat(data.get('totalCuota')) || 0;
+
+        let total = parseFloat((cantidadDePagos * totalCuota).toFixed(2));
+        monto = parseFloat(monto.toFixed(2));
+
+        if (total !== monto) {
+            alertaError(`Al sumar el total de las cuotas (${total}) no coincide con el monto (${monto})`);
+            return false;
+        }
+    }
+
+    Swal.fire({
+        title: 'Espere...',
+        html: 'Procesando...',
+        allowEscapeKey: false,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    $.ajax({
+        type: 'POST',
+        url: baseURL + tipo_proceso,
+        data: data,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function (response) {
+            if (response.status == 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.mensaje
+                }).then(() => {
+                    window.location.href = baseURL + 'solicitudes';
+                });
+            } else {
+                alertEnSweet('error', 'Uups..', response.mensaje);
+            }
+        },
+        error: function () {
+            alertEnSweet('error', 'Ups..', 'Ocurrió un error en la operacion');
+        }
+    });
+}
+
+function cargarSolicitudDesdeURLeditarYaAprobada() {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('solicitud');
+
+    if (encoded) {
+        const id = atob(encoded); // decodifica
+
+        modo = 'editar_ya_aprobada'; // AQUÍ defines el modo
+        idSolicitud = id;
+        // console.log(modo);
+        $.ajax({
+            url: baseURL + 'getSolicitudById',
+            type: 'GET',
+            data: { idSolicitud: id },
+            dataType: 'json',
+            success: function (response) {
+                // mostrar botón correcto
+                toggleBotones();
+                // console.log(modo);
+
+                const d = response.data;
+
+                inputs.idSolicitud.val(d.id_solicitud);
+                inputs.fechaCreacion.val(d.fechaCreacion);
+
+                inputs.numeroSolicitud.val(d.codigoSolicitud).prop('disabled', true);
+                inputs.numeroDEContrato.val(d.numeroContrato).prop('disabled', true);
+
+                // SECCION DE CLIENTE
+                const cliente = {
+                    id_cliente: d.id_cliente,
+                    nombre_completo: d.nombre,
+                    edad: d.edad,
+                    dui: d.dui,
+                    nit: d.nit,
+                    extendido: d.extendido,
+                    fecha: d.fecha,
+                    lugar_nacimiento: d.lugarNacimiento,
+                    fecha_nacimiento: d.fechaNacimiento,
+                    estado_familiar: d.estadoFamiliar,
+                    numero_grupo_familiar: d.numeroGrupoFamiliar,
+                    direccion_completa: d.direccion,
+                    lugar_trabajo: d.lugarDeTrabajo,
+                    ocupacion: d.ocupacion,
+                    telefono: d.telefonos
+                };
+                llenarInputs(cliente);
+
+                // SECCION DE BENEFICIARIO
+                const beneficiario = {
+                    id_beneficiario: d.idBeneficiario,
+                    nombre: d.nombreBeneficiario,
+                    edad: d.edadBeneficiario,
+                    parentesco: d.parentescoBeneficiario,
+                    direccion: d.direccionBeneficiario
+                };
+                cargarBeneficiarios(cliente.id_cliente, function (lista) {
+                    if (beneficiario.id_beneficiario) {
+                        // seleccionar en el select
+                        $('#beneficiarios-registratos')
+                            .val(beneficiario.id_beneficiario)
+                            .trigger('change');
+                        // llenar inputs
+                        llenarInputsBeneficiarios(beneficiario);
+                        eventoSeccionBeneficarioEditar();
+                    }
+                });
+
+                // SECCION DATOS DEL INMUEBLE
+                inputs.direccionInmueble.val(d.direccionInmueble);
+                inputs.propietario.prop('checked', d.propietario === "1");
+                inputs.inquilino.prop('checked', d.inquilino === "1");
+                inputs.representante.prop('checked', d.representante === "1");
+                inputs.otroCheck.val(d.otroCheck);
+                inputs.abonera.prop('checked', d.abonera === "1");
+                inputs.hoyoSeco.prop('checked', d.hoyoSeco === "1");
+                inputs.lavable.prop('checked', d.lavable === "1");
+                inputs.otroBaño.val(d.otroBaño);
+
+                // SECCION DE ENTREVISTA DIRIGIDA
+                let tieneLetrina = d.aceptaConstruccionLetrina;
+                if (tieneLetrina == 1) {
+                    inputs.si.prop('checked', true);
+                } else {
+                    inputs.no.prop('checked', false);
+                }
+                inputs.tiempo.val(d.tiempo);
+                inputs.monto.val(d.monto);
+                inputs.contado.prop('checked', d.contado === "1");
+                if ($('#contado').is(':checked')) {
+                    inputs.otro.prop('disabled', true);
+                    inputs.cantidadDePagos.prop('disabled', true);
+                    inputs.totalCuota.prop('disabled', true);
+                } else {
+                    inputs.otro.prop('disabled', false);
+                    inputs.cantidadDePagos.prop('disabled', false);
+                    inputs.totalCuota.prop('disabled', false);
+                };
+                inputs.otro.val(d.otroTipoPago);
+                inputs.idPlanPago.val(d.idPlanDePago);
+                if (d.contado === "1") {
+                    inputs.cantidadDePagos.val('');
+                    inputs.totalCuota.val('');
+                } else {
+                    inputs.cantidadDePagos.val(d.cantidadDePagos);
+                    inputs.totalCuota.val(d.totalCuota);
+                }
+                inputs.interes.val(d.interesACobrar);
+
+                // SECCION DE COMISION MUNICIPAL
+                inputs.acuerdo.val(d.acuerdo);
+                inputs.fechaSession.val(d.fechaSession);
+                inputs.numeroActa.val(d.numeroActa);
+
+                // SECCION DE LOS QUE FIRMAN
+                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', true);
+                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', true);
+                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', true);
+
+                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', true);
+                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', true);
+                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', true);
+
+                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', true);
+                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', true);
+                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', true);
+
+                // SECCION SOLO DE CONTRATO
+                inputs.numeroContrato.val(d.numeroContrato)
+                inputs.fichaAlcaldia.val(d.fichaAlcaldia)
+                inputs.fechaInicio.val(d.fechaInicio)
+                inputs.fechaVencimiento.val(d.fechaVencimiento)
+                setRutaSeleccionada(d.idRuta, d.nombreRuta);
+                setMedidorSeleccionada(d.idMedidor, d.numeroSerie);
+                inputs.direccionMedidor.val(d.direccionMedidor);
+
+                setTarifasSeleccionada(d.idTarifa, d.codigoTarifa + ' - ' + d.nombreTarifa)
+            }
+        });
+    }
+}
 
 function enviarDatosContrato(extraData = {}, usarFormData = true) {
 
@@ -2177,9 +2400,9 @@ function eventosUsuarios() {
             success: function (response) {
                 // response debe venir como objeto JSON
                 // console.log('aca resivo null');
-                
+
                 // console.log(response.data);
-                
+
                 vistaPrevia(response.data);
             },
             error: function () {
@@ -2197,7 +2420,7 @@ function eventosUsuarios() {
         $.ajax({
             url: baseURL + 'getSolicitudById',
             type: 'GET',
-            data: { id: id },
+            data: { idSolicitud: id },
             success: function (response) {
                 // response debe venir como objeto JSON
                 vistaPrevia(response.data);
@@ -2249,6 +2472,20 @@ function eventosUsuarios() {
             }
         });
     });
+
+    // evento para poder editar la solicitud ya creada y aceptada
+    // evento se activa cuando desde la tabla de creadas quiere ver la solicitud para aprobarla
+    $(document).on("click", ".btn-editar-solicitud", function (e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        const encoded = btoa(id);
+        window.location.href = baseURL + 'nueva_solicitud?solicitud=' + encoded + '&modo=editar_ya_aprobada';
+    });
+
+    // evento que envia los datos al controlador y editar datos de la solicitud ya creada
+    $("#editar-registro").on("click", function () {
+        editarSolicitudAprobada('editarSolicitudAprobada');
+    });
 }
 
 function detectarModo() {
@@ -2261,8 +2498,10 @@ function detectarModo() {
         modo = 'crear';
     } else if (tipoModo === 'ver') {
         modo = 'ver';
-    } else {
+    } else if (tipoModo == 'editar') {
         modo = 'editar';
+    } else {
+        modo = 'editar_ya_aprobada'
     }
 
     // console.log("Modo detectado:", modo);
@@ -2277,6 +2516,8 @@ function iniciarTodo() {
         cargarSolicitudDesdeURL();
     } else if (modo === 'ver') {
         cargarSolicitudDesdeURLSoloVer();
+    } else if (modo === 'editar_ya_aprobada') {
+        cargarSolicitudDesdeURLeditarYaAprobada();
     }
 
     toggleBotones();
