@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <style>
         @page {
-            margin: 1.5cm 1cm 1.5cm 1cm;
+            margin: 3cm 1cm 1.5cm 1cm;
         }
 
         body {
@@ -70,10 +70,10 @@
             width: 35%;
             display: inline-block;
             text-align: center;
-            margin: 20px 5%;
+            margin: 30px 5%;
             vertical-align: top;
             /* 🔥 alinea correctamente */
-            font-size: 14px;
+            font-size: 10px;
             /* restaura texto */
         }
 
@@ -93,6 +93,11 @@
         .titulo {
             font-size: 12px;
             font-weight: normal;
+        }
+
+        .firma-container {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
     </style>
 </head>
@@ -345,11 +350,11 @@
         </div>
 
         <!-- Firmante 1 -->
-        <?php if (!empty($nombreFirmante1) || !empty($rolFirmante1)) : ?>
+        <?php if (!empty($nombreFirmante1 ?? '') || !empty($rolFirmante1 ?? '')) : ?>
             <div class="firma">
                 <div class="linea"></div>
-                <div class="nombre"><?= $nombreFirmante1 ?></div>
-                <div class="titulo"><?= $rolFirmante1 ?></div>
+                <div class="nombre"><?= $nombreFirmante1 ?? '' ?></div>
+                <div class="titulo"><?= $rolFirmante1 ?? '' ?></div>
             </div>
         <?php endif; ?>
 
@@ -357,8 +362,8 @@
         <?php if (!empty($nombreFirmante2) || !empty($rolFirmante2)) : ?>
             <div class="firma">
                 <div class="linea"></div>
-                <div class="nombre"><?= $nombreFirmante2 ?></div>
-                <div class="titulo"><?= $rolFirmante2 ?></div>
+                <div class="nombre"><?= $nombreFirmante2 ?? '' ?></div>
+                <div class="titulo"><?= $rolFirmante2 ?? '' ?></div>
             </div>
         <?php endif; ?>
 
@@ -366,8 +371,8 @@
         <?php if (!empty($nombreFirmante3) || !empty($rolFirmante3)) : ?>
             <div class="firma">
                 <div class="linea"></div>
-                <div class="nombre"><?= $nombreFirmante3 ?></div>
-                <div class="titulo"><?= $rolFirmante3 ?></div>
+                <div class="nombre"><?= $nombreFirmante3 ?? '' ?></div>
+                <div class="titulo"><?= $rolFirmante3 ?? '' ?></div>
             </div>
         <?php endif; ?>
 
