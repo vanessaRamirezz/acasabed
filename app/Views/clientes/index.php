@@ -281,10 +281,11 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-3">
+                                <div class="col-sm-6">
                                     <div class="form-group">
                                         <label for="complemento-direccion">Complemento</label>
-                                        <input type="text" class="form-control" name="complemento-direccion" id="complemento-direccion">
+                                        <textarea  class="form-control" name="complemento-direccion" id="complemento-direccion"></textarea>
+                                        <!-- <input type="text" class="form-control" name="complemento-direccion" id="complemento-direccion"> -->
                                     </div>
                                 </div>
                             </div>

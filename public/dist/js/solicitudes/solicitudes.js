@@ -309,8 +309,8 @@ function eventoSeccionBeneficarioEditar() {
 
 function llenarInputFirmante1(firmanteUno) {
     inputs.idFirmante1.val(firmanteUno.id_firmante);
-    inputs.nombreFirmante1.val(firmanteUno.nombre).prop('disabled', true);
-    inputs.puestoFirmante1.val(firmanteUno.rol).prop('disabled', true);
+    inputs.nombreFirmante1.val(firmanteUno.nombre).prop('disabled', false);
+    inputs.puestoFirmante1.val(firmanteUno.rol).prop('disabled', false);
 }
 
 
@@ -331,8 +331,8 @@ function eventoSeleccionFirmante1() {
 
 function llenarInputFirmante2(firmanteUno) {
     inputs.idFirmante2.val(firmanteUno.id_firmante);
-    inputs.nombreFirmante2.val(firmanteUno.nombre).prop('disabled', true);
-    inputs.puestoFirmante2.val(firmanteUno.rol).prop('disabled', true);
+    inputs.nombreFirmante2.val(firmanteUno.nombre).prop('disabled', false);
+    inputs.puestoFirmante2.val(firmanteUno.rol).prop('disabled', false);
 }
 
 
@@ -353,8 +353,8 @@ function eventoSeleccionFirmante2() {
 
 function llenarInputFirmante3(firmanteUno) {
     inputs.idFirmante3.val(firmanteUno.id_firmante);
-    inputs.nombreFirmante3.val(firmanteUno.nombre).prop('disabled', true);
-    inputs.puestoFirmante3.val(firmanteUno.rol).prop('disabled', true);
+    inputs.nombreFirmante3.val(firmanteUno.nombre).prop('disabled', false);
+    inputs.puestoFirmante3.val(firmanteUno.rol).prop('disabled', false);
 }
 
 
@@ -1886,17 +1886,17 @@ function cargarSolicitudDesdeURL() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', true);
-                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', true);
-                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', true);
+                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', false);
+                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', false);
+                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', false);
 
-                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', true);
-                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', true);
-                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', true);
+                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', false);
+                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', false);
+                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', false);
 
-                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', true);
-                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', true);
-                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', true);
+                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', false);
+                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', false);
+                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', false);
             }
         });
     }
@@ -2243,17 +2243,17 @@ function cargarSolicitudDesdeURLeditarYaAprobada() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', true);
-                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', true);
-                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', true);
+                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', false);
+                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', false);
+                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', false);
 
-                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', true);
-                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', true);
-                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', true);
+                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', false);
+                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', false);
+                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', false);
 
-                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', true);
-                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', true);
-                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', true);
+                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', false);
+                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', false);
+                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', false);
 
                 // SECCION SOLO DE CONTRATO
                 inputs.numeroContrato.val(d.numeroContrato)

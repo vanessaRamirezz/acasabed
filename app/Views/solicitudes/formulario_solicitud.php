@@ -558,7 +558,7 @@
                             </div> -->
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label class="mb-1">Seleccionar Nombre</label>
                                             <select name="buscar-firmante-1" id="buscar-firmante-1" class="form-control">
@@ -567,13 +567,13 @@
                                         </div>
                                     </div>
                                     <input type="hidden" id="id-firmante-1">
-                                    <div class="col-md-8">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label for="nombre-firmante-1">Nombre</label>
                                             <input type="text" class="form-control" id="nombre-firmante-1" name="nombre-firmante-1">
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label for="puesto-firmante-1">Rol</label>
                                             <input type="text" class="form-control" id="puesto-firmante-1" name="puesto-firmante-1">
@@ -590,7 +590,7 @@
                             </div> -->
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label class="mb-1">Seleccionar Nombre</label>
                                             <select name="buscar-firmante-2" id="buscar-firmante-2" class="form-control">
@@ -599,13 +599,13 @@
                                         </div>
                                     </div>
                                     <input type="hidden" id="id-firmante-2">
-                                    <div class="col-md-8">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label for="nombre-firmante-2">Nombre</label>
                                             <input type="text" class="form-control" id="nombre-firmante-2" name="nombre-firmante-2">
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label for="puesto-firmante-2">Rol</label>
                                             <input type="text" class="form-control" id="puesto-firmante-2" name="puesto-firmante-2">
@@ -622,7 +622,7 @@
                             </div> -->
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label class="mb-1">Seleccionar Nombre</label>
                                             <select name="buscar-firmante-3" id="buscar-firmante-3" class="form-control">
@@ -631,13 +631,13 @@
                                         </div>
                                     </div>
                                     <input type="hidden" id="id-firmante-3">
-                                    <div class="col-md-8">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label for="nombre-firmante-3">Nombre</label>
                                             <input type="text" class="form-control" id="nombre-firmante-3" name="nombre-firmante-3">
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-9">
                                         <div class="form-group">
                                             <label for="puesto-firmante-3">Rol</label>
                                             <input type="text" class="form-control" id="puesto-firmante-3" name="puesto-firmante-3">
