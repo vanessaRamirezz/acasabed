@@ -60,6 +60,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('editarRuta', 'Rutas::editarRuta');
     $routes->get('selectRuta', 'Rutas::selectRuta');
 
+    // ORDEN DE CONTRATOS POR RUTA
+    $routes->get('orden_rutas', 'OrdenRutas::index');
+    $routes->get('getContratosOrdenRuta', 'OrdenRutas::getContratosPorRuta');
+    $routes->post('guardarOrdenContratosRuta', 'OrdenRutas::guardarOrdenContratos');
+
     // INSTALADORES
     $routes->get('instaladores', 'Instaladores::index');
     $routes->get('getInstaladores', 'Instaladores::getInstaladores');

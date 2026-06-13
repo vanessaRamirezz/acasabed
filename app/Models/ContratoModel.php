@@ -16,6 +16,7 @@ class ContratoModel extends Model
         'fecha_de_inicio',
         'fecha_de_vencimiento',
         'id_ruta',
+        'orden_ruta',
         'id_medidor',
         'direccion_medidor',
         'id_tarifa',
@@ -87,6 +88,7 @@ class ContratoModel extends Model
             'fecha_de_inicio' => $fechaInicio,
             'fecha_de_vencimiento' => $fechaVencimiento,
             'id_ruta' => $idRuta,
+            'orden_ruta' => null,
             'id_medidor' => $idMedidor,
             'direccion_medidor' => $direccionMedidor,
             'id_tarifa' => $idTarifa,
@@ -106,6 +108,37 @@ class ContratoModel extends Model
     public function actualizarContrato($idContrato, array $data)
     {
         return $this->update($idContrato, $data);
+    }
+
+    public function getContratosPorRutaOrden($idRuta)
+    {
+        return $this->db->table('contratos c')
+            ->select("
+                c.id_contrato,
+                c.numero_contrato,
+                c.orden_ruta,
+                c.estado,
+                cl.nombre_completo AS cliente
+            ", false)
+            ->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left')
+            ->where('c.id_ruta', $idRuta)
+            ->groupStart()
+            ->where('c.estado', 'APROBADO')
+            ->orWhere('c.estado', 'SUSPENDIDO')
+            ->groupEnd()
+            ->orderBy('CASE WHEN c.orden_ruta IS NULL THEN 1 ELSE 0 END', 'ASC', false)
+            ->orderBy('c.orden_ruta', 'ASC')
+            ->orderBy('cl.nombre_completo', 'ASC')
+            ->orderBy('c.id_contrato', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    public function actualizarOrdenRutaContrato($idContrato, $orden)
+    {
+        return $this->update($idContrato, [
+            'orden_ruta' => $orden
+        ]);
     }
 
     public function getTodosContratos(int $start, int $length, $searchValue = '')
@@ -242,6 +275,8 @@ class ContratoModel extends Model
         $builder->where("NOT EXISTS ($subQuery)", null, false);
 
         return $builder
+            ->orderBy('CASE WHEN contratos.orden_ruta IS NULL THEN 1 ELSE 0 END', 'ASC', false)
+            ->orderBy('contratos.orden_ruta', 'ASC')
             ->orderBy('contratos.id_contrato', 'DESC')
             ->get()
             ->getResultArray();
@@ -319,6 +354,8 @@ class ContratoModel extends Model
 
         return $builder
             // ->orderBy('clientes.nombre_completo', 'ASC')
+            ->orderBy('CASE WHEN contratos.orden_ruta IS NULL THEN 1 ELSE 0 END', 'ASC', false)
+            ->orderBy('contratos.orden_ruta', 'ASC')
             ->orderBy('contratos.id_contrato', 'DESC')
             ->get()
             ->getResultArray();
