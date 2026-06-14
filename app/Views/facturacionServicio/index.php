@@ -32,24 +32,33 @@
 
 <section class="content">
 
-    <div class="row">
-        <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir</button>
-        <button type="button"
-            id="btn-generar-facturas-servicio"
-            class="btn btn-primary">
-            <i class="fas fa-file-invoice-dollar me-1"></i>
-            Generar Facturas
-        </button>
-    </div>
     <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <button type="button"
+                    id="btn-imprimir-facturas-periodo"
+                    class="btn bg-gradient-success btn-flat mr-2">
+                    <i class="fas fa-print mr-1"></i>
+                    Imprimir
+                </button>
+
+                <button type="button"
+                    id="btn-generar-facturas-servicio"
+                    class="btn btn-primary">
+                    <i class="fas fa-file-invoice-dollar mr-1"></i>
+                    Generar Facturas
+                </button>
+            </div>
+        </div>
+
         <input type="hidden" id="id-factura-servicio">
 
         <div id="accordion-facturacion-servicio">
-            <div class="card">
+            <div class="card mt-3">
                 <div class="card-header" id="headingFacturaOtro">
                     <h5 class="mb-0">
                         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseFacturaOtro" aria-expanded="false" aria-controls="collapseFacturaOtro">
-                            Facturación manual tipo OTRO
+                            Otro tipo facturación
                         </button>
                     </h5>
                 </div>

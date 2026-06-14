@@ -172,7 +172,8 @@ function eventosUsuarios() {
         const fileInput = document.getElementById("inputExcelPagos");
 
         if (!fileInput.files.length) {
-            alert("Debes seleccionar un archivo Excel");
+            alertaError('Debes seleccionar un archivo Excel')
+            // alert("Debes seleccionar un archivo Excel");
             return;
         }
 
