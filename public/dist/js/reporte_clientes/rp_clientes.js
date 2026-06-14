@@ -130,7 +130,7 @@ function cargarColonias(idDistrito) {
     });
 }
 
-function generarReporte() {
+async function generarReporte() {
 
     const params = new URLSearchParams({
         departamento: $("#departamento").val() || "-1",
@@ -140,18 +140,57 @@ function generarReporte() {
     });
 
     const iframe = document.getElementById("visorPDF");
-    const message = document.getElementById("pdfMessage"); // 👈 asegúrate que exista
+    const message = document.getElementById("pdfMessage");
+    const loading = document.getElementById("loadingClientes");
 
-    // 👇 ocultar mensaje inicial
     if (message) {
         message.style.display = "none";
     }
 
-    // 👇 mostrar iframe
-    iframe.style.display = "block";
+    iframe.style.display = "none";
+    loading.style.display = "flex";
 
-    // 👇 cargar PDF
-    iframe.src = `${baseURL}reporte-clientes/pdf?${params.toString()}`;
+    try {
+
+        const response = await fetch(
+            `${baseURL}reporte-clientes/pdf?${params.toString()}`
+        );
+
+        if (!response.ok) {
+            throw new Error("No fue posible generar el reporte");
+        }
+
+        const blob = await response.blob();
+
+        if (!blob.type.includes("pdf")) {
+            throw new Error("El servidor no devolvió un PDF válido");
+        }
+
+        const pdfUrl = URL.createObjectURL(blob);
+
+        iframe.onload = () => {
+            loading.style.display = "none";
+            iframe.style.display = "block";
+        };
+
+        iframe.src = pdfUrl;
+
+    } catch (error) {
+
+        loading.style.display = "none";
+
+        alertEnSweet(
+            "error",
+            "Error",
+            error.message || "Ocurrió un error al generar el reporte"
+        );
+
+        if (message) {
+            message.style.display = "flex";
+        }
+
+        console.error(error);
+    }
 }
 
 function eventosUsuarios() {

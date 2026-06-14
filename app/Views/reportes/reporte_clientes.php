@@ -69,6 +69,20 @@
 
                 <div id="pdfBox" style="position:relative; width:100%; height:600px; border:1px solid #ddd; background:#f8f9fa;">
 
+                    <div id="loadingClientes" style="
+                        position:absolute;
+                        inset:0;
+                        display:none;
+                        align-items:center;
+                        justify-content:center;
+                        flex-direction:column;
+                        background:rgba(255,255,255,0.85);
+                        z-index:1000;
+                    ">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <h5 class="mt-3">Generando reporte...</h5>
+                    </div>
+
                     <!-- 👇 Mensaje inicial -->
                     <div id="pdfMessage" style="
                         position:absolute;

@@ -34,12 +34,43 @@
         </div> -->
 
         <!-- Vista previa -->
-        <div class="row">
+        <!-- <div class="row">
             <div class="col-12">
                 <iframe id="visorPDF" style="width:100%; height:700px; border:none;"></iframe>
             </div>
-        </div>
+        </div> -->
 
+        <div class="row">
+            <div class="col-12">
+
+                <div id="contenedorPDF" style="position: relative; min-height: 700px;">
+
+                    <div id="loadingRutas" style="
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(255,255,255,0.85);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        flex-direction: column;
+                        z-index: 9999;
+                    ">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <h5 class="mt-3">Generando reporte...</h5>
+                    </div>
+
+                    <iframe
+                        id="visorPDF"
+                        style="width:100%; height:700px; border:none;">
+                    </iframe>
+
+                </div>
+
+            </div>
+        </div>
 
     </div><!-- /.container-fluid -->
 </section>

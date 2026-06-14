@@ -73,37 +73,39 @@ class ReporteResumenFacturas extends BaseController
 
     public function generarPDF()
     {
-        $idPeriodo = $this->request->getGet('periodo');
-        $idPeriodo = !empty($idPeriodo) ? $idPeriodo : null;
-        $tipo = $this->request->getGet('tipo') ?? 'Todos';
-        $periodo = $idPeriodo ? $this->periodosModel->find($idPeriodo) : null;
 
-        $resumen = $this->facturaModel->getResumenContableFacturas($idPeriodo, $tipo);
-        $general = $resumen['general'] ?? [];
-        $estados = $this->ordenarEstados($resumen['estados'] ?? []);
-        $tipos = $resumen['tipos'] ?? [];
-        $servicios = $resumen['servicios'] ?? [];
+        try {
+            $idPeriodo = $this->request->getGet('periodo');
+            $idPeriodo = !empty($idPeriodo) ? $idPeriodo : null;
+            $tipo = $this->request->getGet('tipo') ?? 'Todos';
+            $periodo = $idPeriodo ? $this->periodosModel->find($idPeriodo) : null;
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
+            $resumen = $this->facturaModel->getResumenContableFacturas($idPeriodo, $tipo);
+            $general = $resumen['general'] ?? [];
+            $estados = $this->ordenarEstados($resumen['estados'] ?? []);
+            $tipos = $resumen['tipos'] ?? [];
+            $servicios = $resumen['servicios'] ?? [];
 
-        $pdf = new ReporteResumenFacturasPDF();
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(true, 15);
-        $pdf->AddPage();
+            if (ob_get_length()) {
+                ob_end_clean();
+            }
 
-        $logo = FCPATH . 'dist/img/agua.png';
-        $pdf->Image($logo, 10, 10, 22);
+            $pdf = new ReporteResumenFacturasPDF();
+            $pdf->SetMargins(10, 10, 10);
+            $pdf->SetAutoPageBreak(true, 15);
+            $pdf->AddPage();
 
-        $nombrePeriodo = 'Todos los periodos';
-        if (!empty($idPeriodo) && is_array($periodo) && !empty($periodo['nombre'])) {
-            $nombrePeriodo = esc($periodo['nombre']);
-        }
+            $logo = FCPATH . 'dist/img/agua.png';
+            $pdf->Image($logo, 10, 10, 22);
 
-        $tipoTexto = $tipo === 'Todos' ? 'Todos los tipos' : esc($tipo);
+            $nombrePeriodo = 'Todos los periodos';
+            if (!empty($idPeriodo) && is_array($periodo) && !empty($periodo['nombre'])) {
+                $nombrePeriodo = esc($periodo['nombre']);
+            }
 
-        $html = '
+            $tipoTexto = $tipo === 'Todos' ? 'Todos los tipos' : esc($tipo);
+
+            $html = '
         <style>
             .titulo {
                 text-align: center;
@@ -182,20 +184,20 @@ class ReporteResumenFacturas extends BaseController
             </thead>
             <tbody>';
 
-        if (empty($estados)) {
-            $html .= '<tr><td colspan="4" class="center">No hay datos para los filtros seleccionados.</td></tr>';
-        } else {
-            foreach ($estados as $estado) {
-                $html .= '
+            if (empty($estados)) {
+                $html .= '<tr><td colspan="4" class="center">No hay datos para los filtros seleccionados.</td></tr>';
+            } else {
+                foreach ($estados as $estado) {
+                    $html .= '
                 <tr>
                     <td>' . esc((string)$estado['estado'] ?? '-') . '</td>
                     <td class="center">' . number_format((float)($estado['cantidad_facturas'] ?? 0), 0) . '</td>
                     <td class="right">$ ' . number_format((float)($estado['total_facturado'] ?? 0), 2) . '</td>
                 </tr>';
+                }
             }
-        }
 
-        $html .= '
+            $html .= '
             </tbody>
         </table>
 
@@ -210,20 +212,20 @@ class ReporteResumenFacturas extends BaseController
             </thead>
             <tbody>';
 
-        if (empty($tipos)) {
-            $html .= '<tr><td colspan="4" class="center">No hay tipos registrados.</td></tr>';
-        } else {
-            foreach ($tipos as $filaTipo) {
-                $html .= '
+            if (empty($tipos)) {
+                $html .= '<tr><td colspan="4" class="center">No hay tipos registrados.</td></tr>';
+            } else {
+                foreach ($tipos as $filaTipo) {
+                    $html .= '
                 <tr>
                     <td>' . esc((string)$filaTipo['tipo'] ?? '-') . '</td>
                     <td class="center">' . number_format((float)($filaTipo['cantidad_facturas'] ?? 0), 0) . '</td>
                     <td class="right">$ ' . number_format((float)($filaTipo['total_facturado'] ?? 0), 2) . '</td>
                 </tr>';
+                }
             }
-        }
 
-        $html .= '
+            $html .= '
             </tbody>
         </table>
 
@@ -238,29 +240,40 @@ class ReporteResumenFacturas extends BaseController
             </thead>
             <tbody>';
 
-        if (empty($servicios)) {
-            $html .= '<tr><td colspan="3" class="center">No hay conceptos de servicio para este filtro.</td></tr>';
-        } else {
-            foreach ($servicios as $servicio) {
-                $html .= '
+            if (empty($servicios)) {
+                $html .= '<tr><td colspan="3" class="center">No hay conceptos de servicio para este filtro.</td></tr>';
+            } else {
+                foreach ($servicios as $servicio) {
+                    $html .= '
                 <tr>
                     <td>' . esc((string)$servicio['servicio'] ?? '-') . '</td>
                     <td class="center">' . number_format((float)($servicio['cantidad_facturas'] ?? 0), 0) . '</td>
                     <td class="right">$ ' . number_format((float)($servicio['subtotal_servicio'] ?? 0), 2) . '</td>
                 </tr>';
+                }
             }
-        }
 
-        $html .= '
+            $html .= '
             </tbody>
         </table>';
 
-        $pdf->Ln(10);
-        $pdf->writeHTML($html, true, false, true, false, '');
+            $pdf->Ln(10);
+            $pdf->writeHTML($html, true, false, true, false, '');
 
-        return $this->response
-            ->setHeader('Content-Type', 'application/pdf')
-            ->setHeader('Content-Disposition', 'inline; filename="reporte_resumen_facturacion.pdf"')
-            ->setBody($pdf->Output('reporte_resumen_facturacion.pdf', 'S'));
+            return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'inline; filename="reporte_resumen_facturacion.pdf"')
+                ->setBody($pdf->Output('reporte_resumen_facturacion.pdf', 'S'));
+        } catch (\Throwable $e) {
+
+            log_message('error', $e->getMessage());
+
+            return $this->response
+                ->setStatusCode(500)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Error al generar el reporte'
+                ]);
+        }
     }
 }

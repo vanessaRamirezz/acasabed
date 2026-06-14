@@ -46,85 +46,86 @@ class ReporteLecturas extends BaseController
 
     public function generarPDF()
     {
-        $idPeriodo = $this->request->getGet('periodo');
-        $idContrato = $this->request->getGet('contrato');
-        $idInstalador = $this->request->getGet('instalador');
-        $idDepartamento = $this->request->getGet('departamento');
-        $idMunicipio = $this->request->getGet('municipio');
-        $idDistrito = $this->request->getGet('distrito');
-        $idColonia = $this->request->getGet('colonia');
+        try {
+            $idPeriodo = $this->request->getGet('periodo');
+            $idContrato = $this->request->getGet('contrato');
+            $idInstalador = $this->request->getGet('instalador');
+            $idDepartamento = $this->request->getGet('departamento');
+            $idMunicipio = $this->request->getGet('municipio');
+            $idDistrito = $this->request->getGet('distrito');
+            $idColonia = $this->request->getGet('colonia');
 
-        $lecturas = $this->lecturasModel->getReporteLecturasTomadas(
-            $idPeriodo,
-            $idContrato,
-            $idInstalador,
-            $idDepartamento,
-            $idMunicipio,
-            $idDistrito,
-            $idColonia
-        );
+            $lecturas = $this->lecturasModel->getReporteLecturasTomadas(
+                $idPeriodo,
+                $idContrato,
+                $idInstalador,
+                $idDepartamento,
+                $idMunicipio,
+                $idDistrito,
+                $idColonia
+            );
 
-        $periodo = (!empty($idPeriodo) && $idPeriodo !== '-1') ? $this->periodosModel->find($idPeriodo) : null;
-        $contrato = (!empty($idContrato) && $idContrato !== '-1') ? $this->contratosModel->find($idContrato) : null;
-        $instalador = (!empty($idInstalador) && $idInstalador !== '-1') ? $this->instaladoresModel->find($idInstalador) : null;
-        $mostrarPeriodo = empty($idPeriodo) || $idPeriodo === '-1';
-        $mostrarContrato = empty($idContrato) || $idContrato === '-1';
-        $mostrarInstalador = empty($idInstalador) || $idInstalador === '-1';
-        $vistaContrato = !$mostrarContrato;
+            $periodo = (!empty($idPeriodo) && $idPeriodo !== '-1') ? $this->periodosModel->find($idPeriodo) : null;
+            $contrato = (!empty($idContrato) && $idContrato !== '-1') ? $this->contratosModel->find($idContrato) : null;
+            $instalador = (!empty($idInstalador) && $idInstalador !== '-1') ? $this->instaladoresModel->find($idInstalador) : null;
+            $mostrarPeriodo = empty($idPeriodo) || $idPeriodo === '-1';
+            $mostrarContrato = empty($idContrato) || $idContrato === '-1';
+            $mostrarInstalador = empty($idInstalador) || $idInstalador === '-1';
+            $vistaContrato = !$mostrarContrato;
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
-        $pdf = new ReporteLecturasPDF();
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(true, 15);
-        $pdf->AddPage();
-
-        $logo = FCPATH . 'dist/img/agua.png';
-        if (file_exists($logo)) {
-            $pdf->Image($logo, 10, 10, 22);
-        }
-
-        $filtrosAplicados = [];
-
-        if (!empty($periodo['nombre'])) {
-            $filtrosAplicados[] = 'Período: ' . $periodo['nombre'];
-        }
-
-        if (!empty($contrato['numero_contrato'])) {
-            $filtrosAplicados[] = 'Contrato: ' . $contrato['numero_contrato'];
-        }
-
-        if (!empty($instalador['nombre_completo'])) {
-            $filtrosAplicados[] = 'Instalador: ' . $instalador['nombre_completo'];
-        }
-
-        if (!empty($lecturas)) {
-            $primero = $lecturas[0];
-
-            if (!empty($idDepartamento) && $idDepartamento !== '-1' && !empty($primero['departamento'])) {
-                $filtrosAplicados[] = 'Departamento: ' . $primero['departamento'];
+            if (ob_get_length()) {
+                ob_end_clean();
             }
 
-            if (!empty($idMunicipio) && $idMunicipio !== '-1' && !empty($primero['municipio'])) {
-                $filtrosAplicados[] = 'Municipio: ' . $primero['municipio'];
+            $pdf = new ReporteLecturasPDF();
+            $pdf->SetMargins(10, 10, 10);
+            $pdf->SetAutoPageBreak(true, 15);
+            $pdf->AddPage();
+
+            $logo = FCPATH . 'dist/img/agua.png';
+            if (file_exists($logo)) {
+                $pdf->Image($logo, 10, 10, 22);
             }
 
-            if (!empty($idDistrito) && $idDistrito !== '-1' && !empty($primero['distrito'])) {
-                $filtrosAplicados[] = 'Distrito: ' . $primero['distrito'];
+            $filtrosAplicados = [];
+
+            if (!empty($periodo['nombre'])) {
+                $filtrosAplicados[] = 'Período: ' . $periodo['nombre'];
             }
 
-            if (!empty($idColonia) && $idColonia !== '-1' && !empty($primero['colonia'])) {
-                $filtrosAplicados[] = 'Colonia: ' . $primero['colonia'];
+            if (!empty($contrato['numero_contrato'])) {
+                $filtrosAplicados[] = 'Contrato: ' . $contrato['numero_contrato'];
             }
-        }
 
-        if (empty($filtrosAplicados)) {
-            $filtrosAplicados[] = 'Todas las lecturas tomadas';
-        }
+            if (!empty($instalador['nombre_completo'])) {
+                $filtrosAplicados[] = 'Instalador: ' . $instalador['nombre_completo'];
+            }
 
-        $html = '
+            if (!empty($lecturas)) {
+                $primero = $lecturas[0];
+
+                if (!empty($idDepartamento) && $idDepartamento !== '-1' && !empty($primero['departamento'])) {
+                    $filtrosAplicados[] = 'Departamento: ' . $primero['departamento'];
+                }
+
+                if (!empty($idMunicipio) && $idMunicipio !== '-1' && !empty($primero['municipio'])) {
+                    $filtrosAplicados[] = 'Municipio: ' . $primero['municipio'];
+                }
+
+                if (!empty($idDistrito) && $idDistrito !== '-1' && !empty($primero['distrito'])) {
+                    $filtrosAplicados[] = 'Distrito: ' . $primero['distrito'];
+                }
+
+                if (!empty($idColonia) && $idColonia !== '-1' && !empty($primero['colonia'])) {
+                    $filtrosAplicados[] = 'Colonia: ' . $primero['colonia'];
+                }
+            }
+
+            if (empty($filtrosAplicados)) {
+                $filtrosAplicados[] = 'Todas las lecturas tomadas';
+            }
+
+            $html = '
         <style>
             .titulo {
                 text-align: center;
@@ -176,74 +177,85 @@ class ReporteLecturas extends BaseController
                     ' . ($mostrarInstalador ? '<th align="left">Instalador</th>' : '') . '
                     <th align="left">Fecha</th>
                     ' . ($vistaContrato
-                        ? '<th align="left">Lectura anterior</th><th align="left">Lectura actual</th><th align="left">Consumo</th>'
-                        : '<th align="left">Lectura actual</th>') . '
+                ? '<th align="left">Lectura anterior</th><th align="left">Lectura actual</th><th align="left">Consumo</th>'
+                : '<th align="left">Lectura actual</th>') . '
                 </tr>
             </thead>
             <tbody>';
 
-        if (empty($lecturas)) {
-            $columnas = 3;
-            if ($mostrarPeriodo) {
-                $columnas++;
-            }
-            if ($mostrarContrato) {
-                $columnas++;
-            }
-            if ($mostrarInstalador) {
-                $columnas++;
-            }
-            $columnas += $vistaContrato ? 3 : 1;
+            if (empty($lecturas)) {
+                $columnas = 3;
+                if ($mostrarPeriodo) {
+                    $columnas++;
+                }
+                if ($mostrarContrato) {
+                    $columnas++;
+                }
+                if ($mostrarInstalador) {
+                    $columnas++;
+                }
+                $columnas += $vistaContrato ? 3 : 1;
 
-            $html .= '
+                $html .= '
                 <tr>
                     <td colspan="' . $columnas . '" class="center">No hay lecturas para los filtros seleccionados.</td>
                 </tr>';
-        } else {
-            $numero = 1;
+            } else {
+                $numero = 1;
 
-            foreach ($lecturas as $lectura) {
-                $html .= '<tr>';
-                $html .= '<td align="left">' . $numero++ . '</td>';
+                foreach ($lecturas as $lectura) {
+                    $html .= '<tr>';
+                    $html .= '<td align="left">' . $numero++ . '</td>';
 
-                if ($mostrarPeriodo) {
-                    $html .= '<td align="left">' . esc((string)$lectura['periodo'] ?? '-') . '</td>';
+                    if ($mostrarPeriodo) {
+                        $html .= '<td align="left">' . esc((string)$lectura['periodo'] ?? '-') . '</td>';
+                    }
+
+                    if ($mostrarContrato) {
+                        $html .= '<td align="left">' . esc((string)$lectura['numero_contrato'] ?? '-') . '</td>';
+                    }
+
+                    $html .= '<td align="left">' . esc((string)$lectura['cliente'] ?? '-') . '</td>';
+
+                    if ($mostrarInstalador) {
+                        $html .= '<td align="left">' . esc((string)$lectura['instalador'] ?? '-') . '</td>';
+                    }
+
+                    $html .= '<td align="left">' . esc((string)$lectura['fecha_lectura'] ?? '-') . '</td>';
+
+                    if ($vistaContrato) {
+                        $html .= '<td align="left">' . number_format((float)($lectura['lectura_anterior'] ?? 0), 0) . '</td>';
+                        $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
+                        $html .= '<td align="left">' . number_format((float)($lectura['consumo_factura'] ?? 0), 0) . '</td>';
+                    } else {
+                        $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
+                    }
+
+                    $html .= '</tr>';
                 }
-
-                if ($mostrarContrato) {
-                    $html .= '<td align="left">' . esc((string)$lectura['numero_contrato'] ?? '-') . '</td>';
-                }
-
-                $html .= '<td align="left">' . esc((string)$lectura['cliente'] ?? '-') . '</td>';
-
-                if ($mostrarInstalador) {
-                    $html .= '<td align="left">' . esc((string)$lectura['instalador'] ?? '-') . '</td>';
-                }
-
-                $html .= '<td align="left">' . esc((string)$lectura['fecha_lectura'] ?? '-') . '</td>';
-
-                if ($vistaContrato) {
-                    $html .= '<td align="left">' . number_format((float)($lectura['lectura_anterior'] ?? 0), 0) . '</td>';
-                    $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
-                    $html .= '<td align="left">' . number_format((float)($lectura['consumo_factura'] ?? 0), 0) . '</td>';
-                } else {
-                    $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
-                }
-
-                $html .= '</tr>';
             }
-        }
 
-        $html .= '
+            $html .= '
             </tbody>
         </table>';
 
-        $pdf->Ln(12);
-        $pdf->writeHTML($html, true, false, true, false, '');
+            $pdf->Ln(12);
+            $pdf->writeHTML($html, true, false, true, false, '');
 
-        return $this->response
-            ->setHeader('Content-Type', 'application/pdf')
-            ->setHeader('Content-Disposition', 'inline; filename="reporte_lecturas_tomadas.pdf"')
-            ->setBody($pdf->Output('reporte_lecturas_tomadas.pdf', 'S'));
+            return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'inline; filename="reporte_lecturas_tomadas.pdf"')
+                ->setBody($pdf->Output('reporte_lecturas_tomadas.pdf', 'S'));
+        } catch (\Throwable $e) {
+
+            log_message('error', $e->getMessage());
+
+            return $this->response
+                ->setStatusCode(500)
+                ->setJSON([
+                    'success' => false,
+                    'message' => 'Error al generar el reporte'
+                ]);
+        }
     }
 }

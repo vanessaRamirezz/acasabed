@@ -29,7 +29,8 @@ function cargarPeriodosResumen() {
     }
 }
 
-function generarReporteResumenFacturas() {
+async function generarReporteResumenFacturas() {
+
     const periodo = $("#periodoResumenFacturas").val();
     const tipo = $("#tipoResumenFacturas").val();
 
@@ -41,10 +42,49 @@ function generarReporteResumenFacturas() {
 
     const iframe = document.getElementById("visorPDFResumenFacturas");
     const message = document.getElementById("pdfMessageResumenFacturas");
+    const loading = document.getElementById("loadingResumenFacturas");
 
     message.style.display = "none";
-    iframe.style.display = "block";
-    iframe.src = `${baseURL}reporte-resumen-facturas/pdf?${params.toString()}`;
+    iframe.style.display = "none";
+    loading.style.display = "flex";
+
+    try {
+
+        const response = await fetch(
+            `${baseURL}reporte-resumen-facturas/pdf?${params.toString()}`
+        );
+
+        if (!response.ok) {
+            throw new Error("No fue posible generar el reporte");
+        }
+
+        const blob = await response.blob();
+
+        if (!blob.type.includes("pdf")) {
+            throw new Error("El servidor no devolvió un PDF válido");
+        }
+
+        const pdfUrl = URL.createObjectURL(blob);
+
+        iframe.onload = () => {
+            loading.style.display = "none";
+            iframe.style.display = "block";
+        };
+
+        iframe.src = pdfUrl;
+
+    } catch (error) {
+
+        loading.style.display = "none";
+
+        alertEnSweet(
+            "error",
+            "Error",
+            error.message || "Ocurrió un error al generar el reporte"
+        );
+
+        message.style.display = "flex";
+    }
 }
 
 function eventosUsuarios() {

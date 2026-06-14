@@ -1,32 +1,64 @@
 import { alertaOk, alertEnSweet, eliminarColorYfocus, validarCampo } from "../metodos/metodos.js";
 
 function eventosUsuarios() {
+
     const btn = document.getElementById('btnGenerar');
     const iframe = document.getElementById('visorPDF');
     const message = document.getElementById('pdfMessage');
+    const loading = document.getElementById('loadingContratos');
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
 
         const estado = document.getElementById('estado').value;
 
         let url = baseURL + 'reporte-contratos/pdf';
+
         if (estado) {
-            url += '?estado=' + estado;
+            url += '?estado=' + encodeURIComponent(estado);
         }
 
-        // ocultar mensaje
         message.style.display = 'none';
+        iframe.style.display = 'none';
+        loading.style.display = 'flex';
 
-        // mostrar iframe
-        iframe.style.display = 'block';
+        try {
 
-        // cargar PDF
-        iframe.src = url;
-    });
+            const response = await fetch(url);
 
-    // 👇 cuando carga el PDF (opcional UX)
-    iframe.addEventListener('load', () => {
-        // aquí ya puedes quitar loaders si quisieras
+            if (!response.ok) {
+                throw new Error('No fue posible generar el reporte');
+            }
+
+            const blob = await response.blob();
+
+            if (!blob.type.includes('pdf')) {
+                throw new Error('El servidor no devolvió un PDF válido');
+            }
+
+            const pdfUrl = URL.createObjectURL(blob);
+
+            iframe.onload = () => {
+                loading.style.display = 'none';
+                iframe.style.display = 'block';
+            };
+
+            iframe.src = pdfUrl;
+
+        } catch (error) {
+
+            loading.style.display = 'none';
+
+            alertEnSweet(
+                'error',
+                'Error',
+                error.message || 'Ocurrió un error al generar el reporte'
+            );
+
+            message.style.display = 'flex';
+
+            console.error(error);
+        }
+
     });
 }
 

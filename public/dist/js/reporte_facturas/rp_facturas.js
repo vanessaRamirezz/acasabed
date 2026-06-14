@@ -1,3 +1,5 @@
+import { alertaError } from "../metodos/metodos.js";
+
 function cargarPeriodos() {
     $("#periodo").select2({
         placeholder: "Busque y seleccione un período",
@@ -20,12 +22,18 @@ function cargarPeriodos() {
     });
 }
 
-function generarReporte() {
+async function generarReporte() {
+
     const periodo = $("#periodo").val();
     const tipo = $("#tipo").val();
     const search = $("#searchReporteFactura").val().trim();
 
     const params = new URLSearchParams({ tipo });
+
+    if (periodo === null || periodo === '') {
+        alertaError('Debe seleccionar un período');
+        return;
+    }
 
     if (periodo) {
         params.append("periodo", periodo);
@@ -37,15 +45,51 @@ function generarReporte() {
 
     const iframe = document.getElementById("visorPDF");
     const message = document.getElementById("pdfMessage");
+    const loading = document.getElementById("loadingFacturas");
 
-    // 👇 ocultar mensaje inicial
     message.style.display = "none";
+    iframe.style.display = "none";
+    loading.style.display = "flex";
 
-    // 👇 mostrar iframe
-    iframe.style.display = "block";
+    try {
 
-    // 👇 cargar PDF
-    iframe.src = `${baseURL}reporte-facturas/pdf?${params.toString()}`;
+        const response = await fetch(
+            `${baseURL}reporte-facturas/pdf?${params.toString()}`
+        );
+
+        if (!response.ok) {
+            throw new Error("No fue posible generar el reporte");
+        }
+
+        const blob = await response.blob();
+
+        if (!blob.type.includes("pdf")) {
+            throw new Error("El servidor no devolvió un PDF válido");
+        }
+
+        const pdfUrl = URL.createObjectURL(blob);
+
+        iframe.onload = () => {
+            loading.style.display = "none";
+            iframe.style.display = "block";
+        };
+
+        iframe.src = pdfUrl;
+
+    } catch (error) {
+
+        loading.style.display = "none";
+
+        alertEnSweet(
+            "error",
+            "Error",
+            error.message || "Ocurrió un error al generar el reporte"
+        );
+
+        message.style.display = "flex";
+
+        console.error(error);
+    }
 }
 
 function eventosUsuarios() {
