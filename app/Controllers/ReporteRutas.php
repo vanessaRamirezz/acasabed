@@ -72,7 +72,7 @@ class ReporteRutas extends BaseController
         table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 10px;
+            font-size: 8px;
         }
         th {
             background-color: #003366;
@@ -94,10 +94,10 @@ class ReporteRutas extends BaseController
     <table>
         <thead>
             <tr>
-                <th  align="left">No.</th>
-                <th  align="left">Fecha Creación</th>
-                <th  align="left">Codigo</th>
-                <th  align="left">Nombre</th>';
+                <th width="15%" align="left">No.</th>
+                <th width="15%" align="left">Fecha Creación</th>
+                <th width="15%" align="left">Codigo</th>
+                <th width="55%" align="left">Nombre</th>';
 
         $html .= '</tr>
         </thead>
@@ -109,10 +109,10 @@ class ReporteRutas extends BaseController
             $fechaFormateada = date('d-m-Y', strtotime($r['fecha_creacion']));
 
             $html .= '<tr>
-            <td align="left">' . $numero++ . '</td>
-            <td align="left">' . $fechaFormateada . '</td>
-            <td align="left">' . $r['codigo'] . '</td>
-            <td align="left">' . $r['nombre'] . '</td>';
+            <td width="15%" align="left">' . $numero++ . '</td>
+            <td width="15%" align="left">' . $fechaFormateada . '</td>
+            <td width="15%" align="left">' . $r['codigo'] . '</td>
+            <td width="55%" align="left">' . $r['nombre'] . '</td>';
             $html .= '</tr>';
         }
 
