@@ -31,58 +31,17 @@
 </div>
 
 <section class="content">
+
+    <div class="row">
+        <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir</button>
+        <button type="button"
+            id="btn-generar-facturas-servicio"
+            class="btn btn-primary">
+            <i class="fas fa-file-invoice-dollar me-1"></i>
+            Generar Facturas
+        </button>
+    </div>
     <div class="container-fluid">
-
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-light">
-                <h6 class="mb-0 fw-bold">Carga de Archivo de Alcaldía</h6>
-                <small class="text-muted">Sube el archivo Excel para validar cargos de alumbrado y aseo</small>
-            </div>
-
-            <div class="card-body">
-
-                <!-- Input file -->
-                <div class="mb-3">
-                    <label for="input-excel" class="form-label fw-semibold">
-                        Archivo Excel
-                    </label>
-
-                    <input type="file"
-                        id="input-excel"
-                        class="form-control"
-                        accept=".xlsx, .xls">
-
-                    <div class="form-text">
-                        Formatos permitidos: .xlsx, .xls
-                    </div>
-                </div>
-
-                <!-- Estado -->
-                <div id="estado-excel" class="alert alert-secondary d-none">
-                    <span id="estado-texto">Esperando archivo...</span>
-                </div>
-
-                <!-- Botones -->
-                <div class="d-flex justify-content-end gap-2 flex-wrap">
-
-                    <button type="button"
-                        id="btn-cargar-excel"
-                        class="btn btn-outline-success">
-                        <i class="fas fa-upload me-1"></i>
-                        Validar Excel
-                    </button>
-
-                    <button type="button"
-                        id="btn-generar-facturas-servicio"
-                        class="btn btn-primary">
-                        <i class="fas fa-file-invoice-dollar me-1"></i>
-                        Generar Facturas
-                    </button>
-                    <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir</button>
-                </div>
-            </div>
-        </div>
-
         <input type="hidden" id="id-factura-servicio">
 
         <div id="accordion-facturacion-servicio">

@@ -1,5 +1,160 @@
 import { alertaError, alertaInfo, alertaOk, alertEnSweet, colorEnInputConFocus, eliminarColorYfocus, validarCampo, colorEnInputConFocusSelect, eliminarColorYfocusSelect } from "../metodos/metodos.js";
 
+function validarExcelCargado() {
+
+    $.ajax({
+        url: baseURL + "validarExcelCargado",
+        type: "GET",
+        dataType: "json",
+
+        success: function (response) {
+
+            if (response.success && response.hayDatos) {
+
+                $("#btn-cancelar-excel").removeClass("d-none");
+
+                $("#estado-excel")
+                    .removeClass("d-none alert-danger")
+                    .addClass("alert-info");
+
+                $("#estado-texto").text(
+                    `Ya se importo un documento con: (${response.cantidad} registros).`
+                );
+
+            } else {
+                $("#btn-cargar-excel").removeClass("d-none");
+                $("#btn-cancelar-excel").addClass("d-none");
+            }
+        }
+    });
+}
+
+function cancelarExcelAldaldia() {
+
+    Swal.fire({
+        title: '¿Está seguro?',
+        text: 'Se eliminarán todos los registros temporales cargados.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        heightAuto: false
+    }).then((result) => {
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        $.ajax({
+            url: baseURL + "cancelarExcelAlcaldia",
+            type: "POST",
+            dataType: "json",
+            beforeSend: function () {
+                $("#btn-cancelar-excel").prop("disabled", true);
+            },
+            success: function (response) {
+
+                if (response.success) {
+
+                    alertEnSweet(
+                        'success',
+                        'Proceso cancelado',
+                        response.message
+                    );
+
+                    // Opcional
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+
+                } else {
+
+                    alertEnSweet(
+                        'error',
+                        'Error',
+                        response.message
+                    );
+                }
+            },
+            error: function () {
+
+                alertEnSweet(
+                    'error',
+                    'Error',
+                    'Ocurrió un error al procesar la solicitud.'
+                );
+            },
+            complete: function () {
+                $("#btn-cancelar-excel").prop("disabled", false);
+            }
+        });
+
+    });
+}
+
+function cargarExcelAlcaldia() {
+    let file = $("#input-excel")[0].files[0];
+
+    if (!file) {
+        Swal.fire("Atención", "Debes seleccionar un archivo Excel", "warning");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("excel", file);
+
+    // reset visual
+    $("#estado-excel")
+        .removeClass("d-none alert-success alert-danger")
+        .addClass("alert-info");
+
+    $("#estado-texto").text("Procesando archivo...");
+
+    // $("#btn-generar-facturas-servicio").prop("disabled", true);
+
+    $.ajax({
+        url: baseURL + "cargarExcelAlcaldia",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: "json",
+
+        success: function (response) {
+
+            // $("#estado-excel").removeClass("alert-info");
+
+            if (response.status === "success") {
+                $("#btn-cargar-excel").addClass("d-none");
+                $("#btn-cancelar-excel").removeClass("d-none");
+
+                $("#estado-excel").addClass("alert-success");
+                $("#estado-texto").text(response.data);
+
+                // ✅ habilita el botón
+                $("#btn-generar-facturas-servicio").prop("disabled", false);
+
+            } else {
+
+                $("#estado-excel").addClass("alert-danger");
+                $("#estado-texto").text(response.mensaje || "No se pudo validar el archivo");
+
+                $("#btn-generar-facturas-servicio").prop("disabled", true);
+            }
+        },
+
+        error: function () {
+
+            $("#estado-excel")
+                .removeClass("alert-info")
+                .addClass("alert-danger");
+
+            $("#estado-texto").text("Error al cargar el archivo");
+
+            $("#btn-generar-facturas-servicio").prop("disabled", true);
+        }
+    });
+}
 
 function eventosUsuarios() {
     // EXPORAR
@@ -135,10 +290,21 @@ function eventosUsuarios() {
                 });
         });
     });
+
+    //evento para cargar el excel
+    $("#btn-cargar-excel").on("click", function () {
+        cargarExcelAlcaldia();
+    });
+
+    // Evento para cancelar el excel
+    $("#btn-cancelar-excel").on("click", function () {
+        cancelarExcelAldaldia();
+    });
 }
 
 function iniciarTodo() {
     eventosUsuarios();
+    validarExcelCargado();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

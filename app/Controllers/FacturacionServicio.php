@@ -5,13 +5,11 @@ namespace App\Controllers;
 use App\Models\ContratoModel;
 use App\Models\FacturaDetalleModel;
 use App\Models\FacturaModel;
-use App\Models\FacturaServicioModel;
 use App\Models\LecturaModel;
 use App\Models\PeriodoModel;
 use App\Models\RangoFacturaModel;
 use App\Models\ServicioModel;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+
 
 class FacturacionServicio extends BaseController
 {
@@ -742,151 +740,6 @@ class FacturacionServicio extends BaseController
         //     log_message('error', 'Lectura actual menor a anterior');
         //     return 0;
         // }
-    }
-
-    private function buscarColumna($header, $palabra)
-    {
-        foreach ($header as $i => $col) {
-            if (strpos($col, $palabra) !== false) {
-                return $i;
-            }
-        }
-        return false;
-    }
-
-    private function procesarExcel(string $ruta)
-    {
-        try {
-
-            log_message('info', '2- Leyendo Excel: ' . $ruta);
-
-            $reader = new Xlsx();
-            $reader->setReadDataOnly(true);
-
-            //SOLO LEER NOMBRES DE HOJAS (no carga datos aún)
-            $worksheetNames = $reader->listWorksheetNames($ruta);
-
-            if (empty($worksheetNames)) {
-                throw new \Exception('El archivo no contiene hojas');
-            }
-
-            $primeraHoja = $worksheetNames[0];
-
-            log_message('info', '3- Primera hoja detectada: ' . $primeraHoja);
-
-            // SOLO cargar esa hoja
-            $reader->setLoadSheetsOnly($primeraHoja);
-
-            $spreadsheet = $reader->load($ruta);
-            $sheet = $spreadsheet->getActiveSheet();
-
-            $data = [];
-            $header = [];
-
-            foreach ($sheet->getRowIterator() as $rowIndex => $row) {
-
-                $cellIterator = $row->getCellIterator();
-                $cellIterator->setIterateOnlyExistingCells(false);
-
-                $rowData = [];
-
-                foreach ($cellIterator as $cell) {
-                    $rowData[] = strtolower(trim((string)$cell->getValue()));
-                }
-
-                // encabezado
-                if ($rowIndex === 1) {
-
-                    $header = $rowData;
-
-                    log_message('info', '4- Encabezados: ' . print_r($header, true));
-
-                    $colFicha = $this->buscarColumna($header, 'ficha');
-                    $colAlumbrado = $this->buscarColumna($header, 'alumbrado');
-                    $colAseo = $this->buscarColumna($header, 'aseo');
-
-                    if ($colFicha === false || $colAlumbrado === false || $colAseo === false) {
-                        throw new \Exception('Columnas requeridas no encontradas');
-                    }
-
-                    continue;
-                }
-
-                $ficha = trim($rowData[$colFicha] ?? '');
-                if (empty($ficha)) continue;
-
-                $data[] = [
-                    'ficha' => $ficha,
-                    'alumbrado' => (float)($rowData[$colAlumbrado] ?? 0),
-                    'aseo' => (float)($rowData[$colAseo] ?? 0),
-                ];
-            }
-
-            // iberar memoria
-            $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
-
-            log_message('info', '5- Filas procesadas: ' . count($data));
-
-            return $data;
-        } catch (\Throwable $e) {
-            log_message('error', 'Error Excel: ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    public function cargarExcelAlcaldia()
-    {
-        try {
-
-            // evitar problemas de salida previa
-            if (ob_get_length()) ob_clean();
-
-            $db = \Config\Database::connect();
-
-            $file = $this->request->getFile('excel');
-
-            if (!$file || !$file->isValid()) {
-                return $this->respondError('Archivo inválido');
-            }
-
-            log_message('info', '1- Archivo recibido: ' . $file->getName());
-
-            // guardar archivo
-            $nombre = $file->getRandomName();
-            $file->move(WRITEPATH . 'uploads', $nombre);
-
-            $ruta = WRITEPATH . 'uploads/' . $nombre;
-
-            // procesar excel
-            $dataExcel = $this->procesarExcel($ruta);
-
-            if (empty($dataExcel)) {
-                return $this->respondError('El Excel no contiene datos válidos');
-            }
-
-            // limpiar tabla temporal
-            $db->table('tmp_alcaldia')->truncate();
-
-            // insertar datos
-            $db->table('tmp_alcaldia')->insertBatch($dataExcel);
-            // foreach ($dataExcel as $row) {
-            //     $db->table('tmp_alcaldia')->insert($row);
-            // }
-
-            log_message('info', '6- Datos insertados en tmp_alcaldia');
-
-            return $this->respondSuccess(
-                "Excel cargado correctamente (" . count($dataExcel) . " registros)"
-            );
-        } catch (\Throwable $e) {
-
-            log_message('error', 'Error en carga Excel: ' . $e->getMessage());
-
-            return $this->respondError(
-                'Error al procesar el archivo: ' . $e->getMessage()
-            );
-        }
     }
 
     private function calcularMontoServicio(int $idTarifa, float $consumo)

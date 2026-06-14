@@ -153,7 +153,6 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('facturaCobroServicio/(:num)', 'FacturacionServicio::facturaCobroServicio/$1');
     $routes->post('generarFacturasServicio', 'FacturacionServicio::generarFacturasServicio');
     $routes->post('crearFacturaOtro', 'FacturacionServicio::crearFacturaOtro');
-    $routes->post('cargarExcelAlcaldia', 'FacturacionServicio::cargarExcelAlcaldia');
     $routes->get('imprimirFacturasConsumoPeriodoActivo', 'FacturacionServicio::imprimirFacturasConsumoPeriodoActivo');
 
 
@@ -192,4 +191,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('facturas/exportar-excel-alcaldia', 'CargarGenerarPlantillas::exportarExcelAlcaldia');
     $routes->post('facturas/importar-excel', 'CargarGenerarPlantillas::importarExcel');
     $routes->post('facturas/cancelar-importacion-excel', 'CargarGenerarPlantillas::cancelarImportacionExcelPeriodoActivo');
+    $routes->post('cargarExcelAlcaldia', 'CargarGenerarPlantillas::cargarExcelAlcaldia');
+    $routes->post('cancelarExcelAlcaldia', 'CargarGenerarPlantillas::cancelarExcelAlcaldia');
+    $routes->get('validarExcelCargado', 'CargarGenerarPlantillas::validarExcelCargado');
 });
