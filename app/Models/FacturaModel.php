@@ -172,7 +172,6 @@ class FacturaModel extends Model
     {
         $builder = $this->db->table('facturas f');
 
-        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
         $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
         $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
         $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
@@ -180,12 +179,11 @@ class FacturaModel extends Model
 
         $builder->whereIn('f.tipo', ['Consumo', 'OTRO']);
 
-        // CLAVE PARA EVITAR DUPLICADOS
-        $builder->distinct();
-        $builder->select('f.id_factura');
+        // TOTAL SIN FILTRO
+        $totalBuilder = clone $builder;
+        $total = $totalBuilder->countAllResults();
 
-        $total = $builder->countAllResults(false);
-
+        // FILTRO DE BÚSQUEDA
         if (!empty($searchValue)) {
             $builder->groupStart()
                 ->like('f.correlativo', $searchValue)
@@ -195,30 +193,32 @@ class FacturaModel extends Model
                 ->groupEnd();
         }
 
-        $filtered = $builder->countAllResults(false);
+        // TOTAL FILTRADO
+        $filteredBuilder = clone $builder;
+        $filtered = $filteredBuilder->countAllResults();
 
-        // SELECT FINAL (ya con columnas reales)
+        // DATOS
         $data = $builder
-            ->select("
-            f.id_factura AS id,
-            f.correlativo,
-            f.tipo,
-            c.numero_contrato,
-            cl.nombre_completo AS cliente,
-            p.nombre AS periodo,
-            f.fecha_emision,
-            f.fecha_vencimiento,
-            f.estado
-        ")
+            ->select([
+                'f.id_factura AS id',
+                'f.correlativo',
+                'f.tipo',
+                'c.numero_contrato',
+                'cl.nombre_completo AS cliente',
+                'p.nombre AS periodo',
+                'f.fecha_emision',
+                'f.fecha_vencimiento',
+                'f.estado'
+            ])
             ->orderBy('f.id_factura', 'DESC')
             ->limit($length, $start)
             ->get()
             ->getResultArray();
 
         return [
-            'data' => $data,
-            'total' => $total,
-            'filtered' => $filtered
+            'data'      => $data,
+            'total'     => $total,
+            'filtered'  => $filtered
         ];
     }
 
