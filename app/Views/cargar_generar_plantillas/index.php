@@ -200,15 +200,18 @@
                         <input type="file" id="inputExcelPagos" class="form-control mb-3" accept=".xlsx, .xls">
 
 
-                        <div class="mt-auto">
+                        <div class="mt-auto d-flex flex-column flex-md-row gap-2">
+
                             <button id="btnImportarExcel" class="btn btn-primary">
                                 <i class="fas fa-sync-alt"></i>
                                 Actualizar pagos
                             </button>
-                            <button id="btnCancelarImportacionExcel" class="btn btn-outline-danger mt-2 mt-md-0 ml-md-2">
+
+                            <button id="btnCancelarImportacionExcel" class="btn btn-outline-danger">
                                 <i class="fas fa-undo-alt"></i>
                                 Cancelar importacion
                             </button>
+
                         </div>
 
                     </div>

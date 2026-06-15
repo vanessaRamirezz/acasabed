@@ -17,6 +17,12 @@ use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 
 class CargarGenerarPlantillas extends BaseController
 {
+    protected bool $tieneIdPeriodoPagoFactura = false;
+
+    protected bool $tieneEstadoExcelPagoFactura = false;
+
+    protected array $pagosFacturaIndex = [];
+
     private FacturaModel $facturasModel;
     private PeriodoModel $periodosModel;
     private PagoFacturaModel $pagosFacturaModel;
@@ -51,44 +57,51 @@ class CargarGenerarPlantillas extends BaseController
     private function registrarImportacionFactura(
         int $facturaId,
         array $periodo,
-        string $tiraje,
-        string $correlativo,
+        ?string $tiraje,
+        ?string $correlativo,
         string $referencia,
         string $estadoExcel,
         ?float $montoPagado,
         ?string $fechaPago,
         string $archivoOrigen
     ): void {
+
         $payload = [
-            'id_factura' => $facturaId,
-            'tiraje' => $tiraje,
-            'correlativo' => $correlativo,
-            'referencia' => $referencia,
-            'monto_pagado' => $montoPagado,
-            'fecha_pago' => $fechaPago,
-            'fecha_carga' => date('Y-m-d'),
-            'id_usuario' => session()->get('id_usuario'),
+            'id_factura'     => $facturaId,
+            'tiraje'         => $tiraje,
+            'correlativo'    => $correlativo,
+            'referencia'     => $referencia,
+            'monto_pagado'   => $montoPagado,
+            'fecha_pago'     => $fechaPago,
+            'fecha_carga'    => date('Y-m-d'),
+            'id_usuario'     => session()->get('id_usuario'),
             'archivo_origen' => $archivoOrigen
         ];
 
-        if ($this->pagosFacturaTieneCampo('id_periodo')) {
+        if ($this->tieneIdPeriodoPagoFactura) {
             $payload['id_periodo'] = $periodo['id_periodo'];
         }
 
-        if ($this->pagosFacturaTieneCampo('estado_excel')) {
+        if ($this->tieneEstadoExcelPagoFactura) {
             $payload['estado_excel'] = $estadoExcel;
         }
 
-        $registroExistente = $this->pagosFacturaModel
-            ->where('id_factura', $facturaId)
-            ->first();
+        $idPagoFactura =
+            $this->pagosFacturaIndex[$facturaId]
+            ?? null;
 
-        if ($registroExistente) {
-            $this->pagosFacturaModel->update($registroExistente['id_pago_factura'], $payload);
+        if ($idPagoFactura) {
+
+            $this->pagosFacturaModel
+                ->update($idPagoFactura, $payload);
+
             return;
         }
 
-        $this->pagosFacturaModel->insert($payload);
+        $nuevoId = $this->pagosFacturaModel
+            ->insert($payload, true);
+
+        $this->pagosFacturaIndex[$facturaId] = $nuevoId;
     }
 
     private function aplicarEstiloEncabezado($sheet, $range)
@@ -213,12 +226,12 @@ class CargarGenerarPlantillas extends BaseController
             $tiraje2 = $d['tiraje'];
             $correlativo2 = $d['correlativo'];
             $sheet2->fromArray([
-                $tiraje2,
-                $correlativo2,
+                '',
+                '',
                 $d['fecha_de_pago'],
                 '',
-                $d['codigo'],
-                $d['cliente'],
+                '',
+                '',
                 '',
                 $d['fechaEmision'],
                 $d['fechaVencimiento'],
@@ -492,8 +505,61 @@ class CargarGenerarPlantillas extends BaseController
         exit;
     }
 
+    private function normalizarFechaPago($fechaPago)
+    {
+        if (is_numeric($fechaPago)) {
+            return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fechaPago)
+                ->format('Y-m-d');
+        }
+
+        if (!empty($fechaPago)) {
+            return date('Y-m-d', strtotime($fechaPago));
+        }
+
+        return date('Y-m-d');
+    }
+
+    private function procesarDetallesFactura(
+        array $detalles,
+        string $fechaPago,
+        array &$solicitudesAfectadas,
+        int &$montoCapital,
+        $idSolicitud
+    ) {
+        foreach ($detalles as $d) {
+
+            $esValido =
+                (!empty($d['id_cobro_instalacion']) ||
+                    stripos($d['concepto'], 'cuota') !== false)
+                &&
+                stripos($d['concepto'], 'mora') === false;
+
+            if (!$esValido) continue;
+
+            $montoCapital += (float)($d['monto'] ?? 0);
+
+            if (!empty($d['id_cobro_instalacion'])) {
+                $this->cobrosContratoModel->update(
+                    $d['id_cobro_instalacion'],
+                    [
+                        'estado' => 'CANCELADO',
+                        'fecha_pago' => $fechaPago
+                    ]
+                );
+            }
+
+            if ($idSolicitud) {
+                $solicitudesAfectadas[$idSolicitud] = true;
+            }
+        }
+    }
+
     public function importarExcel()
     {
+        ini_set('memory_limit', '512M');
+        set_time_limit(0);
+        $inicio = microtime(true);
+
         $file = $this->request->getFile('excel');
 
         $periodo = $this->periodosModel->getPeriodoActivo();
@@ -537,9 +603,34 @@ class CargarGenerarPlantillas extends BaseController
                 ]);
             }
 
-            $data = $sheetBase->toArray();
-            $cobrosData = $sheetCobros->toArray();
+            $highestRowBase = $sheetBase->getHighestDataRow();
+            $highestColBase = $sheetBase->getHighestDataColumn();
 
+            $data = $sheetBase->rangeToArray(
+                'A1:' . $highestColBase . $highestRowBase,
+                null,
+                true,
+                true,
+                false
+            );
+
+            $highestRowCobros = $sheetCobros->getHighestDataRow();
+            $highestColCobros = $sheetCobros->getHighestDataColumn();
+
+            $cobrosData = $sheetCobros->rangeToArray(
+                'A1:' . $highestColCobros . $highestRowCobros,
+                null,
+                true,
+                true,
+                false
+            );
+
+            log_message(
+                'info',
+                'Memoria despues de cargar hojas: '
+                    . round(memory_get_usage(true) / 1024 / 1024, 2)
+                    . ' MB'
+            );
             $cobrosIndex = [];
 
             /**
@@ -550,75 +641,291 @@ class CargarGenerarPlantillas extends BaseController
             $fechaActual = null;
             $cobrosIndex = [];
 
+            $facturasPeriodo = $this->facturasModel
+                ->select('
+                    facturas.*,
+                    clientes.codigo
+                ')
+                ->join('contratos', 'contratos.id_contrato = facturas.id_contrato')
+                ->join('clientes', 'clientes.id_cliente = contratos.id_cliente')
+                ->where('facturas.id_periodo', $periodo['id_periodo'])
+                ->findAll();
+
+            $facturasPorCodigo = [];
+            $facturasPorReferencia = [];
+
+            foreach ($facturasPeriodo as $f) {
+
+                // Para formato cliente (pueden existir varias facturas)
+                $facturasPorCodigo[$f['codigo']][] = $f;
+
+                // Para formato tradicional
+                $referencia = $f['tiraje'] . '-' . $f['correlativo'];
+
+                $facturasPorReferencia[$referencia] = $f;
+            }
+
+            /**
+             * ==========================================
+             * DETECTAR FORMATO DE COBROS
+             * ==========================================
+             *
+             * Formato 1:
+             * 0 = tiraje
+             * 1 = correlativo
+             * 2 = fecha
+             * ...
+             * 6 = monto
+             *
+             * Formato 2:
+             * 0 = fecha
+             * 2 = codigo_cliente
+             * 3 = nombre_cliente
+             * 4 = monto
+             */
+            $primeraFilaCobro = $cobrosData[1] ?? [];
+            $formatoCobroCliente = false;
+            if (
+                isset($primeraFilaCobro[2]) &&
+                isset($primeraFilaCobro[3]) &&
+                isset($primeraFilaCobro[4])
+            ) {
+                $formatoCobroCliente = true;
+            }
+
             foreach ($cobrosData as $i => $c) {
 
                 if ($i === 0) continue; // encabezado
 
-                // intentar formato nuevo (tiraje / correlativo separados)
-                $tirajeCobro = trim($c[0] ?? null);
-                $correlativoCobro = trim($c[1] ?? null);
+                /**
+                 * ==========================================
+                 * FORMATO 1 (TIRAJE / CORRELATIVO)
+                 * ==========================================
+                 */
+                if (!$formatoCobroCliente) {
+                    // intentar formato nuevo (tiraje / correlativo separados)
+                    $tirajeCobro = trim((string)($c[0] ?? ''));
+                    $correlativoCobro = trim((string)($c[1] ?? ''));
 
-                if ($tirajeCobro && $correlativoCobro) {
-                    $referencia = $tirajeCobro . '-' . $correlativoCobro;
+                    if ($tirajeCobro && $correlativoCobro) {
+                        $referencia = $tirajeCobro . '-' . $correlativoCobro;
+                    } else {
+                        // fallback formato viejo "1-6"
+                        $referencia = trim((string)($c[0] ?? ''));
+                    }
+
+                    if (!$referencia) continue;
+
+                    log_message('info', 'Referencia COBRO detectada: ' . $referencia);
+
+                    // 2. FECHA (columna 1)
+                    $fechaExcel = trim($c[2] ?? '');
+
+                    // 🔥 SI VIENE FECHA, LA ACTUALIZAMOS
+                    if (!empty($fechaExcel)) {
+                        $fechaActual = $fechaExcel;
+                    }
+
+                    // 🔥 SI NO VIENE FECHA, USA LA ÚLTIMA
+                    $cobrosIndex[$referencia] = [
+                        'fecha_pago'   => $fechaActual, // 👈 clave
+                        'monto_pagado' => $c[6] ?? null
+                    ];
                 } else {
-                    // fallback formato viejo "1-6"
-                    $referencia = trim($c[0] ?? null);
+
+                    /**
+                     * ==========================================
+                     * FORMATO 2 (CLIENTE)
+                     * ==========================================
+                     */
+                    $codigoCliente = trim((string)($c[2] ?? ''));
+                    $montoPagado   = (float)($c[4] ?? 0);
+
+                    if (!$codigoCliente) {
+                        continue;
+                    }
+
+                    $facturasCliente = $facturasPorCodigo[$codigoCliente] ?? [];
+
+                    if (empty($facturasCliente)) {
+
+                        log_message(
+                            'warning',
+                            'No se encontró factura para cliente: ' . $codigoCliente
+                        );
+
+                        continue;
+                    }
+
+                    $facturaEncontrada = null;
+
+                    foreach ($facturasCliente as $factura) {
+
+                        if (
+                            abs(
+                                (float)$factura['total'] - $montoPagado
+                            ) < 0.01
+                        ) {
+                            $facturaEncontrada = $factura;
+                            break;
+                        }
+                    }
+
+
+                    if (!$facturaEncontrada) {
+
+                        log_message(
+                            'warning',
+                            'No se encontró coincidencia por monto para cliente '
+                                . $codigoCliente
+                                . ' monto '
+                                . $montoPagado
+                        );
+
+                        continue;
+                    }
+
+                    $referencia =
+                        $facturaEncontrada['tiraje']
+                        . '-'
+                        . $facturaEncontrada['correlativo'];
+
+                    $fechaExcel = trim((string)($c[0] ?? ''));
+
+                    if (!empty($fechaExcel)) {
+                        $fechaActual = $fechaExcel;
+                    }
+
+                    $cobrosIndex[$referencia] = [
+                        'fecha_pago'   => $fechaActual,
+                        'monto_pagado' => $montoPagado
+                    ];
                 }
-
-                if (!$referencia) continue;
-
-                log_message('info', 'Referencia COBRO detectada: ' . $referencia);
-
-                // 2. FECHA (columna 1)
-                $fechaExcel = trim($c[2] ?? '');
-
-                // 🔥 SI VIENE FECHA, LA ACTUALIZAMOS
-                if (!empty($fechaExcel)) {
-                    $fechaActual = $fechaExcel;
-                }
-
-                // 🔥 SI NO VIENE FECHA, USA LA ÚLTIMA
-                $cobrosIndex[$referencia] = [
-                    'fecha_pago'   => $fechaActual, // 👈 clave
-                    'monto_pagado' => $c[6] ?? null
-                ];
             }
 
-            log_message('info', 'COBROS INDEX: ' . print_r($cobrosIndex, true));
+            // log_message('info', 'COBROS INDEX: ' . print_r($cobrosIndex, true));
 
             $db->transStart();
+
+            $primeraFilaBase = $data[1] ?? [];
+            $formatoBaseCliente = false;
+
+            if (
+                isset($primeraFilaBase[0]) &&
+                isset($primeraFilaBase[1]) &&
+                isset($primeraFilaBase[2]) &&
+                isset($primeraFilaBase[3])
+            ) {
+                $formatoBaseCliente = !is_numeric(trim((string)($primeraFilaBase[1] ?? '')));
+            }
+
+            $this->tieneIdPeriodoPagoFactura =
+                $this->pagosFacturaTieneCampo('id_periodo');
+            $this->tieneEstadoExcelPagoFactura =
+                $this->pagosFacturaTieneCampo('estado_excel');
+
+            $pagosExistentes = $this->pagosFacturaModel
+                ->select('id_pago_factura,id_factura')
+                ->findAll();
+            $this->pagosFacturaIndex = [];
+            foreach ($pagosExistentes as $p) {
+
+                $this->pagosFacturaIndex[$p['id_factura']]
+                    = $p['id_pago_factura'];
+            }
+
+            $detallesFacturas = $this->facturaDetalleModel
+                ->select('id_factura,id_cobro_instalacion,monto,concepto')
+                ->findAll();
+            $detallesPorFactura = [];
+            foreach ($detallesFacturas as $detalle) {
+
+                $detallesPorFactura[$detalle['id_factura']][] = $detalle;
+            }
 
             foreach ($data as $index => $row) {
 
                 if ($index === 0) continue;
 
-                $tiraje = trim($row[0] ?? null);
-                $correlativo = trim($row[1] ?? null);
-                $estadoExcel = trim($row[5] ?? null);
+                $factura = null;
 
-                // reconstruir referencia para uso interno
-                $referencia = $tiraje . '-' . $correlativo;
 
-                if (!$tiraje || !$correlativo) {
-                    $errores[] = "Fila $index sin tiraje o correlativo";
-                    continue;
+                /**
+                 * ==========================================
+                 * FORMATO 1
+                 * TIRAJE / CORRELATIVO
+                 * ==========================================
+                 */
+                if (!$formatoBaseCliente) {
+                    $tiraje = trim((string)($row[0] ?? ''));
+                    $correlativo = trim((string)($row[1] ?? ''));
+                    $estadoExcel = trim((string)($row[5] ?? ''));
+
+                    // reconstruir referencia para uso interno
+                    $referencia = $tiraje . '-' . $correlativo;
+
+                    if (!$tiraje || !$correlativo) {
+                        $errores[] = "Fila $index sin tiraje o correlativo";
+                        continue;
+                    }
+
+                    // log_message('info', "Referencia reconstruida: $referencia");
+                    $factura = $facturasPorReferencia[$referencia] ?? null;
+                } else {
+                    /**
+                     * ==========================================
+                     * FORMATO 2
+                     * CODIGO CLIENTE
+                     * ==========================================
+                     */
+
+                    $codigoCliente = trim((string)($row[0] ?? ''));
+                    $totalFactura = (float)($row[2] ?? 0);
+                    $estadoExcel = trim((string)($row[3] ?? ''));
+
+                    if (!$codigoCliente) {
+                        $errores[] = "Fila $index sin código cliente";
+                        continue;
+                    }
+
+                    $facturasCliente = $facturasPorCodigo[$codigoCliente] ?? [];
+
+                    foreach ($facturasCliente as $f) {
+
+                        if (
+                            abs(
+                                (float)$f['total'] - $totalFactura
+                            ) < 0.01
+                        ) {
+                            $factura = $f;
+                            break;
+                        }
+                    }
+
+                    if ($factura) {
+
+                        $tiraje = (string)($factura['tiraje'] ?? '');
+                        $correlativo = (string)($factura['correlativo'] ?? '');
+
+                        $referencia = trim($tiraje . '-' . $correlativo, '-');
+                    }
                 }
-
-                log_message('info', "Referencia reconstruida: $referencia");
-
-                $factura = $this->facturasModel
-                    ->where('tiraje', $tiraje)
-                    ->where('correlativo', $correlativo)
-                    ->first();
 
                 if (!$factura) {
-                    $errores[] = "Factura no encontrada: $referencia";
+
+                    $errores[] = "Factura no encontrada en fila $index";
+
                     continue;
                 }
+
+                // log_message(
+                //     'info',
+                //     "Referencia reconstruida: $referencia"
+                // );
 
                 $facturaId = $factura['id_factura'];
 
-                log_message('info', 'factura encontrada ID ' . $facturaId);
+                // log_message('info', 'factura encontrada ID ' . $facturaId);
 
                 /**
                  * ==========================================
@@ -630,16 +937,9 @@ class CargarGenerarPlantillas extends BaseController
                     $cobro = $cobrosIndex[$referencia] ?? null;
 
                     $montoPagado = $cobro['monto_pagado'] ?? $factura['total'];
-                    $fechaPago = $cobro['fecha_pago'] ?? null;
+                    // $fechaPago = $cobro['fecha_pago'] ?? null;
 
-                    if (is_numeric($fechaPago)) {
-                        $fechaPago = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fechaPago);
-                        $fechaPago = $fechaPago->format('Y-m-d');
-                    } elseif ($fechaPago) {
-                        $fechaPago = date('Y-m-d', strtotime($fechaPago));
-                    } else {
-                        $fechaPago = date('Y-m-d');
-                    }
+                    $fechaPago = $this->normalizarFechaPago($cobro['fecha_pago'] ?? null);
 
                     // evitar duplicado
                     $existePago = $this->pagosFacturaModel
@@ -671,7 +971,7 @@ class CargarGenerarPlantillas extends BaseController
                         ->where('id_contrato', $factura['id_contrato'])
                         ->first();
 
-                    log_message('info', ' data de contrato obtenido ' . print_r($contrato, true));
+                    // log_message('info', ' data de contrato obtenido ' . print_r($contrato, true));
 
                     $solicitudesAfectadas = [];
                     $montoCapital = 0;
@@ -690,44 +990,21 @@ class CargarGenerarPlantillas extends BaseController
 
                     foreach ($facturasPendientes as $fp) {
 
-                        $detallesPendientes = $this->facturaDetalleModel
-                            ->where('id_factura', $fp['id_factura'])
-                            ->findAll();
-
-                        foreach ($detallesPendientes as $dp) {
-
-                            if (
-                                (!empty($dp['id_cobro_instalacion']) ||
-                                    stripos($dp['concepto'], 'cuota') !== false)
-                                &&
-                                stripos($dp['concepto'], 'mora') === false
-                            ) {
-
-                                // sumar capital SIEMPRE
-                                $montoCapital += (float)($dp['monto'] ?? 0);
-
-                                // actualizar SOLO si tiene ID
-                                if (!empty($dp['id_cobro_instalacion'])) {
-                                    $this->cobrosContratoModel->update(
-                                        $dp['id_cobro_instalacion'],
-                                        [
-                                            'estado' => 'CANCELADO',
-                                            'fecha_pago' => $fechaPago
-                                        ]
-                                    );
-                                }
-
-                                if ($contrato && !empty($contrato['id_solicitud'])) {
-                                    $solicitudesAfectadas[$contrato['id_solicitud']] = true;
-                                }
-                            }
-                        }
-
                         $this->facturasModel->update($fp['id_factura'], [
                             'estado' => 'CANCELADA',
                             'saldo_pendiente' => 0,
                             'fecha_de_pago' => $fechaPago
                         ]);
+
+                        $detallesPendientes = $detallesPorFactura[$fp['id_factura']] ?? [];
+
+                        $this->procesarDetallesFactura(
+                            $detallesPendientes,
+                            $fechaPago,
+                            $solicitudesAfectadas,
+                            $montoCapital,
+                            $contrato['id_solicitud'] ?? null
+                        );
                     }
 
                     /**
@@ -735,40 +1012,50 @@ class CargarGenerarPlantillas extends BaseController
                      * 2. FACTURA ACTUAL
                      * ==========================================
                      */
-                    $detalles = $this->facturaDetalleModel
-                        ->where('id_factura', $facturaId)
-                        ->findAll();
+                    $detalles = $detallesPorFactura[$facturaId] ?? [];
 
-                    foreach ($detalles as $d) {
+                    $this->procesarDetallesFactura(
+                        $detalles,
+                        $fechaPago,
+                        $solicitudesAfectadas,
+                        $montoCapital,
+                        $contrato['id_solicitud'] ?? null
+                    );
 
-                        if (
-                            (!empty($d['id_cobro_instalacion']) ||
-                                stripos($d['concepto'], 'cuota') !== false)
-                            &&
-                            stripos($d['concepto'], 'mora') === false
-                        ) {
+                    // $detalles = $this->facturaDetalleModel
+                    //     ->where('id_factura', $facturaId)
+                    //     ->findAll();
 
-                            // sumar capital
-                            $montoCapital += (float)($d['monto'] ?? 0);
+                    // foreach ($detalles as $d) {
 
-                            // actualizar SOLO si tiene ID
-                            if (!empty($d['id_cobro_instalacion'])) {
-                                $this->cobrosContratoModel->update(
-                                    $d['id_cobro_instalacion'],
-                                    [
-                                        'estado' => 'CANCELADO',
-                                        'fecha_pago' => $fechaPago
-                                    ]
-                                );
-                            }
+                    //     if (
+                    //         (!empty($d['id_cobro_instalacion']) ||
+                    //             stripos($d['concepto'], 'cuota') !== false)
+                    //         &&
+                    //         stripos($d['concepto'], 'mora') === false
+                    //     ) {
 
-                            log_message('info', 'monto acumulado ' . $montoCapital);
+                    //         // sumar capital
+                    //         $montoCapital += (float)($d['monto'] ?? 0);
 
-                            if ($contrato && !empty($contrato['id_solicitud'])) {
-                                $solicitudesAfectadas[$contrato['id_solicitud']] = true;
-                            }
-                        }
-                    }
+                    //         // actualizar SOLO si tiene ID
+                    //         if (!empty($d['id_cobro_instalacion'])) {
+                    //             $this->cobrosContratoModel->update(
+                    //                 $d['id_cobro_instalacion'],
+                    //                 [
+                    //                     'estado' => 'CANCELADO',
+                    //                     'fecha_pago' => $fechaPago
+                    //                 ]
+                    //             );
+                    //         }
+
+                    //         log_message('info', 'monto acumulado ' . $montoCapital);
+
+                    //         if ($contrato && !empty($contrato['id_solicitud'])) {
+                    //             $solicitudesAfectadas[$contrato['id_solicitud']] = true;
+                    //         }
+                    //     }
+                    // }
 
                     /**
                      * ==========================================
@@ -798,6 +1085,12 @@ class CargarGenerarPlantillas extends BaseController
                     }
                 } else {
 
+                    // log_message(
+                    //     'info',
+                    //     'FACTURA ENCONTRADA: '
+                    //         . print_r($factura, true)
+                    // );
+
                     /**
                      * ==========================================
                      * NO PAGÓ → SOLO NO PAGADA
@@ -810,24 +1103,24 @@ class CargarGenerarPlantillas extends BaseController
                         'fecha_de_pago' => null,
                     ]);
 
-                    $this->registrarImportacionFactura(
-                        $facturaId,
-                        $periodo,
-                        $tiraje,
-                        $correlativo,
-                        $referencia,
-                        'NO PAGADA',
-                        0,
-                        null,
-                        $file->getName()
-                    );
+                    if (!isset($this->pagosFacturaIndex[$facturaId])) {
 
-                    log_message('info', 'Factura marcada como NO PAHADA ID: ' . $facturaId);
+                        $this->registrarImportacionFactura(
+                            $facturaId,
+                            $periodo,
+                            $tiraje,
+                            $correlativo,
+                            $referencia,
+                            'NO PAGADA',
+                            0,
+                            null,
+                            $file->getName()
+                        );
+                    }
+                    // log_message('info', 'Factura marcada como NO PAHADA ID: ' . $facturaId);
 
                     // 2. Actualizar cobros asociados
-                    $detalles = $this->facturaDetalleModel
-                        ->where('id_factura', $facturaId)
-                        ->findAll();
+                    $detalles = $detallesPorFactura[$facturaId] ?? [];
 
                     foreach ($detalles as $d) {
 
@@ -843,13 +1136,19 @@ class CargarGenerarPlantillas extends BaseController
                         }
                     }
 
-                    log_message('info', 'Factura no pagada SIN aplicar mora aún');
+                    // log_message('info', 'Factura no pagada SIN aplicar mora aún');
                 }
 
                 $procesados++;
             }
             // exit;
 
+            log_message(
+                'info',
+                'Tiempo total: ' .
+                    round(microtime(true) - $inicio, 2)
+                    . ' segundos'
+            );
             $db->transComplete();
 
             if ($db->transStatus() === false) {
@@ -865,18 +1164,29 @@ class CargarGenerarPlantillas extends BaseController
                 'procesados' => $procesados,
                 'errores' => $errores
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+
+            log_message('error', 'ERROR IMPORTAR EXCEL');
+            log_message('error', 'Mensaje: ' . $e->getMessage());
+            log_message('error', 'Archivo: ' . $e->getFile());
+            log_message('error', 'Linea: ' . $e->getLine());
+            log_message('error', 'Trace: ' . $e->getTraceAsString());
 
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Error al procesar archivo',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'linea' => $e->getLine(),
+                'archivo' => $e->getFile()
             ]);
         }
     }
 
     public function cancelarImportacionExcelPeriodoActivo()
     {
+        ini_set('memory_limit', '512M');
+        set_time_limit(0);
+
         $periodo = $this->periodosModel->getPeriodoActivo();
 
         if (!$periodo) {
@@ -889,16 +1199,25 @@ class CargarGenerarPlantillas extends BaseController
         $db = \Config\Database::connect();
 
         try {
+            $fieldsPagosFactura = $db->getFieldNames('pagos_factura');
+
+            $tieneEstadoExcel = in_array('estado_excel', $fieldsPagosFactura);
+            $tieneIdPeriodo   = in_array('id_periodo', $fieldsPagosFactura);
+
             $pagosBuilder = $db->table('pagos_factura pf')
                 ->select('pf.id_pago_factura, pf.id_factura, pf.fecha_pago, pf.monto_pagado, f.id_contrato');
 
-            if ($this->pagosFacturaTieneCampo('estado_excel')) {
+            if ($tieneEstadoExcel) {
                 $pagosBuilder->select('pf.estado_excel');
             }
 
-            $pagosBuilder->join('facturas f', 'f.id_factura = pf.id_factura', 'inner');
+            $pagosBuilder->join(
+                'facturas f',
+                'f.id_factura = pf.id_factura',
+                'inner'
+            );
 
-            if ($this->pagosFacturaTieneCampo('id_periodo')) {
+            if ($tieneIdPeriodo) {
                 $pagosBuilder->where('pf.id_periodo', $periodo['id_periodo']);
             } else {
                 $pagosBuilder->where('f.id_periodo', $periodo['id_periodo']);
@@ -907,30 +1226,29 @@ class CargarGenerarPlantillas extends BaseController
             $pagosPeriodo = $pagosBuilder->get()->getResultArray();
 
             $facturasPeriodo = [];
-            if (!empty($pagosPeriodo)) {
-                $idsFacturasPeriodo = array_values(array_unique(array_column($pagosPeriodo, 'id_factura')));
 
-                if (!empty($idsFacturasPeriodo)) {
-                    $facturasPeriodo = $this->facturasModel
-                        ->whereIn('id_factura', $idsFacturasPeriodo)
-                        ->findAll();
-                }
-            }
+            $idsFacturasPeriodo = array_unique(
+                array_column($pagosPeriodo, 'id_factura')
+            );
 
-            if (empty($facturasPeriodo)) {
-                $facturasPeriodo = $this->facturasModel
+            $facturasQuery = $this->facturasModel;
+            if (!empty($idsFacturasPeriodo)) {
+                $facturasQuery = $facturasQuery->whereIn('id_factura', $idsFacturasPeriodo);
+            } else {
+                $facturasQuery = $facturasQuery
                     ->where('id_periodo', $periodo['id_periodo'])
                     ->groupStart()
                     ->whereIn('estado', ['PAGADA', 'NO PAGADA'])
                     ->orWhere('fecha_de_pago IS NOT NULL', null, false)
-                    ->groupEnd()
-                    ->findAll();
+                    ->groupEnd();
             }
+
+            $facturasPeriodo = $facturasQuery->findAll();
 
             if (empty($facturasPeriodo) && empty($pagosPeriodo)) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'No hay cambios de importacion para revertir en el periodo activo'
+                    'message' => 'No hay cambios de importación para revertir en el periodo activo'
                 ]);
             }
 
@@ -941,6 +1259,12 @@ class CargarGenerarPlantillas extends BaseController
 
             $facturasRevertir = [];
             $facturasQueRestauranSolicitud = [];
+
+            //indexar pagos
+            $pagosFacturaIndex = [];
+            foreach ($pagosPeriodo as $pago) {
+                $pagosFacturaIndex[$pago['id_factura']] = true;
+            }
 
             foreach ($facturasPeriodo as $factura) {
                 $facturasRevertir[$factura['id_factura']] = $factura;
@@ -972,9 +1296,8 @@ class CargarGenerarPlantillas extends BaseController
                         ->findAll();
 
                     foreach ($facturasAnteriores as $facturaAnterior) {
-                        $tienePagoRegistrado = $this->pagosFacturaModel
-                            ->where('id_factura', $facturaAnterior['id_factura'])
-                            ->first();
+                        $tienePagoRegistrado =
+                            isset($pagosFacturaIndex[$facturaAnterior['id_factura']]);
 
                         if (!$tienePagoRegistrado) {
                             $facturasRevertir[$facturaAnterior['id_factura']] = $facturaAnterior;
@@ -989,14 +1312,38 @@ class CargarGenerarPlantillas extends BaseController
 
             $db->transStart();
 
-            foreach ($facturasRevertir as $factura) {
-                $detalles = $this->facturaDetalleModel
-                    ->where('id_factura', $factura['id_factura'])
-                    ->findAll();
+            // indexar contratos
+            $contratos = $this->contratosModel
+                ->select('id_contrato,id_solicitud')
+                ->findAll();
+            $contratosIndex = [];
+            foreach ($contratos as $contrato) {
+                $contratosIndex[$contrato['id_contrato']]
+                    = $contrato;
+            }
 
-                $contrato = $this->contratosModel
-                    ->where('id_contrato', $factura['id_contrato'])
-                    ->first();
+            //indexar detalle
+            $detallesFacturas = $this->facturaDetalleModel
+                ->findAll();
+            $detallesPorFactura = [];
+            foreach ($detallesFacturas as $detalle) {
+                $detallesPorFactura[$detalle['id_factura']][] = $detalle;
+            }
+
+            //indexar soliciutdes
+            $solicitudes = $this->solicitudesModel
+                ->findAll();
+            $solicitudesIndex = [];
+            foreach ($solicitudes as $s) {
+                $solicitudesIndex[$s['id_solicitud']] = $s;
+            }
+
+            $cobrosActualizar = [];
+
+            foreach ($facturasRevertir as $factura) {
+                $detalles = $detallesPorFactura[$factura['id_factura']] ?? [];
+
+                $contrato = $contratosIndex[$factura['id_contrato']] ?? null;
 
                 $idSolicitud = $contrato['id_solicitud'] ?? null;
                 $montoCapital = 0;
@@ -1009,13 +1356,12 @@ class CargarGenerarPlantillas extends BaseController
                     ) && !str_contains($concepto, 'mora');
 
                     if (!empty($detalle['id_cobro_instalacion'])) {
-                        $this->cobrosContratoModel->update(
-                            $detalle['id_cobro_instalacion'],
-                            [
-                                'estado' => 'PENDIENTE',
-                                'fecha_pago' => null
-                            ]
-                        );
+
+                        $cobrosActualizar[] = [
+                            'id_cobro_instalacion' => $detalle['id_cobro_instalacion'],
+                            'estado' => 'PENDIENTE',
+                            'fecha_pago' => null
+                        ];
                     }
 
                     if (
@@ -1045,8 +1391,16 @@ class CargarGenerarPlantillas extends BaseController
                 $facturasRevertidas++;
             }
 
+            if (!empty($cobrosActualizar)) {
+
+                $this->cobrosContratoModel->updateBatch(
+                    $cobrosActualizar,
+                    'id_cobro_instalacion'
+                );
+            }
+
             foreach ($solicitudesAjuste as $idSolicitud => $montoAjuste) {
-                $solicitud = $this->solicitudesModel->find($idSolicitud);
+                $solicitud = $solicitudesIndex[$idSolicitud] ?? null;
 
                 if (!$solicitud) {
                     continue;

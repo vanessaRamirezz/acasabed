@@ -172,13 +172,23 @@ function eventosUsuarios() {
         const fileInput = document.getElementById("inputExcelPagos");
 
         if (!fileInput.files.length) {
-            alertaError('Debes seleccionar un archivo Excel')
-            // alert("Debes seleccionar un archivo Excel");
+            alertaError('Debes seleccionar un archivo Excel');
             return;
         }
 
         let formData = new FormData();
         formData.append("excel", fileInput.files[0]);
+
+        // 🔵 LOADING INMEDIATO
+        Swal.fire({
+            title: 'Importando Excel...',
+            html: 'Procesando archivo, por favor espera',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         fetch(baseURL + 'facturas/importar-excel', {
             method: 'POST',
@@ -190,28 +200,30 @@ function eventosUsuarios() {
             })
             .then(data => {
 
+                Swal.close(); // 🔴 cerrar loader
+
                 if (data.success) {
 
                     let erroresHtml = "";
 
                     if (data.errores && data.errores.length > 0) {
                         erroresHtml = `
-                <div style="text-align:left; max-height:200px; overflow:auto; margin-top:10px;">
-                    <b>Errores:</b>
-                    <ul style="margin-top:5px;">
-                        ${data.errores.map(e => `<li>${e}</li>`).join('')}
-                    </ul>
-                </div>
-            `;
+                    <div style="text-align:left; max-height:200px; overflow:auto; margin-top:10px;">
+                        <b>Errores:</b>
+                        <ul style="margin-top:5px;">
+                            ${data.errores.map(e => `<li>${e}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
                     }
 
                     Swal.fire({
                         icon: data.errores && data.errores.length > 0 ? 'warning' : 'success',
                         title: 'Resultado de importación',
                         html: `
-                <p><b>Procesados:</b> ${data.procesados ?? 0}</p>
-                ${erroresHtml}
-            `,
+                    <p><b>Procesados:</b> ${data.procesados ?? 0}</p>
+                    ${erroresHtml}
+                `,
                         width: 600,
                         confirmButtonText: 'Aceptar'
                     });
@@ -227,7 +239,10 @@ function eventosUsuarios() {
 
             })
             .catch(error => {
+
                 console.error(error);
+
+                Swal.close(); // 🔴 cerrar loader también en error
 
                 Swal.fire({
                     icon: 'error',
@@ -241,52 +256,72 @@ function eventosUsuarios() {
     $("#btnCancelarImportacionExcel").on("click", function () {
         Swal.fire({
             icon: "warning",
-            title: "Cancelar importacion",
+            title: "Cancelar importación",
             html: `
-                <p>Se revertiran los cambios hechos por la importacion del Excel en el periodo activo.</p>
-                <p class="mb-0"><b>Esto restaurara estados de facturas, pagos y cobros relacionados.</b></p>
-            `,
+            <p>Se revertirán los cambios hechos por la importación del Excel en el periodo activo.</p>
+            <p class="mb-0"><b>Esto restaurará estados de facturas, pagos y cobros relacionados.</b></p>
+        `,
             showCancelButton: true,
-            confirmButtonText: "Si, cancelar importacion",
+            confirmButtonText: "Sí, cancelar importación",
             cancelButtonText: "No"
         }).then((result) => {
+
             if (!result.isConfirmed) {
                 return;
             }
+
+            // Modal de carga
+            Swal.fire({
+                title: 'Procesando...',
+                html: 'Revirtiendo cambios de la importación',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             fetch(baseURL + 'facturas/cancelar-importacion-excel', {
                 method: 'POST'
             })
                 .then(res => {
-                    if (!res.ok) throw new Error('Error en la respuesta del servidor');
+                    if (!res.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+
                     return res.json();
                 })
                 .then(data => {
+
                     if (!data.success) {
+
                         Swal.fire({
                             icon: 'error',
                             title: 'No se pudo revertir',
-                            text: data.message || 'No fue posible cancelar la importacion'
+                            text: data.message || 'No fue posible cancelar la importación'
                         });
+
                         return;
                     }
 
                     Swal.fire({
                         icon: 'success',
-                        title: 'Importacion revertida',
+                        title: 'Importación revertida',
                         html: `
-                            <p><b>Facturas revertidas:</b> ${data.facturas_revertidas ?? 0}</p>
-                            <p class="mb-0"><b>Pagos eliminados:</b> ${data.pagos_eliminados ?? 0}</p>
-                        `
+                    <p><b>Facturas revertidas:</b> ${data.facturas_revertidas ?? 0}</p>
+                    <p class="mb-0"><b>Pagos eliminados:</b> ${data.pagos_eliminados ?? 0}</p>
+                `
                     });
                 })
                 .catch(error => {
+
                     console.error(error);
 
                     Swal.fire({
                         icon: 'error',
                         title: 'Error inesperado',
-                        text: 'No se pudieron revertir los cambios de la importacion'
+                        text: 'No se pudieron revertir los cambios de la importación'
                     });
                 });
         });
