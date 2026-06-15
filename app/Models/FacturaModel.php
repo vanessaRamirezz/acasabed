@@ -297,6 +297,8 @@ class FacturaModel extends Model
             ) AS lecturaAnterior,
             f.consumo
         ", false)
+            ->orderBy('CASE WHEN c.orden_ruta IS NULL THEN 1 ELSE 0 END', 'ASC', false)
+            ->orderBy('c.orden_ruta', 'ASC')
             ->orderBy('f.id_factura', 'ASC')
             ->limit('10')
             ->get()
