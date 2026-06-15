@@ -380,6 +380,7 @@ class ContratoModel extends Model
             ->join('medidores', 'medidores.id_medidor = contratos.id_medidor', 'left')
             // ->join('lecturas', 'lecturas.id_contrato = contratos.id_contrato', 'left')
             ->join('tarifas', 'tarifas.id_tarifa = contratos.id_tarifa', 'left')
+            ->where('medidores.estado', 'ACTIVO')
             ->where('contratos.estado', 'APROBADO')
             // ->where('solicitudes.estado', 'APROBADA')
             ->orderBy('contratos.id_contrato', 'ASC')

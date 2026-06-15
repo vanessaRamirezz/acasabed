@@ -1013,6 +1013,13 @@ class FacturacionServicio extends BaseController
                     'mora' => 0
                 ];
 
+                $detalle[] = [
+                    'id_servicio' => $mapServicios['00010'],
+                    'concepto' => 'USO DE RED',
+                    'monto' => 1.80,
+                    'mora' => 0
+                ];
+
                 $totalFactura += ($montoServicio + $trenAseo + $alumbrado);
 
                 log_message('info', 'Detalle final: ' . print_r($detalle, true));
