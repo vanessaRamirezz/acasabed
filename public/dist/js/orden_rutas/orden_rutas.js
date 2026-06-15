@@ -7,17 +7,17 @@ const inputs = {
     guardar: $("#btn-guardar-orden-ruta"),
 };
 
-function renderEstado(estado) {
-    if (estado === "APROBADO") {
-        return `<span class="badge badge-success">${estado}</span>`;
-    }
+// function renderEstado(estado) {
+//     if (estado === "APROBADO") {
+//         return `<span class="badge badge-success">${estado}</span>`;
+//     }
 
-    if (estado === "SUSPENDIDO") {
-        return `<span class="badge badge-warning">${estado}</span>`;
-    }
+//     if (estado === "SUSPENDIDO") {
+//         return `<span class="badge badge-warning">${estado}</span>`;
+//     }
 
-    return `<span class="badge badge-secondary">${estado || "-"}</span>`;
-}
+//     return `<span class="badge badge-secondary">${estado || "-"}</span>`;
+// }
 
 function cargarRutas() {
     $.ajax({
@@ -107,6 +107,8 @@ function renderContratos(contratos) {
 
         inputs.tbody.append(`
             <tr>
+                <td>${contrato.numero_contrato || "-"}</td>
+                <td class="text-left">${contrato.cliente || "-"}</td>
                 <td>
                     <input type="number"
                         class="form-control form-control-sm orden-ruta-input"
@@ -115,9 +117,6 @@ function renderContratos(contratos) {
                         data-id="${contrato.id_contrato}"
                         data-original="${orden}">
                 </td>
-                <td>${contrato.numero_contrato || "-"}</td>
-                <td class="text-left">${contrato.cliente || "-"}</td>
-                <td>${renderEstado(contrato.estado)}</td>
             </tr>
         `);
     });

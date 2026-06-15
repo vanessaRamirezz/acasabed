@@ -58,10 +58,10 @@
                     <table class="table table-bordered table-sm" id="tbl-orden-rutas">
                         <thead>
                             <tr>
-                                <th style="width: 12%;">Orden</th>
                                 <th style="width: 25%;">Contrato</th>
                                 <th>Cliente</th>
-                                <th style="width: 18%;">Estado</th>
+                                <th style="width: 12%;">Orden</th>
+                                <!-- <th style="width: 18%;">Estado</th> -->
                             </tr>
                         </thead>
                         <tbody class="text-center">
