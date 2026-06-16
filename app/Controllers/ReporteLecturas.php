@@ -170,7 +170,7 @@ class ReporteLecturas extends BaseController
         <table>
             <thead>
                 <tr>
-                    <th align="left">No.</th>
+                    <th width="10%" align="left">No.</th>
                     ' . ($mostrarPeriodo ? '<th align="left">Período</th>' : '') . '
                     ' . ($mostrarContrato ? '<th align="left">Contrato</th>' : '') . '
                     <th align="left">Cliente</th>
@@ -205,7 +205,7 @@ class ReporteLecturas extends BaseController
 
                 foreach ($lecturas as $lectura) {
                     $html .= '<tr>';
-                    $html .= '<td align="left">' . $numero++ . '</td>';
+                    $html .= '<td width="10%" align="left">' . $numero++ . '</td>';
 
                     if ($mostrarPeriodo) {
                         $html .= '<td align="left">' . esc((string)$lectura['periodo'] ?? '-') . '</td>';
@@ -224,11 +224,11 @@ class ReporteLecturas extends BaseController
                     $html .= '<td align="left">' . esc((string)$lectura['fecha_lectura'] ?? '-') . '</td>';
 
                     if ($vistaContrato) {
-                        $html .= '<td align="left">' . number_format((float)($lectura['lectura_anterior'] ?? 0), 0) . '</td>';
-                        $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
+                        $html .= '<td align="left">' . ($lectura['lectura_anterior'] ?? 0) . '</td>';
+                        $html .= '<td align="left">' . ($lectura['lectura_actual'] ?? 0) . '</td>';
                         $html .= '<td align="left">' . number_format((float)($lectura['consumo_factura'] ?? 0), 0) . '</td>';
                     } else {
-                        $html .= '<td align="left">' . number_format((float)($lectura['lectura_actual'] ?? 0), 0) . '</td>';
+                        $html .= '<td align="left">' . ($lectura['lectura_actual'] ?? 0) . '</td>';
                     }
 
                     $html .= '</tr>';

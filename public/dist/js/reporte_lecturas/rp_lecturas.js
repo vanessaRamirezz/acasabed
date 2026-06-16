@@ -1,4 +1,4 @@
-import { alertaError } from "../metodos/metodos.js";
+import { alertaError, alertEnSweet } from "../metodos/metodos.js";
 
 function resetSelect(selector, placeholder = "Seleccione...") {
     $(selector).empty().append(`<option value="-1">${placeholder}</option>`);
@@ -214,6 +214,15 @@ async function generarReporte() {
     const periodo = $("#periodo").val();
     const contrato = $("#contrato").val();
     const instalador = $("#instalador").val();
+
+    if ((!contrato || contrato === '-1') &&
+        (!periodo || periodo === '-1')) {
+
+        alertaError(
+            'Debe seleccionar un período cuando no filtre por contrato'
+        );
+        return;
+    }
 
     if (periodo) {
         params.append("periodo", periodo);
