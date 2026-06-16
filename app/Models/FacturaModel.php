@@ -54,36 +54,55 @@ class FacturaModel extends Model
     // modelo para facturas de cobros de instalacion
     public function getHistorial(int $start, int $length, $searchValue = '')
     {
-        $builder = $this->db->table('facturas f');
+        $db = $this->db;
 
-        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner');
-        $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
-        $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
-        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
-        $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
+        /**
+         * ==========================================
+         * BASE QUERY (SIN JOIN A DETALLE)
+         * ==========================================
+         */
+        $baseBuilder = $db->table('facturas f');
 
-        $builder->where('f.tipo', 'Instalacion');
+        $baseBuilder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
+        $baseBuilder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
+        $baseBuilder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+        $baseBuilder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
 
-        // CLAVE PARA EVITAR DUPLICADOS
-        $builder->distinct();
-        $builder->select('f.id_factura');
+        $baseBuilder->where('f.tipo', 'Instalacion');
 
-        //total sin filtros
-        $total = $builder->countAllResults(false);
+        /**
+         * ==========================================
+         * TOTAL (SIN FILTROS)
+         * ==========================================
+         */
+        $total = (clone $baseBuilder)->countAllResults();
 
-        // búsqueda
+        /**
+         * ==========================================
+         * FILTRO DE BÚSQUEDA
+         * ==========================================
+         */
         if (!empty($searchValue)) {
-            $builder->groupStart()
+            $baseBuilder->groupStart()
                 ->like('cl.nombre_completo', $searchValue)
                 ->orLike('s.codigo_solicitud', $searchValue)
                 ->orLike('p.nombre', $searchValue)
                 ->groupEnd();
         }
 
-        $filtered = $builder->countAllResults(false);
+        /**
+         * ==========================================
+         * TOTAL FILTRADO
+         * ==========================================
+         */
+        $filtered = (clone $baseBuilder)->countAllResults();
 
-        // data principal
-        $data = $builder
+        /**
+         * ==========================================
+         * DATA FINAL
+         * ==========================================
+         */
+        $data = $baseBuilder
             ->select("
             f.id_factura AS id,
             f.correlativo,
@@ -94,7 +113,7 @@ class FacturaModel extends Model
             f.fecha_emision,
             f.fecha_de_pago,
             p.nombre AS periodo
-        ", false)
+        ")
             ->orderBy('f.id_factura', 'DESC')
             ->limit($length, $start)
             ->get()
