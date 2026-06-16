@@ -41,24 +41,58 @@ class CobrosInstalacion extends BaseController
     private function numeroEnteroALetras(int $numero): string
     {
         $unidades = [
-            0 => 'CERO', 1 => 'UNO', 2 => 'DOS', 3 => 'TRES', 4 => 'CUATRO',
-            5 => 'CINCO', 6 => 'SEIS', 7 => 'SIETE', 8 => 'OCHO', 9 => 'NUEVE',
-            10 => 'DIEZ', 11 => 'ONCE', 12 => 'DOCE', 13 => 'TRECE', 14 => 'CATORCE',
-            15 => 'QUINCE', 16 => 'DIECISEIS', 17 => 'DIECISIETE', 18 => 'DIECIOCHO',
-            19 => 'DIECINUEVE', 20 => 'VEINTE', 21 => 'VEINTIUNO', 22 => 'VEINTIDOS',
-            23 => 'VEINTITRES', 24 => 'VEINTICUATRO', 25 => 'VEINTICINCO',
-            26 => 'VEINTISEIS', 27 => 'VEINTISIETE', 28 => 'VEINTIOCHO', 29 => 'VEINTINUEVE'
+            0 => 'CERO',
+            1 => 'UNO',
+            2 => 'DOS',
+            3 => 'TRES',
+            4 => 'CUATRO',
+            5 => 'CINCO',
+            6 => 'SEIS',
+            7 => 'SIETE',
+            8 => 'OCHO',
+            9 => 'NUEVE',
+            10 => 'DIEZ',
+            11 => 'ONCE',
+            12 => 'DOCE',
+            13 => 'TRECE',
+            14 => 'CATORCE',
+            15 => 'QUINCE',
+            16 => 'DIECISEIS',
+            17 => 'DIECISIETE',
+            18 => 'DIECIOCHO',
+            19 => 'DIECINUEVE',
+            20 => 'VEINTE',
+            21 => 'VEINTIUNO',
+            22 => 'VEINTIDOS',
+            23 => 'VEINTITRES',
+            24 => 'VEINTICUATRO',
+            25 => 'VEINTICINCO',
+            26 => 'VEINTISEIS',
+            27 => 'VEINTISIETE',
+            28 => 'VEINTIOCHO',
+            29 => 'VEINTINUEVE'
         ];
 
         $decenas = [
-            30 => 'TREINTA', 40 => 'CUARENTA', 50 => 'CINCUENTA',
-            60 => 'SESENTA', 70 => 'SETENTA', 80 => 'OCHENTA', 90 => 'NOVENTA'
+            30 => 'TREINTA',
+            40 => 'CUARENTA',
+            50 => 'CINCUENTA',
+            60 => 'SESENTA',
+            70 => 'SETENTA',
+            80 => 'OCHENTA',
+            90 => 'NOVENTA'
         ];
 
         $centenas = [
-            100 => 'CIEN', 200 => 'DOSCIENTOS', 300 => 'TRESCIENTOS', 400 => 'CUATROCIENTOS',
-            500 => 'QUINIENTOS', 600 => 'SEISCIENTOS', 700 => 'SETECIENTOS',
-            800 => 'OCHOCIENTOS', 900 => 'NOVECIENTOS'
+            100 => 'CIEN',
+            200 => 'DOSCIENTOS',
+            300 => 'TRESCIENTOS',
+            400 => 'CUATROCIENTOS',
+            500 => 'QUINIENTOS',
+            600 => 'SEISCIENTOS',
+            700 => 'SETECIENTOS',
+            800 => 'OCHOCIENTOS',
+            900 => 'NOVECIENTOS'
         ];
 
         if ($numero < 30) {
@@ -490,7 +524,7 @@ class CobrosInstalacion extends BaseController
 
         $pdf->SetXY($x + 2, $currentY);
 
-        $pdf->MultiCell(60, 4, $factura['cliente'], 0, 'L');
+        $pdf->MultiCell(60, 3, $factura['cliente'], 0, 'L');
 
         // actualizar Y dinámicamente
         $currentY = $pdf->GetY();
@@ -503,7 +537,7 @@ class CobrosInstalacion extends BaseController
         $currentY = $pdf->GetY();
 
         // === MEDIDOR LABEL ===
-        $currentY += 6; // espacio extra
+        $currentY += 5; // espacio extra
         $pdf->SetXY($x + 1, $currentY);
 
         // etiqueta (azul)
@@ -580,15 +614,19 @@ class CobrosInstalacion extends BaseController
         $pdf->Cell($colW, 5, 'COD. TARIFA', 1, 0, 'C');
         $pdf->Cell($colW, 5, 'FECHA LECTURA', 1, 1, 'C'); // 👈 solo aquí salto
 
+        $pdf->SetTextColor(0, 0, 0);
         $pdf->SetX($x);
-        $pdf->Cell($colW, 5, '', 1, 0);
-        $pdf->Cell($colW, 5, '', 1, 0);
-        $pdf->Cell($colW, 5, '', 1, 0);
-        $pdf->Cell($colW, 5, '', 1, 0);
-        $pdf->Cell($colW, 5, '', 1, 1);
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetX($x);
+        $pdf->Cell($colW, 5, $factura['lecturaActual'], 1, 0, 'C');
+        $pdf->Cell($colW, 5, $factura['lecturaAnterior'], 1, 0, 'C');
+        $pdf->Cell($colW, 5, $factura['consumo'], 1, 0, 'C');
+        $pdf->Cell($colW, 5, $factura['codigoTarifa'], 1, 0, 'C');
+        $pdf->Cell($colW, 5, $factura['fechaLectura'], 1, 1, 'C');
 
 
         // DETALLE
+        $pdf->SetTextColor(0, 51, 153);
         $pdf->SetXY($x, $y + 62);
 
         // CÓDIGO ocupa columna 1
@@ -664,7 +702,7 @@ class CobrosInstalacion extends BaseController
         // TOTALES
         $pdf->SetXY($x, $yDetalle + 5);
         $totalConMora = $total + 2;
-        $totalConMoraFormateado = number_format($totalConMora,2);
+        $totalConMoraFormateado = number_format($totalConMora, 2);
 
         // izquierda
         $pdf->SetTextColor(0, 51, 153);
@@ -678,7 +716,7 @@ class CobrosInstalacion extends BaseController
         $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW, 6, 'TOTAL:', 'TB', 0, 'R');
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colW, 6, '$ ' . number_format($total,2), 'TB', 1, 'R');
+        $pdf->Cell($colW, 6, '$ ' . number_format($total, 2), 'TB', 1, 'R');
 
         // FOOTER
         $currentY = $pdf->GetY();

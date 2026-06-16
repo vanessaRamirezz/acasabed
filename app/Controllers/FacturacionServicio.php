@@ -418,7 +418,7 @@ class FacturacionServicio extends BaseController
 
         $pdf->SetXY($x + 2, $currentY);
 
-        $pdf->MultiCell(60, 4, $factura['cliente'], 0, 'L');
+        $pdf->MultiCell(60, 3, $factura['cliente'], 0, 'L');
 
         // actualizar Y dinámicamente
         $currentY = $pdf->GetY();
@@ -431,7 +431,7 @@ class FacturacionServicio extends BaseController
         $currentY = $pdf->GetY();
 
         // === MEDIDOR LABEL ===
-        $currentY += 6; // espacio extra
+        $currentY += 5; // espacio extra
         $pdf->SetXY($x + 1, $currentY);
 
         // etiqueta (azul)
@@ -596,7 +596,7 @@ class FacturacionServicio extends BaseController
         // TOTALES
         $pdf->SetXY($x, $yDetalle + 5);
         $totalConMora = $total + 2;
-        $totalConMoraFormateado = number_format($totalConMora,2);
+        $totalConMoraFormateado = number_format($totalConMora, 2);
 
         // izquierda
         $pdf->SetTextColor(0, 51, 153);
@@ -610,7 +610,7 @@ class FacturacionServicio extends BaseController
         $pdf->SetFont('helvetica', '', 6);
         $pdf->Cell($colW, 6, 'TOTAL:', 'TB', 0, 'R');
         $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell($colW, 6, '$ ' . number_format($total,2), 'TB', 1, 'R');
+        $pdf->Cell($colW, 6, '$ ' . number_format($total, 2), 'TB', 1, 'R');
 
         // FOOTER
         $currentY = $pdf->GetY();

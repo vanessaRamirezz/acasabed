@@ -126,6 +126,66 @@ class FacturaModel extends Model
         ];
     }
 
+    // public function obtenerFacturaPorId(int $idFactura)
+    // {
+    //     $builder = $this->db->table('facturas f');
+
+    //     $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
+    //     $builder->join('solicitudes s', 's.id_solicitud = c.id_solicitud', 'left');
+    //     $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+    //     $builder->join('departamentos d', 'd.id_departamento = cl.id_departamento', 'left');
+    //     $builder->join('municipios m', 'm.id_municipio = cl.id_municipio', 'left');
+    //     $builder->join('distritos ds', 'ds.id_distrito = cl.id_distrito', 'left');
+    //     $builder->join('medidores medi', 'medi.id_medidor = c.id_medidor', 'left');
+    //     $builder->join('colonias col', 'col.id_colonia = cl.id_colonia', 'left');
+
+    //     $factura = $builder
+    //         ->select("
+    //         f.id_factura AS id,
+    //         f.correlativo,
+    //         s.codigo_solicitud,
+    //         c.numero_contrato,
+    //         cl.nombre_completo AS cliente,
+
+    //         CONCAT_WS(', ',
+    //             d.nombre,
+    //             m.nombre,
+    //             ds.nombre,
+    //             col.nombre,
+    //             cl.complemento_direccion
+    //         ) AS direccion,
+
+    //         f.fecha_emision,
+    //         DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fechaVencimiento,
+    //         f.fecha_vencimiento,
+    //         f.estado,
+    //         f.total,
+    //         f.mora,
+    //         medi.numero_serie
+    //     ", false)
+    //         ->where('f.id_factura', $idFactura)
+    //         ->get()
+    //         ->getRowArray();
+
+    //     // detalle para PDF
+    //     $detalle = $this->db->table('facturas_detalle fd')
+    //         ->select("
+    //         fd.id_factura_detalle,
+    //         fd.concepto,
+    //         fd.mora,
+    //         fd.monto,
+    //         fd.id_cobro_instalacion
+    //     ")
+    //         ->where('fd.id_factura', $idFactura)
+    //         ->get()
+    //         ->getResultArray();
+
+    //     return [
+    //         'factura' => $factura,
+    //         'detalle' => $detalle
+    //     ];
+    // }
+
     public function obtenerFacturaPorId(int $idFactura)
     {
         $builder = $this->db->table('facturas f');
@@ -138,6 +198,8 @@ class FacturaModel extends Model
         $builder->join('distritos ds', 'ds.id_distrito = cl.id_distrito', 'left');
         $builder->join('medidores medi', 'medi.id_medidor = c.id_medidor', 'left');
         $builder->join('colonias col', 'col.id_colonia = cl.id_colonia', 'left');
+        $builder->join('lecturas lec', 'lec.id_lectura = f.id_lectura', 'left');
+        $builder->join('tarifas tari', 'tari.id_tarifa = c.id_tarifa', 'left');
 
         $factura = $builder
             ->select("
@@ -147,27 +209,38 @@ class FacturaModel extends Model
             c.numero_contrato,
             cl.nombre_completo AS cliente,
 
-            CONCAT_WS(', ',
-                d.nombre,
-                m.nombre,
-                ds.nombre,
-                col.nombre,
-                cl.complemento_direccion
-            ) AS direccion,
+            cl.complemento_direccion AS direccion,
 
             f.fecha_emision,
+
+            DATE_FORMAT(lec.fecha, '%d-%m-%Y') AS fechaLectura,
+
             DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fechaVencimiento,
+
             f.fecha_vencimiento,
             f.estado,
             f.total,
             f.mora,
-            medi.numero_serie
+            f.consumo,
+
+            medi.numero_serie,
+
+            lec.valor AS lecturaActual,
+
+            (
+                SELECT l2.valor
+                FROM lecturas l2
+                WHERE l2.id_contrato = f.id_contrato
+                AND l2.id_periodo < f.id_periodo
+                ORDER BY l2.id_periodo DESC, l2.id_lectura DESC
+                LIMIT 1
+            ) AS lecturaAnterior,
+            tari.codigo AS codigoTarifa
         ", false)
             ->where('f.id_factura', $idFactura)
             ->get()
             ->getRowArray();
 
-        // detalle para PDF
         $detalle = $this->db->table('facturas_detalle fd')
             ->select("
             fd.id_factura_detalle,
@@ -370,13 +443,7 @@ class FacturaModel extends Model
             s.codigo_solicitud,
             c.numero_contrato,
             cl.nombre_completo AS cliente,
-            CONCAT_WS(', ',
-                    d.nombre,
-                    m.nombre,
-                    ds.nombre,
-                    col.nombre,
-                    cl.complemento_direccion
-                ) AS direccion,
+            cl.complemento_direccion AS direccion,
             DATE_FORMAT(lec.fecha, '%d-%m-%Y') AS fechaLectura,
             DATE_FORMAT(f.fecha_vencimiento, '%d-%m-%Y') AS fechaVencimiento,
             tari.codigo AS codigoTarifa,
