@@ -39,6 +39,8 @@ class ReporteMedidores extends BaseController
     public function generarPDF()
     {
         try {
+            ini_set('memory_limit', '1024M');
+            set_time_limit(0);
             $estado = $this->request->getGet('estado');
             $medidores = $this->medidoresModel->getReporteMedidores($estado);
             // log_message('info', 'medidores ' . print_r($medidores, true));
