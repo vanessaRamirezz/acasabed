@@ -160,34 +160,6 @@
                     <div class="card-body p-4 d-flex flex-column">
 
                         <div class="card-icon">
-                            <i class="fas fa-file-excel"></i>
-                        </div>
-
-                        <h4 class="card-title-custom">
-                            Plantilla que se emite al banco
-                        </h4>
-
-                        <p class="card-description">
-                            Genera el documento correspondiente al período activo que se envia al banco.
-                        </p>
-
-                        <div class="mt-auto">
-                            <button id="btnExportarExcel"
-                                class="btn btn-dark">
-                                <i class="fas fa-download mr-1"></i>
-                                Generar archivo
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TARJETA 4 -->
-            <div class="col-md-6 mb-3">
-                <div class="card dashboard-card h-100">
-                    <div class="card-body p-4 d-flex flex-column">
-
-                        <div class="card-icon">
                             <i class="fas fa-file-upload"></i>
                         </div>
 
@@ -214,6 +186,34 @@
 
                         </div>
 
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETA 4 -->
+            <div class="col-md-6 mb-3">
+                <div class="card dashboard-card h-100">
+                    <div class="card-body p-4 d-flex flex-column">
+
+                        <div class="card-icon">
+                            <i class="fas fa-file-excel"></i>
+                        </div>
+
+                        <h4 class="card-title-custom">
+                            Plantilla que se emite al banco
+                        </h4>
+
+                        <p class="card-description">
+                            Genera el documento correspondiente al período activo que se envia al banco.
+                        </p>
+
+                        <div class="mt-auto">
+                            <button id="btnExportarExcel"
+                                class="btn btn-dark">
+                                <i class="fas fa-download mr-1"></i>
+                                Generar archivo
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
