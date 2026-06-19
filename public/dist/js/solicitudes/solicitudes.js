@@ -84,6 +84,11 @@ const inputs = {
     nombreFirmante3: $("#nombre-firmante-3"),
     puestoFirmante3: $("#puesto-firmante-3"),
 
+    firmante4: $("#buscar-firmante-4"),
+    idFirmante4: $("#id-firmante-4"),
+    nombreFirmante4: $("#nombre-firmante-4"),
+    puestoFirmante4: $("#puesto-firmante-4"),
+
 
     // datos del contrato
     numeroContrato: $("#numero-contrato"),
@@ -172,6 +177,10 @@ function getData() {
     formData.append('idFirmante3', inputs.idFirmante3.val().trim());
     formData.append('nombreFirmante3', inputs.nombreFirmante3.val().trim());
     formData.append('puestoFirmante3', inputs.puestoFirmante3.val().trim());
+
+    formData.append('idFirmante4', inputs.idFirmante4.val().trim());
+    formData.append('nombreFirmante4', inputs.nombreFirmante4.val().trim());
+    formData.append('puestoFirmante4', inputs.puestoFirmante4.val().trim());
 
     // datos del contrato
     formData.append('numeroContrato', inputs.numeroContrato.val().trim());
@@ -307,12 +316,12 @@ function eventoSeccionBeneficarioEditar() {
     $('#btn-limpiar').show();
 }
 
+
 function llenarInputFirmante1(firmanteUno) {
     inputs.idFirmante1.val(firmanteUno.id_firmante);
     inputs.nombreFirmante1.val(firmanteUno.nombre).prop('disabled', false);
     inputs.puestoFirmante1.val(firmanteUno.rol).prop('disabled', false);
 }
-
 
 function eventoSeleccionFirmante1() {
     $('#buscar-firmante-1').on('select2:select', function (e) {
@@ -335,7 +344,6 @@ function llenarInputFirmante2(firmanteUno) {
     inputs.puestoFirmante2.val(firmanteUno.rol).prop('disabled', false);
 }
 
-
 function eventoSeleccionFirmante2() {
     $('#buscar-firmante-2').on('select2:select', function (e) {
         const selected = e.params.data.data;
@@ -357,7 +365,6 @@ function llenarInputFirmante3(firmanteUno) {
     inputs.puestoFirmante3.val(firmanteUno.rol).prop('disabled', false);
 }
 
-
 function eventoSeleccionFirmante3() {
     $('#buscar-firmante-3').on('select2:select', function (e) {
         const selected = e.params.data.data;
@@ -369,6 +376,26 @@ function eventoSeleccionFirmante3() {
             inputs.idFirmante3.val('');
             inputs.nombreFirmante3.val('').prop('disabled', false);
             inputs.puestoFirmante3.val('').prop('disabled', false);
+        });
+    });
+}
+
+function llenarInputFirmante4(firmanteUno) {
+    inputs.idFirmante4.val(firmanteUno.id_firmante);
+    inputs.nombreFirmante4.val(firmanteUno.nombre).prop('disabled', false);
+    inputs.puestoFirmante4.val(firmanteUno.rol).prop('disabled', false);
+}
+function eventoSeleccionFirmante4() {
+    $('#buscar-firmante-4').on('select2:select', function (e) {
+        const selected = e.params.data.data;
+
+        if (selected) {
+            llenarInputFirmante4(selected);
+        }
+        $('#buscar-firmante-4').on('select2:clear', function () {
+            inputs.idFirmante4.val('');
+            inputs.nombreFirmante4.val('').prop('disabled', false);
+            inputs.puestoFirmante4.val('').prop('disabled', false);
         });
     });
 }
@@ -574,6 +601,10 @@ function getDataForPDF() {
         nombreFirmante3: inputs.nombreFirmante3.val().trim(),
         puestoFirmante3: inputs.puestoFirmante3.val().trim(),
 
+        idFirmante4: inputs.idFirmante4.val().trim(),
+        nombreFirmante4: inputs.nombreFirmante4.val().trim(),
+        puestoFirmante4: inputs.puestoFirmante4.val().trim(),
+
         // datos del contrato
         numeroContrato: inputs.numeroContrato.val().trim(),
         fichaAlcaldia: inputs.fichaAlcaldia.val().trim(),
@@ -589,7 +620,7 @@ function getDataForPDF() {
 function vistaPrevia(dataObj) {
     // e.preventDefault();
     // console.log(dataObj);
-    
+
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'pt', 'letter');
@@ -1153,9 +1184,10 @@ function vistaPrevia(dataObj) {
     setFont("normal", 7);
     const firmantes = [
         { nombre: dataObj.nombre || '', puesto: 'Persona Solicitante' || '' },
-        { nombre: dataObj.nombreFirmante1 || '', puesto: dataObj.puestoFirmante1 || dataObj.rolFirmante1 || ''},
+        { nombre: dataObj.nombreFirmante1 || '', puesto: dataObj.puestoFirmante1 || dataObj.rolFirmante1 || '' },
         { nombre: dataObj.nombreFirmante2 || '', puesto: dataObj.puestoFirmante2 || dataObj.rolFirmante2 || '' },
-        { nombre: dataObj.nombreFirmante3 || '', puesto: dataObj.puestoFirmante3 || dataObj.rolFirmante3 || '' }
+        { nombre: dataObj.nombreFirmante3 || '', puesto: dataObj.puestoFirmante3 || dataObj.rolFirmante3 || '' },
+        { nombre: dataObj.nombreFirmante4 || '', puesto: dataObj.puestoFirmante4 || dataObj.rolFirmante4 || '' },
     ];
 
     setFont("normal", 7);
@@ -1282,6 +1314,7 @@ function cargarTarifas() {
     })
 }
 
+
 function cargarFirmantes1() {
     $('#buscar-firmante-1').select2({
         placeholder: "Busque y seleccione",
@@ -1340,6 +1373,34 @@ function cargarFirmantes2() {
 
 function cargarFirmantes3() {
     $('#buscar-firmante-3').select2({
+        placeholder: "Busque y seleccione",
+        allowClear: true,
+        theme: 'bootstrap4',
+        ajax: {
+            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
+            dataType: "json",
+            delay: 250, // Espera para reducir solicitudes
+            data: function (params) {
+                return {
+                    q: params.term // El término de búsqueda
+                };
+            },
+            processResults: function (response) {
+                return {
+                    results: response.data.map(firmante => ({
+                        id: firmante.id_firmante,
+                        text: firmante.nombre + ' - ' + firmante.rol,
+                        data: firmante
+                    }))
+                };
+            },
+            cache: true
+        }
+    })
+}
+
+function cargarFirmantes4() {
+    $('#buscar-firmante-4').select2({
         placeholder: "Busque y seleccione",
         allowClear: true,
         theme: 'bootstrap4',
@@ -1897,6 +1958,11 @@ function cargarSolicitudDesdeURL() {
                 inputs.idFirmante3.val(d.idFirmante3).prop('disabled', false);
                 inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', false);
                 inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', false);
+
+                inputs.idFirmante4.val(d.idFirmante4).prop('disabled', false);
+                inputs.nombreFirmante4.val(d.nombreFirmante4).prop('disabled', false);
+                inputs.puestoFirmante4.val(d.rolFirmante4).prop('disabled', false);
+
             }
         });
     }
@@ -2047,6 +2113,10 @@ function cargarSolicitudDesdeURLSoloVer() {
                 inputs.idFirmante3.val(d.idFirmante3).prop('disabled', true);
                 inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', true);
                 inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', true);
+
+                inputs.idFirmante4.val(d.idFirmante4).prop('disabled', true);
+                inputs.nombreFirmante4.val(d.nombreFirmante4).prop('disabled', true);
+                inputs.puestoFirmante4.val(d.rolFirmante4).prop('disabled', true);
 
                 // SECCION SOLO DE CONTRATO
                 inputs.numeroContrato.val(d.numeroContrato)
@@ -2254,6 +2324,10 @@ function cargarSolicitudDesdeURLeditarYaAprobada() {
                 inputs.idFirmante3.val(d.idFirmante3).prop('disabled', false);
                 inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', false);
                 inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', false);
+
+                inputs.idFirmante4.val(d.idFirmante4).prop('disabled', false);
+                inputs.nombreFirmante4.val(d.nombreFirmante4).prop('disabled', false);
+                inputs.puestoFirmante4.val(d.rolFirmante4).prop('disabled', false);
 
                 // SECCION SOLO DE CONTRATO
                 inputs.numeroContrato.val(d.numeroContrato)
@@ -2529,6 +2603,7 @@ function iniciarTodo() {
     cargarFirmantes1();
     cargarFirmantes2();
     cargarFirmantes3();
+    cargarFirmantes4();
     cargarMedidores();
     cargarTarifas();
     eventoSeleccionCliente();
@@ -2540,6 +2615,7 @@ function iniciarTodo() {
     eventoSeleccionFirmante1();
     eventoSeleccionFirmante2();
     eventoSeleccionFirmante3();
+    eventoSeleccionFirmante4();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

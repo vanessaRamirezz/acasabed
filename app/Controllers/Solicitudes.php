@@ -326,6 +326,9 @@ class Solicitudes extends BaseController
         $nombreFirmante3 = $data['nombreFirmante3'] ?? null;
         $puestoFirmante3 = $data['puestoFirmante3'] ?? null;
 
+        $idFirmante4 = $data['idFirmante4'] ?? null;
+        $nombreFirmante4 = $data['nombreFirmante4'] ?? null;
+        $puestoFirmante4 = $data['puestoFirmante4'] ?? null;
 
 
         return [
@@ -341,7 +344,11 @@ class Solicitudes extends BaseController
 
                 'idFirmante3' => $idFirmante3,
                 'nombreFirmante3' => $nombreFirmante3,
-                'puestoFirmante3' => $puestoFirmante3
+                'puestoFirmante3' => $puestoFirmante3,
+
+                'idFirmante4' => $idFirmante4,
+                'nombreFirmante4' => $nombreFirmante4,
+                'puestoFirmante4' => $puestoFirmante4,
             ]
         ];
     }
@@ -782,10 +789,17 @@ class Solicitudes extends BaseController
                 $firmantes['data']['puestoFirmante3'],
             );
 
+            $idFirmante4 = $this->procesarFirmante(
+                $firmantes['data']['idFirmante4'],
+                $firmantes['data']['nombreFirmante4'],
+                $firmantes['data']['puestoFirmante4'],
+            );
+
             log_message('info', 'ids firmantes ' . print_r([
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
                 'idFirmante3' => $idFirmante3,
+                'idFirmante4' => $idFirmante4,
             ], true));
 
             // =========================
@@ -797,7 +811,8 @@ class Solicitudes extends BaseController
                 'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
                 'id_firmante_1' => $idFirmante1,
                 'id_firmante_2' => $idFirmante2,
-                'id_firmante_3' => $idFirmante3
+                'id_firmante_3' => $idFirmante3,
+                'id_firmante_4' => $idFirmante4
             ]);
 
             if (!$solicitudActualizada) {
@@ -817,6 +832,7 @@ class Solicitudes extends BaseController
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
                 'idFirmante3' => $idFirmante3,
+                'idFirmante4' => $idFirmante4,
             ]));
 
             return $this->respondOk('Solicitud creada correctamente con codigo ' . $codigoFormateado);
@@ -1031,10 +1047,17 @@ class Solicitudes extends BaseController
                 $firmantes['data']['puestoFirmante3'],
             );
 
+            $idFirmante4 = $this->procesarFirmante(
+                $firmantes['data']['idFirmante4'],
+                $firmantes['data']['nombreFirmante4'],
+                $firmantes['data']['puestoFirmante4'],
+            );
+
             log_message('info', 'ids firmantes ' . print_r([
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
                 'idFirmante3' => $idFirmante3,
+                'idFirmante4' => $idFirmante4,
             ], true));
 
             // =========================
@@ -1046,7 +1069,8 @@ class Solicitudes extends BaseController
                 'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
                 'id_firmante_1' => $idFirmante1,
                 'id_firmante_2' => $idFirmante2,
-                'id_firmante_3' => $idFirmante3
+                'id_firmante_3' => $idFirmante3,
+                'id_firmante_4' => $idFirmante4
             ]);
 
             if (!$relacionesActualizadas) {
@@ -1522,10 +1546,17 @@ class Solicitudes extends BaseController
                 $firmantes['data']['puestoFirmante3'],
             );
 
+            $idFirmante4 = $this->procesarFirmante(
+                $firmantes['data']['idFirmante4'],
+                $firmantes['data']['nombreFirmante4'],
+                $firmantes['data']['puestoFirmante4'],
+            );
+
             log_message('info', 'ids firmantes ' . print_r([
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
                 'idFirmante3' => $idFirmante3,
+                'idFirmante4' => $idFirmante4
             ], true));
 
             // =========================
@@ -1537,7 +1568,8 @@ class Solicitudes extends BaseController
                 'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
                 'id_firmante_1' => $idFirmante1,
                 'id_firmante_2' => $idFirmante2,
-                'id_firmante_3' => $idFirmante3
+                'id_firmante_3' => $idFirmante3,
+                'id_firmante_4' => $idFirmante4
             ]);
 
             if (!$relacionesActualizadas) {

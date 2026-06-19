@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <style>
         @page {
-            margin: 3cm 1cm 1.5cm 1cm;
+            margin: 1cm 1cm 1.5cm 1cm;
         }
 
         body {
             font-family: "Times New Roman", serif;
-            font-size: 14.3px;
+            font-size: 14px;
             line-height: 1.5;
             text-align: justify;
         }
@@ -186,13 +186,11 @@
             Cobro por reconexión, mora, reposición de recibo, daños ocasionados por el usuario.
         </li>
 
-
-        <div style="page-break-before: always;"></div>
-
         <li>
             La imposición de multas, e inclusive la potestad de establecer las normas necesarias que privarár
             a efecto de que los usuarios hagan un uso racional del agua.
         </li>
+
         <li>
             Facultad de suspender el servicio en aquellos casos que lo ameriten, en aras de garantizar la
             sostenibilidad del mismo.
@@ -210,6 +208,7 @@
         </li>
     </ol>
 
+    <div style="page-break-before: always;"></div>
     <p>
         <strong>USUARIO.</strong> Persona beneficiaria del servicio de agua que presta la asociación y como usuario me
         comprometo a cumplir las disposiciones establecidas en los estatutos reglamento interno y otras leyes de
@@ -274,8 +273,6 @@
             reserva el derecho de otorgar nuevas acometidas, ampliaciones de acuerdo al diseño del sistema.
         </li>
 
-
-        <div style="page-break-before: always;"></div>
         <li>
             Me comprometo también a cancelar puntualmente, la tarifa por servicio de agua mas el uso de red,
             según los bloques de consumo para uso domiciliar, que se estipula en el Reglamento Interno. De
@@ -306,6 +303,7 @@
             Hare custodia de las tuberías que pasan frente a mi vivienda, haciendo participe a la Junta
             Directiva y Empleados, de cualquier amenaza o daño que atente contra los acueductos.
         </li>
+
         <li>
             Atenderé fielmente las instrucciones emanadas de la Junta Directiva, para la conservación del
             medio ambiente, aguas servidas y cualquier otro factor que fuere señalado con relación al uso
@@ -373,6 +371,15 @@
                 <div class="linea"></div>
                 <div class="nombre"><?= $nombreFirmante3 ?? '' ?></div>
                 <div class="titulo"><?= $rolFirmante3 ?? '' ?></div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Firmante 4 -->
+        <?php if (!empty($nombreFirmante4) || !empty($rolFirmante4)) : ?>
+            <div class="firma">
+                <div class="linea"></div>
+                <div class="nombre"><?= $nombreFirmante4 ?? '' ?></div>
+                <div class="titulo"><?= $rolFirmante4 ?? '' ?></div>
             </div>
         <?php endif; ?>
 

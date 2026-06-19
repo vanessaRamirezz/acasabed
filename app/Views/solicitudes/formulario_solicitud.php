@@ -553,9 +553,9 @@
 
                         <!-- Firmante 1 -->
                         <div class="card mb-3 shadow-sm">
-                            <!-- <div class="card-header bg-light">
+                            <div class="card-header bg-light">
                                 <strong>Administrador de ACASABED</strong>
-                            </div> -->
+                            </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-9">
@@ -641,6 +641,35 @@
                                         <div class="form-group">
                                             <label for="puesto-firmante-3">Rol</label>
                                             <input type="text" class="form-control" id="puesto-firmante-3" name="puesto-firmante-3">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Firmante 4 -->
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-9">
+                                        <div class="form-group">
+                                            <label class="mb-1">Seleccionar Nombre</label>
+                                            <select name="buscar-firmante-4" id="buscar-firmante-4" class="form-control">
+                                                <option value="">...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="id-firmante-4">
+                                    <div class="col-md-9">
+                                        <div class="form-group">
+                                            <label for="nombre-firmante-4">Nombre</label>
+                                            <input type="text" class="form-control" id="nombre-firmante-4" name="nombre-firmante-4">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div class="form-group">
+                                            <label for="puesto-firmante-4">Rol</label>
+                                            <input type="text" class="form-control" id="puesto-firmante-4" name="puesto-firmante-4">
                                         </div>
                                     </div>
                                 </div>

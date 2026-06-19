@@ -56,6 +56,9 @@ class Contratos extends BaseController
 
             "nombreFirmante3" => $request->getPost('nombreFirmante3'),
             "rolFirmante3" => $request->getPost('puestoFirmante3'),
+
+            "nombreFirmante4" => $request->getPost('nombreFirmante4'),
+            "rolFirmante4" => $request->getPost('puestoFirmante4'),
         ];
 
         $html = view('contratos/contrato', $data);
@@ -118,6 +121,9 @@ class Contratos extends BaseController
 
             "nombreFirmante3" => $data['nombreFirmante3'] ?? '',
             "rolFirmante3" => $data['rolFirmante3'] ?? '',
+
+            "nombreFirmante4" => $data['nombreFirmante4'] ?? '',
+            "rolFirmante4" => $data['rolFirmante4'] ?? '',
         ];
 
         $html = view('contratos/contrato', $data);

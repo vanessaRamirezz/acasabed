@@ -40,6 +40,7 @@ class SolicitudModel extends Model
         'id_firmante_1',
         'id_firmante_2',
         'id_firmante_3',
+        'id_firmante_4',
         'fecha_anulada'
     ];
 
@@ -445,6 +446,10 @@ class SolicitudModel extends Model
         f3.nombre AS nombreFirmante3,
         f3.rol AS rolFirmante3,
 
+        f4.id_firmante AS idFirmante4,
+        f4.nombre AS nombreFirmante4,
+        f4.rol AS rolFirmante4,
+
         contratos.id_contrato,
         contratos.numero_contrato AS numeroContrato,
         contratos.ficha_alcaldia AS fichaAlcaldia,
@@ -509,6 +514,12 @@ class SolicitudModel extends Model
         $builder->join(
             'firmantes AS f3',
             'f3.id_firmante = solicitudes.id_firmante_3',
+            'left'
+        );
+
+        $builder->join(
+            'firmantes AS f4',
+            'f4.id_firmante = solicitudes.id_firmante_4',
             'left'
         );
 
