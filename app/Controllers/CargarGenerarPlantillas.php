@@ -656,8 +656,15 @@ class CargarGenerarPlantillas extends BaseController
 
             foreach ($facturasPeriodo as $f) {
 
+                // Normalizar código quitando ceros a la izquierda
+                $codigoNormalizado = ltrim((string)$f['codigo'], '0');
+
+                if ($codigoNormalizado === '') {
+                    $codigoNormalizado = '0';
+                }
+
                 // Para formato cliente (pueden existir varias facturas)
-                $facturasPorCodigo[$f['codigo']][] = $f;
+                $facturasPorCodigo[$codigoNormalizado][] = $f;
 
                 // Para formato tradicional
                 $referencia = $f['tiraje'] . '-' . $f['correlativo'];
@@ -739,6 +746,9 @@ class CargarGenerarPlantillas extends BaseController
                      * ==========================================
                      */
                     $codigoCliente = trim((string)($c[2] ?? ''));
+                    // quitar ceros por si algún archivo los trae
+                    $codigoCliente = ltrim($codigoCliente, '0');
+
                     $montoPagado   = (float)($c[4] ?? 0);
 
                     if (!$codigoCliente) {
