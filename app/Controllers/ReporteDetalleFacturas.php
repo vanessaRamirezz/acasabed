@@ -206,10 +206,20 @@ class ReporteDetalleFacturas extends BaseController
                 // $pdf->Ln(2);
             }
 
+            $currentY = $pdf->GetY();
+
+            if ($currentY > 260) {
+                $pdf->AddPage();
+            }
             // =========================
             // TOTAL GENERAL
             // =========================
             $pdf->SetFont('helvetica', 'B', 8);
+
+            $pdf->Ln(2);
+            $pdf->Cell(190, 0, '', 'T');
+            $pdf->Ln(2);
+
             $pdf->Cell(150, 6, 'TOTAL GENERAL', 0, 0, 'R');
             $pdf->Cell(30, 6, '$ ' . number_format($totalGeneral, 2), 0, 1, 'R');
 

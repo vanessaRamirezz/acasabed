@@ -507,14 +507,34 @@ class CargarGenerarPlantillas extends BaseController
 
     private function normalizarFechaPago($fechaPago)
     {
+        if (empty($fechaPago)) {
+            return date('Y-m-d');
+        }
+
+        // Fecha serial de Excel
         if (is_numeric($fechaPago)) {
             return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fechaPago)
                 ->format('Y-m-d');
         }
 
-        if (!empty($fechaPago)) {
-            return date('Y-m-d', strtotime($fechaPago));
+        // Formato dd/mm/yyyy
+        $fecha = \DateTime::createFromFormat('d/m/Y', trim($fechaPago));
+
+        if ($fecha !== false) {
+            return $fecha->format('Y-m-d');
         }
+
+        // Otros formatos válidos
+        $timestamp = strtotime($fechaPago);
+
+        if ($timestamp !== false) {
+            return date('Y-m-d', $timestamp);
+        }
+
+        log_message(
+            'warning',
+            'No se pudo convertir fecha: ' . $fechaPago
+        );
 
         return date('Y-m-d');
     }
@@ -795,12 +815,15 @@ class CargarGenerarPlantillas extends BaseController
                         continue;
                     }
 
-                    $referencia =
-                        $facturaEncontrada['tiraje']
-                        . '-'
-                        . $facturaEncontrada['correlativo'];
-
                     $fechaExcel = trim((string)($c[0] ?? ''));
+
+                    $tiraje = trim((string)($facturaEncontrada['tiraje'] ?? ''));
+                    $correlativo = trim((string)($facturaEncontrada['correlativo'] ?? ''));
+
+                    $referencia = $tiraje !== ''
+                        ? $tiraje . '-' . $correlativo
+                        : $correlativo;
+
 
                     if (!empty($fechaExcel)) {
                         $fechaActual = $fechaExcel;
@@ -813,7 +836,7 @@ class CargarGenerarPlantillas extends BaseController
                 }
             }
 
-            // log_message('info', 'COBROS INDEX: ' . print_r($cobrosIndex, true));
+            log_message('info', 'COBROS INDEX: ' . print_r($cobrosIndex, true));
 
             $db->transStart();
 
@@ -944,31 +967,29 @@ class CargarGenerarPlantillas extends BaseController
                  */
                 if (strtolower($estadoExcel) === 'pagó' || strtolower($estadoExcel) === 'pago') {
 
+
                     $cobro = $cobrosIndex[$referencia] ?? null;
+
 
                     $montoPagado = $cobro['monto_pagado'] ?? $factura['total'];
                     // $fechaPago = $cobro['fecha_pago'] ?? null;
 
+
                     $fechaPago = $this->normalizarFechaPago($cobro['fecha_pago'] ?? null);
 
-                    // evitar duplicado
-                    $existePago = $this->pagosFacturaModel
-                        ->where('id_factura', $facturaId)
-                        ->first();
 
-                    if (!$existePago) {
-                        $this->registrarImportacionFactura(
-                            $facturaId,
-                            $periodo,
-                            $tiraje,
-                            $correlativo,
-                            $referencia,
-                            'PAGADA',
-                            (float)$montoPagado,
-                            $fechaPago,
-                            $file->getName()
-                        );
-                    }
+                    $this->registrarImportacionFactura(
+                        $facturaId,
+                        $periodo,
+                        $tiraje,
+                        $correlativo,
+                        $referencia,
+                        'PAGADA',
+                        (float)$montoPagado,
+                        $fechaPago,
+                        $file->getName()
+                    );
+
 
                     // actualizar factura actual
                     $this->facturasModel->update($facturaId, [
