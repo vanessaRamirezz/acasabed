@@ -845,4 +845,64 @@ class FacturaModel extends Model
             ->get()
             ->getResultArray();
     }
+
+    public function getReporteFacturasDetallePorPeriodo($idPeriodo = null, $searchValue = '', $fecha  = null)
+    {
+        $builder = $this->db->table('facturas f');
+
+        $builder->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'left'); // 🔥 CAMBIO CLAVE
+        $builder->join('contratos c', 'c.id_contrato = f.id_contrato', 'left');
+        $builder->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left');
+        $builder->join('pagos_factura pf', 'pf.id_factura = f.id_factura', 'left');
+        $builder->join('periodos p', 'p.id_periodo = f.id_periodo', 'left');
+
+        if (!empty($idPeriodo)) {
+            $builder->where('f.id_periodo', $idPeriodo);
+        }
+
+        if (!empty($fecha)) {
+            $builder->where('f.fecha_de_pago', $fecha);
+        }
+
+        // if (!empty($tipo) && $tipo !== 'Todos') {
+        //     $builder->where('f.tipo', $tipo);
+        // }
+
+        if (!empty($searchValue)) {
+
+            $searchClean = str_replace('-', '', $searchValue);
+
+            $builder->groupStart()
+                ->like('cl.nombre_completo', $searchValue)
+                ->orLike("REPLACE(c.numero_contrato, '-', '')", $searchClean)
+                ->groupEnd();
+        }
+
+        return $builder
+            ->select("
+            f.id_factura,
+            f.tiraje,
+            f.correlativo,
+            f.total,
+            f.estado,
+            DATE_FORMAT(f.fecha_de_pago, '%d-%m-%Y') AS fecha_pago,
+            c.numero_contrato,
+            cl.nombre_completo AS cliente,
+            f.tipo AS tipo_factura,
+            GROUP_CONCAT(
+            CONCAT(
+                fd.concepto,'||',
+                fd.mora,'||',
+                fd.monto
+                )
+                SEPARATOR '##'
+            ) AS detalles,
+            p.nombre AS periodo
+        ", false)
+            ->groupBy('f.id_factura')
+            ->orderBy('f.id_factura', 'DESC')
+            // ->limit(20)
+            ->get()
+            ->getResultArray();
+    }
 }

@@ -172,6 +172,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('reporte_facturas', 'ReporteFacturas::index');
     $routes->get('getPeriodosReporteSelect', 'ReporteFacturas::getPeriodosReporteSelect');
     $routes->get('reporte-facturas/pdf', 'ReporteFacturas::generarPDF');
+    //REPORTE RESUMEN DE FACTURAS
     $routes->get('reporte_resumen_facturas', 'ReporteResumenFacturas::index');
     $routes->get('getPeriodosResumenFacturasSelect', 'ReporteResumenFacturas::getPeriodosSelect');
     $routes->get('reporte-resumen-facturas/pdf', 'ReporteResumenFacturas::generarPDF');
@@ -184,6 +185,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     //REPORTE MEDIDORES
     $routes->get('reporte_medidores', 'ReporteMedidores::index');
     $routes->get('reporte-medidores/pdf', 'ReporteMedidores::generarPDF');
+    // REPORTE DETALLE DE FACTURAS
+    $routes->get('reporte_detalle_facturas', 'ReporteDetalleFacturas::index');
+    $routes->get('reporte-detalle-facturas/pdf', 'ReporteDetalleFacturas::generarPDF');
 
     // PLANTILLAS
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');
