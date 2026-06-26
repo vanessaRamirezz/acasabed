@@ -511,7 +511,7 @@ class FacturaModel extends Model
             f.correlativo,
             f.total,
             f.estado,
-            DATE_FORMAT(COALESCE(MAX(pf.fecha_pago), f.fecha_de_pago), '%d-%m-%Y') AS fecha_pago,
+            DATE_FORMAT(f.fecha_de_pago, '%d-%m-%Y') AS fecha_pago,
             c.numero_contrato,
             cl.nombre_completo AS cliente,
             p.nombre AS periodo,

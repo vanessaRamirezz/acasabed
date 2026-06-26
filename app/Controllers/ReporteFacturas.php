@@ -342,6 +342,10 @@ class ReporteFacturas extends BaseController
 
                 $anchos = [10, 25, 20, 20, 60, 20, 15, 20];
 
+                $fila = array_map(function ($valor) {
+                    return (string)($valor ?? '');
+                }, $fila);
+
                 //==========================================
                 // CALCULAR ALTURA DE LA FILA
                 //==========================================

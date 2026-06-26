@@ -123,7 +123,7 @@ class ReporteDetalleFacturas extends BaseController
             }
 
             $pdf->SetTextColor(0, 0, 0);
-            $pdf->SetFont('helvetica', '', 7);
+            $pdf->SetFont('helvetica', '', 6);
 
             // =========================
             // DATA
@@ -166,7 +166,7 @@ class ReporteDetalleFacturas extends BaseController
                 }
 
                 // encabezado detalles (sin HTML)
-                $pdf->SetFont('helvetica', 'B', 7);
+                $pdf->SetFont('helvetica', 'B', 6);
                 $pdf->Cell(150, 2, 'Concepto', 0);
                 $pdf->Cell(30, 2, 'Monto', 0, 1, 'R');
 
@@ -192,11 +192,11 @@ class ReporteDetalleFacturas extends BaseController
                 }
 
                 // total factura
-                $pdf->SetFont('helvetica', 'B', 7);
+                $pdf->SetFont('helvetica', 'B', 6);
                 $pdf->Cell(150, 2, 'Total', 0, 0, 'R');
                 $pdf->Cell(30, 2, '$ ' . number_format($factura['total'], 2), 0, 1, 'R');
 
-                $pdf->SetFont('helvetica', '', 7);
+                $pdf->SetFont('helvetica', '', 6);
 
                 // =========================
                 // SEPARADOR VISUAL FACTURA
