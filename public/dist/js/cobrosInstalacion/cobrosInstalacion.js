@@ -49,7 +49,7 @@ function cargarTablaCobros() {
         columns: [
             { data: 'periodo'},
             { data: 'correlativo' },
-            { data: 'codigo_solicitud' },
+            { data: 'numero_contrato' },
             {
                 data: "estado",
                 render: data => renderEstado(data)

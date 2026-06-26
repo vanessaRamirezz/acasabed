@@ -85,7 +85,8 @@ class FacturaModel extends Model
         if (!empty($searchValue)) {
             $baseBuilder->groupStart()
                 ->like('cl.nombre_completo', $searchValue)
-                ->orLike('s.codigo_solicitud', $searchValue)
+                ->orLike('c.numero_contrato', $searchValue)
+                ->orLike('f.correlativo', $searchValue)
                 ->orLike('p.nombre', $searchValue)
                 ->groupEnd();
         }
