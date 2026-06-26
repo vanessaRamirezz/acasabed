@@ -28,15 +28,27 @@ async function generarReporte() {
     const tipo = $("#tipo").val();
     const search = $("#searchReporteFactura").val().trim();
 
-    const params = new URLSearchParams({ tipo });
+    const params = new URLSearchParams();
 
-    if (periodo === null || periodo === '') {
-        alertaError('Debe seleccionar un período');
+    // =========================
+    // VALIDACIÓN DINÁMICA
+    // =========================
+    const sinFiltrosExtra = (
+        (!tipo || tipo === "Todos") &&
+        search === ""
+    );
+
+    if (sinFiltrosExtra && (!periodo || periodo === '')) {
+        alertaError('Debe seleccionar un período o aplicar al menos un filtro');
         return;
     }
 
     if (periodo) {
         params.append("periodo", periodo);
+    }
+
+    if (tipo) {
+        params.append("tipo", tipo);
     }
 
     if (search) {
