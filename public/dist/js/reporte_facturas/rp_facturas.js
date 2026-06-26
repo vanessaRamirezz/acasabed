@@ -31,15 +31,12 @@ async function generarReporte() {
     const params = new URLSearchParams();
 
     // =========================
-    // VALIDACIÓN DINÁMICA
+    // VALIDACIÓN
     // =========================
-    const sinFiltrosExtra = (
-        (!tipo || tipo === "Todos") &&
-        search === ""
-    );
+    const tieneBusqueda = search !== "";
 
-    if (sinFiltrosExtra && (!periodo || periodo === '')) {
-        alertaError('Debe seleccionar un período o aplicar al menos un filtro');
+    if (!tieneBusqueda && (!periodo || periodo === "")) {
+        alertaError("Debe seleccionar un período cuando no realiza una búsqueda.");
         return;
     }
 
