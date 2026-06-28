@@ -150,7 +150,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('getFacturasServicio', 'FacturacionServicio::getFacturasServicio');
     $routes->get('getContratosFacturacionOtro', 'FacturacionServicio::getContratosFacturacionOtro');
     $routes->get('getServiciosFacturacionOtro', 'FacturacionServicio::getServiciosFacturacionOtro');
-    $routes->get('facturaCobroServicio/(:num)', 'FacturacionServicio::facturaCobroServicio/$1');
+    $routes->get('verFacturaPdf/(:num)', 'FacturacionServicio::verFacturaPdf/$1');
     $routes->post('generarFacturasServicio', 'FacturacionServicio::generarFacturasServicio');
     $routes->post('crearFacturaOtro', 'FacturacionServicio::crearFacturaOtro');
     $routes->get('imprimirFacturasConsumoPeriodoActivo', 'FacturacionServicio::imprimirFacturasConsumoPeriodoActivo');
@@ -198,4 +198,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('cargarExcelAlcaldia', 'CargarGenerarPlantillas::cargarExcelAlcaldia');
     $routes->post('cancelarExcelAlcaldia', 'CargarGenerarPlantillas::cancelarExcelAlcaldia');
     $routes->get('validarExcelCargado', 'CargarGenerarPlantillas::validarExcelCargado');
+
+    // PROCESO DE IMPRESION DE TEXTO DE FACTURAS
+    $routes->get('enviarImprimirTexto', 'FacturacionServicio::enviarImprimirTexto');
+    $routes->get('verFacturaPdfTexto/(:num)', 'FacturacionServicio::verFacturaPdfTexto/$1');
+    // PROCESO DE IMPRESION DE TEXTO DE FACTURAS DE COBROS
+    $routes->get('enviarImprimirTextoCobrosInstalacion', 'CobrosInstalacion::enviarImprimirTextoCobrosInstalacion');
+    $routes->get('verFacturaPdfTextoInstalacion/(:num)', 'CobrosInstalacion::verFacturaPdfTextoInstalacion/$1');
 });

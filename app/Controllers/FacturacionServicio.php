@@ -686,7 +686,7 @@ class FacturacionServicio extends BaseController
         $this->dibujarComprobante($pdf, 110, 10, 'COMPROBANTE DEL BANCO', $factura, $detalle);
     }
 
-    public function facturaCobroServicio(int $id)
+    public function verFacturaPdf(int $id)
     {
         $data = $this->facturaModel->getFacturaResumenPorId($id);
 
@@ -1217,6 +1217,101 @@ class FacturacionServicio extends BaseController
             log_message('error', $th->getMessage());
 
             return $this->responderVentanaImpresionConMensaje('Ocurrió un error al preparar la impresión de facturas.', 500);
+        }
+    }
+
+    public function enviarImprimirTexto()
+    {
+        try {
+
+            ini_set('max_execution_time', 0);
+
+            $periodo = $this->periodosModel->getPeriodoActivo();
+
+            $idRuta = $this->request->getGet('ruta');
+            $idDepartamento = $this->request->getGet('departamento');
+            $idMunicipio = $this->request->getGet('municipio');
+            $idDistrito = $this->request->getGet('distrito');
+            $idColonia = $this->request->getGet('colonia');
+
+            if (!$periodo) {
+                return $this->responderVentanaImpresionConMensaje(
+                    'No hay periodo activo para imprimir facturas.',
+                    404
+                );
+            }
+
+            $facturas = $this->facturaModel
+                ->getFacturasConsumoCompletaPorPeriodoYDireccion(
+                    $periodo['id_periodo'],
+                    $idRuta,
+                    $idDepartamento,
+                    $idMunicipio,
+                    $idDistrito,
+                    $idColonia
+                );
+
+            if (empty($facturas)) {
+                return $this->responderVentanaImpresionConMensaje(
+                    'No hay facturas generadas.',
+                    404
+                );
+            }
+
+            return view(
+                'facturas/imprimir_facturas',
+                [
+                    'periodo' => $periodo,
+                    'facturas' => $facturas,
+                    'autoPrint' => $this->request->getGet('autoPrint') === '1'
+                ]
+            );
+        } catch (\Throwable $th) {
+
+            log_message('error', $th->getMessage());
+
+            return $this->responderVentanaImpresionConMensaje(
+                'Ocurrió un error.',
+                500
+            );
+        }
+    }
+
+    public function verFacturaPdfTexto(int $id)
+    {
+        try {
+            ini_set('max_execution_time', 0);
+
+            $data = $this->facturaModel->getFacturaResumenPorId($id);
+
+            if (!$data['factura']) {
+                throw new \CodeIgniter\Exceptions\PageNotFoundException('No existe la factura');
+            }
+
+            // Unir factura + detalle
+            $data['factura']['detalle'] = $data['detalle'];
+
+            // Convertir en arreglo de facturas
+            $facturas = [
+                $data['factura']
+            ];
+
+            return view(
+                'facturas/imprimir_facturas',
+                [
+                    'periodo'   => null,
+                    'facturas'  => $facturas,
+                    'autoPrint' => $this->request->getGet('autoPrint') === '1'
+                ]
+            );
+        } catch (\Throwable $th) {
+
+            log_message('error', $th->getMessage());
+
+            return $this->responderVentanaImpresionConMensaje(
+                'Ocurrió un error.',
+                500
+            );
         }
     }
 }

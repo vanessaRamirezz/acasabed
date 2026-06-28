@@ -34,24 +34,37 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-12">
-                <button type="button"
-                    id="btn-imprimir-facturas-periodo"
-                    class="btn bg-gradient-success btn-flat mr-2">
-                    <i class="fas fa-print mr-1"></i>
-                    Imprimir
-                </button>
+            <div class="col-12 d-flex justify-content-between">
 
-                <button type="button"
-                    id="btn-generar-facturas-servicio"
-                    class="btn btn-primary">
-                    <i class="fas fa-file-invoice-dollar mr-1"></i>
-                    Generar Facturas
-                </button>
+                <div>
+                    <button type="button"
+                        id="btn-ver-facturas-periodo"
+                        class="btn bg-gradient-info btn-flat">
+                        <i class="fas fa-eye mr-1"></i>
+                        Ver Facturas
+                    </button>
+
+                    <button type="button"
+                        id="btn-imprimir-facturas-periodo"
+                        class="btn bg-gradient-success btn-flat mr-2">
+                        <i class="fas fa-print mr-1"></i>
+                        Imprimir
+                    </button>
+                </div>
+
+                <div>
+                    <button type="button"
+                        id="btn-generar-facturas-servicio"
+                        class="btn btn-primary">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i>
+                        Generar Facturas
+                    </button>
+                </div>
+
             </div>
         </div>
 
-        <input type="hidden" id="id-factura-servicio">
+        <!-- <input type="hidden" id="id-factura-servicio"> -->
 
         <div id="accordion-facturacion-servicio">
             <div class="card mt-3">
@@ -225,7 +238,10 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-success" id="btn-confirmar-imprimir-facturas">Generar PDF e imprimir</button>
+                        <!-- <button type="button" class="btn btn-success" id="btn-confirmar-imprimir-facturas">Generar PDF e imprimir</button> -->
+                        <button type="button" class="btn btn-success" id="btn-confirmar-facturas">
+                            Confirmar
+                        </button>
                     </div>
                 </div>
             </div>

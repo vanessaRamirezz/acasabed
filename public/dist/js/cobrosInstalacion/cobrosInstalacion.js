@@ -47,7 +47,7 @@ function cargarTablaCobros() {
             }
         },
         columns: [
-            { data: 'periodo'},
+            { data: 'periodo' },
             { data: 'correlativo' },
             { data: 'numero_contrato' },
             {
@@ -76,7 +76,12 @@ function cargarTablaCobros() {
 
                                 <a class="dropdown-item dropdown-item-custom btn-ver-factura-cobro-intalacion-pdf" href="#"
                                     data-id="${row.id}">
-                                    <i class="fas fa-file-pdf mr-2 text-danger" ></i> Factura
+                                    <i class="fas fa-file-pdf mr-2 text-danger" ></i> PDF
+                                </a>
+
+                                <a class="dropdown-item dropdown-item-custom btn-ver-factura-cobro-servicio-pdf-texto" href="#"
+                                    data-id="${row.id}">
+                                    <i class="fas fa-print mr-2 text-info" ></i> Imprimir
                                 </a>
 
                             </div>
@@ -723,6 +728,46 @@ function imprimirFacturasPeriodoActivo() {
     }
 
     const ventana = window.open(
+        `${baseURL}enviarImprimirTextoCobrosInstalacion?${params.toString()}`,
+        '_blank'
+    );
+
+    if (!ventana) {
+        alertaError('El navegador bloqueó la ventana de impresión. Permite ventanas emergentes e inténtalo nuevamente.');
+        return;
+    }
+
+    // $('#modal-imprimir-facturas-direccion').modal('hide');
+    ventana.focus();
+}
+
+function verFacturasPeriodoActivo() {
+    const params = new URLSearchParams({
+        autoPrint: "1"
+    });
+
+    const departamento = inputs.filtroDepartamentoImpresion.val();
+    const municipio = inputs.filtroMunicipioImpresion.val();
+    const distrito = inputs.filtroDistritoImpresion.val();
+    const colonia = inputs.filtroColoniaImpresion.val();
+
+    if (departamento && departamento !== "-1") {
+        params.append("departamento", departamento);
+    }
+
+    if (municipio && municipio !== "-1") {
+        params.append("municipio", municipio);
+    }
+
+    if (distrito && distrito !== "-1") {
+        params.append("distrito", distrito);
+    }
+
+    if (colonia && colonia !== "-1") {
+        params.append("colonia", colonia);
+    }
+
+    const ventana = window.open(
         `${baseURL}imprimirFacturasCobroPeriodoActivo?${params.toString()}`,
         '_blank'
     );
@@ -735,6 +780,9 @@ function imprimirFacturasPeriodoActivo() {
     // $('#modal-imprimir-facturas-direccion').modal('hide');
     ventana.focus();
 }
+
+let accionFacturas = "";
+
 
 function eventosUsuarios() {
     // evento que al seleccionar un cliente del select se listaran sus solicitudes
@@ -772,6 +820,7 @@ function eventosUsuarios() {
     // inputs.btnValidarCobro.on('click', validarCobro);
     // inputs.btnProcesarPago.on('click', registrarPago);
 
+    // eventos para ver una factura en pdf
     $(document).on('click', '.btn-ver-factura-cobro-intalacion-pdf', function (e) {
         e.preventDefault();
         let id = $(this).data('id');
@@ -785,15 +834,14 @@ function eventosUsuarios() {
         generarFacturas();
     });
 
-    // eventos para imprimir las facturas
-    $("#btn-imprimir-facturas-periodo").on("click", function () {
-        reiniciarFiltrosImpresion();
-        $("#modal-imprimir-facturas-direccion").modal("show");
-    });
+    // $("#btn-imprimir-facturas-periodo").on("click", function () {
+    //     reiniciarFiltrosImpresion();
+    //     $("#modal-imprimir-facturas-direccion").modal("show");
+    // });
 
-    $("#btn-confirmar-imprimir-facturas").on("click", function () {
-        imprimirFacturasPeriodoActivo();
-    });
+    // $("#btn-confirmar-imprimir-facturas").on("click", function () {
+    //     imprimirFacturasPeriodoActivo();
+    // });
 
     inputs.filtroDepartamentoImpresion.on("change", function () {
         cargarMunicipiosImpresion($(this).val());
@@ -805,6 +853,60 @@ function eventosUsuarios() {
 
     inputs.filtroDistritoImpresion.on("change", function () {
         cargarColoniasImpresion($(this).val());
+    });
+
+    // eventos para imprimir las facturas
+    $("#btn-imprimir-facturas-periodo").on("click", function () {
+
+        accionFacturas = "imprimir";
+
+        reiniciarFiltrosImpresion();
+
+        $("#modal-imprimir-facturas-direccion-label")
+            .text("Imprimir facturas por dirección");
+
+        $("#btn-confirmar-facturas")
+            .text("Generar PDF e imprimir");
+
+        $("#modal-imprimir-facturas-direccion").modal("show");
+
+    });
+
+    // eventos para solo ver los pdfs de las facturas
+    $("#btn-ver-facturas-periodo").on("click", function () {
+        accionFacturas = "ver";
+        reiniciarFiltrosImpresion();
+        $("#modal-imprimir-facturas-direccion-label")
+            .text("Ver facturas por dirección");
+        $("#btn-confirmar-facturas")
+            .text("Ver facturas");
+        $("#modal-imprimir-facturas-direccion").modal("show");
+    });
+
+    // evento que valida si ver o imprimir las facturas
+    $("#btn-confirmar-facturas").on("click", function () {
+        switch (accionFacturas) {
+            case "ver":
+                verFacturasPeriodoActivo();
+                break;
+            case "imprimir":
+                imprimirFacturasPeriodoActivo();
+                break;
+        }
+    });
+
+    //evento para ver factura solo texto por ID
+    $(document).on('click', '.btn-ver-factura-cobro-servicio-pdf-texto', function (e) {
+
+        e.preventDefault();
+
+        let id = $(this).data('id');
+
+        window.open(
+            `${baseURL}verFacturaPdfTextoInstalacion/${id}?autoPrint=1`,
+            '_blank'
+        );
+
     });
 }
 

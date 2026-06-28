@@ -532,7 +532,7 @@ class CobrosInstalacion extends BaseController
         // === DIRECCIÓN ===
         $pdf->SetXY($x + 2, $currentY);
 
-        $pdf->MultiCell(60, 4, $factura['direccion'], 0, 'L');
+        $pdf->MultiCell(60, 4, (string)$factura['direccion'], 0, 'L');
 
         $currentY = $pdf->GetY();
 
@@ -880,6 +880,7 @@ class CobrosInstalacion extends BaseController
                 $idDistrito,
                 $idColonia
             );
+            // log_message('info', 'detalles' . print_r($facturas, true));
 
             if (empty($facturas)) {
                 return $this->responderVentanaImpresionConMensaje('No hay facturas generadas en el periodo activo para los filtros seleccionados.', 404);
@@ -1519,4 +1520,123 @@ class CobrosInstalacion extends BaseController
     //         return $this->respondError($e->getMessage());
     //     }
     // }
+
+    public function enviarImprimirTextoCobrosInstalacion()
+    {
+        try {
+
+            ini_set('max_execution_time', 0);
+
+            $periodo = $this->periodosModel->getPeriodoActivo();
+
+            $idDepartamento = $this->request->getGet('departamento');
+            $idMunicipio     = $this->request->getGet('municipio');
+            $idDistrito      = $this->request->getGet('distrito');
+            $idColonia       = $this->request->getGet('colonia');
+
+            if (!$periodo) {
+                return $this->responderVentanaImpresionConMensaje(
+                    'No hay periodo activo para imprimir facturas.',
+                    404
+                );
+            }
+
+            $facturasPeriodo = $this->facturasModel->getFacturasInstalacionPorPeriodoYDireccion(
+                $periodo['id_periodo'],
+                $idDepartamento,
+                $idMunicipio,
+                $idDistrito,
+                $idColonia
+            );
+
+            if (empty($facturasPeriodo)) {
+                return $this->responderVentanaImpresionConMensaje(
+                    'No hay facturas generadas en el periodo activo para los filtros seleccionados.',
+                    404
+                );
+            }
+
+            // Arreglo que tendrá el mismo formato que espera la vista
+            $facturas = [];
+
+            foreach ($facturasPeriodo as $facturaPeriodo) {
+
+                $data = $this->facturasModel->obtenerFacturaPorId($facturaPeriodo['id_factura']);
+
+                if (empty($data['factura'])) {
+                    continue;
+                }
+
+                // Unir factura + detalle
+                $data['factura']['detalle'] = $data['detalle'];
+
+                // Agregar al arreglo final
+                $facturas[] = $data['factura'];
+            }
+
+            if (empty($facturas)) {
+                return $this->responderVentanaImpresionConMensaje(
+                    'No fue posible obtener la información de las facturas.',
+                    404
+                );
+            }
+
+            return view(
+                'facturas/imprimir_facturas',
+                [
+                    'periodo'   => $periodo,
+                    'facturas'  => $facturas,
+                    'autoPrint' => $this->request->getGet('autoPrint') === '1'
+                ]
+            );
+        } catch (\Throwable $th) {
+
+            log_message('error', $th->getMessage());
+
+            return $this->responderVentanaImpresionConMensaje(
+                'Ocurrió un error al preparar la impresión de facturas.',
+                500
+            );
+        }
+    }
+
+    public function verFacturaPdfTextoInstalacion(int $id)
+    {
+        try {
+            ini_set('max_execution_time', 0);
+
+            $data = $this->facturasModel->obtenerFacturaPorId($id);
+
+            // log_message('info', ' datos recibidos para enviar a ver la factura' . print_r($data, true));
+
+            if (!$data['factura']) {
+                throw new \CodeIgniter\Exceptions\PageNotFoundException('No existe la factura');
+            }
+
+            // Unir factura + detalle
+            $data['factura']['detalle'] = $data['detalle'];
+
+            // Convertir en arreglo de facturas
+            $facturas = [
+                $data['factura']
+            ];
+
+
+            return view(
+                'facturas/imprimir_facturas',
+                [
+                    'periodo'   => null,
+                    'facturas'  => $facturas,
+                    'autoPrint' => $this->request->getGet('autoPrint') === '1'
+                ]
+            );
+        } catch (\Throwable $th) {
+
+            log_message('error', $th->getMessage());
+            return $this->responderVentanaImpresionConMensaje(
+                'Ocurrió un error.',
+                500
+            );
+        }
+    }
 }

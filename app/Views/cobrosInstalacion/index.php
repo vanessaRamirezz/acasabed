@@ -81,9 +81,37 @@
 
 <section class="content">
     <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 d-flex justify-content-between">
+                <div>
+                    <button type="button"
+                        id="btn-ver-facturas-periodo"
+                        class="btn bg-gradient-info btn-flat">
+                        <i class="fas fa-eye mr-1"></i>
+                        Ver Facturas
+                    </button>
+
+                    <button type="button"
+                        id="btn-imprimir-facturas-periodo"
+                        class="btn bg-gradient-success btn-flat ml-2">
+                        <i class="fas fa-print mr-1"></i>
+                        Imprimir
+                    </button>
+                </div>
+
+                <div>
+                    <button type="button"
+                        id="btn-generar-facturas"
+                        class="btn bg-gradient-primary btn-flat">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i>
+                        Generar Facturas
+                    </button>
+                </div>
+            </div>
+        </div>
         <div class="card-header py-3 d-flex flex-wrap align-items-center">
-            <button type="button" id="btn-generar-facturas" class="btn bg-gradient-primary btn-flat">Generar Facturas</button>
-            <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir</button>
+            <!-- <button type="button" id="btn-generar-facturas" class="btn bg-gradient-primary btn-flat">Generar Facturas</button> -->
+            <!-- <button type="button" id="btn-imprimir-facturas-periodo" class="btn bg-gradient-success btn-flat ml-2">Imprimir</button> -->
         </div>
         <input type="hidden" id="id-contrato-cobro">
 
@@ -140,7 +168,7 @@
                 <div class="card-header" id="headingAplicarCobro">
                     <h5 class="mb-0">
                         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseAplicarCobro" aria-expanded="false" aria-controls="collapseAplicarCobro">
-                            Cobrar cuotas de instalacion
+                            Ver cuotas de instalacion
                         </button>
                     </h5>
                 </div>
@@ -184,7 +212,7 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-cobro-cuotas-label">Cobrar cuotas de instalacion</h5>
+                <h5 class="modal-title" id="modal-cobro-cuotas-label">Ver cuotas de instalacion</h5>
             </div>
             <div class="modal-body">
                 <div class="row mb-3">
@@ -315,7 +343,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-success" id="btn-confirmar-imprimir-facturas">Generar PDF e imprimir</button>
+                <!-- <button type="button" class="btn btn-success" id="btn-confirmar-imprimir-facturas">Generar PDF e imprimir</button> -->
+                <button type="button" class="btn btn-success" id="btn-confirmar-facturas">
+                    Confirmar
+                </button>
             </div>
         </div>
     </div>
