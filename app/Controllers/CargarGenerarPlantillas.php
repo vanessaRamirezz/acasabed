@@ -146,85 +146,228 @@ class CargarGenerarPlantillas extends BaseController
         $sheet->setSelectedCell('A1');
     }
 
+    // public function exportarExcel()
+    // {
+    //     $periodo = $this->periodosModel->getPeriodoActivo();
+    //     if (!$periodo) {
+    //         return $this->response
+    //             ->setStatusCode(400)
+    //             ->setBody('No hay periodo activo');
+    //     }
+    //     log_message('info', 'Periodo activo ID: ' . $periodo['id_periodo']);
+
+
+    //     $facturas = $this->facturasModel->getFacturasExcel($periodo['id_periodo']);
+
+    //     $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+
+    //     // =========================
+    //     // HOJA 1: BASE
+    //     // =========================
+    //     $sheet1 = $spreadsheet->getActiveSheet();
+    //     $sheet1->setTitle('BASE');
+
+    //     $sheet1->fromArray([
+    //         'Tiraje',
+    //         'Correlativo',
+    //         'fcliente',
+    //         'nombre',
+    //         'total',
+    //         'ESTATUTOS',
+    //         'ACTIVO'
+    //     ], NULL, 'A1');
+
+    //     $row = 2;
+    //     foreach ($facturas as $f) {
+    //         $tiraje = $f['tiraje'];
+    //         $correlativo = $f['correlativo'];
+    //         $sheet1->fromArray([
+    //             $tiraje,
+    //             $correlativo,
+    //             $f['codigo'],
+    //             $f['cliente'],
+    //             $f['total'],
+    //             'No pagó',
+    //             'ACTIVO'
+    //         ], NULL, 'A' . $row);
+    //         $row++;
+    //     }
+
+    //     $lastRow = $row - 1;
+    //     $range1 = "A1:G{$lastRow}";
+
+    //     // 🔥 USANDO HELPERS
+    //     $this->aplicarEstiloEncabezado($sheet1, 'A1:G1');
+    //     $this->aplicarBordesTabla($sheet1, $range1);
+    //     $this->autoSizeColumnas($sheet1, 'A', 'G');
+    //     $this->configurarHoja($sheet1, $range1);
+
+
+    //     // =========================
+    //     // HOJA 2: COBROS
+    //     // =========================
+    //     $sheet2 = $spreadsheet->createSheet();
+    //     $sheet2->setTitle('COBROS');
+
+    //     $sheet2->fromArray([
+    //         'Tiraje',
+    //         'Correlativo',
+    //         'Fecha de pago',
+    //         'CANTIDAD RECIBO',
+    //         'fcliente',
+    //         'Nombre o Razon Social',
+    //         'Total Pagado',
+    //         'Fecha de emision',
+    //         'Fecha de Vencimiento',
+    //     ], NULL, 'A1');
+
+    //     $row = 2;
+    //     foreach ($facturas as $d) {
+    //         $tiraje2 = $d['tiraje'];
+    //         $correlativo2 = $d['correlativo'];
+    //         $sheet2->fromArray([
+    //             '',
+    //             '',
+    //             $d['fecha_de_pago'],
+    //             '',
+    //             '',
+    //             '',
+    //             '',
+    //             $d['fechaEmision'],
+    //             $d['fechaVencimiento'],
+    //         ], NULL, 'A' . $row);
+    //         $row++;
+    //     }
+
+    //     $lastRow = $row - 1;
+    //     $range2 = "A1:I{$lastRow}";
+
+    //     // 🔥 USANDO HELPERS
+    //     $this->aplicarEstiloEncabezado($sheet2, 'A1:I1');
+    //     $this->aplicarBordesTabla($sheet2, $range2);
+    //     $this->autoSizeColumnas($sheet2, 'A', 'I');
+    //     $this->configurarHoja($sheet2, $range2);
+
+    //     // Alineaciones específicas
+    //     $sheet2->getStyle("A2:A{$lastRow}")->getAlignment()->setHorizontal('center');
+    //     $sheet2->getStyle("B2:B{$lastRow}")->getAlignment()->setHorizontal('center');
+    //     $sheet2->getStyle("E2:E{$lastRow}")->getAlignment()->setHorizontal('right');
+
+
+    //     // =========================
+    //     // ABRIR EN HOJA BASE
+    //     // =========================
+    //     $spreadsheet->setActiveSheetIndexByName('BASE');
+
+
+    //     // =========================
+    //     // NOMBRE ARCHIVO
+    //     // =========================
+    //     $meses = [
+    //         1 => 'ENERO',
+    //         2 => 'FEBRERO',
+    //         3 => 'MARZO',
+    //         4 => 'ABRIL',
+    //         5 => 'MAYO',
+    //         6 => 'JUNIO',
+    //         7 => 'JULIO',
+    //         8 => 'AGOSTO',
+    //         9 => 'SEPTIEMBRE',
+    //         10 => 'OCTUBRE',
+    //         11 => 'NOVIEMBRE',
+    //         12 => 'DICIEMBRE'
+    //     ];
+
+    //     $mes = $meses[(int)date('n')];
+    //     $anio = date('Y');
+
+    //     $filename = "BASE DE ACAYCCOMAC {$periodo['nombre']} {$anio}.xlsx";
+
+
+    //     // =========================
+    //     // DESCARGA
+    //     // =========================
+    //     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    //     header("Content-Disposition: attachment; filename=\"$filename\"");
+    //     header('Cache-Control: max-age=0');
+
+    //     $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    //     $writer->save('php://output');
+    //     exit;
+    // }
+
     public function exportarExcel()
     {
         $periodo = $this->periodosModel->getPeriodoActivo();
+
         if (!$periodo) {
             return $this->response
                 ->setStatusCode(400)
                 ->setBody('No hay periodo activo');
         }
-        log_message('info', 'Periodo activo ID: ' . $periodo['id_periodo']);
-
 
         $facturas = $this->facturasModel->getFacturasExcel($periodo['id_periodo']);
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        // ============================================
+        // CONFIGURACIÓN DE LA PLANTILLA
+        // ============================================
+        $capacidadPlantilla = 2000; // Última fila con fórmulas
+        $filaInicial = 2;
 
-        // =========================
-        // HOJA 1: BASE
-        // =========================
-        $sheet1 = $spreadsheet->getActiveSheet();
-        $sheet1->setTitle('BASE');
+        $maxFacturas = $capacidadPlantilla - ($filaInicial - 1);
 
-        $sheet1->fromArray([
-            'Tiraje',
-            'Correlativo',
-            'fcliente',
-            'nombre',
-            'total',
-            'ESTATUTOS',
-            'ACTIVO'
-        ], NULL, 'A1');
+        if (count($facturas) > $maxFacturas) {
+            throw new \RuntimeException(
+                "La cantidad de facturas (" . count($facturas) .
+                    ") supera la capacidad de la plantilla ({$maxFacturas})."
+            );
+        }
 
-        $row = 2;
+        // ============================================
+        // CARGAR PLANTILLA
+        // ============================================
+        $spreadsheet = IOFactory::load(APPPATH . 'Templates/plantilla_cobros.xlsx');
+
+        // ============================================
+        // HOJA BASE
+        // ============================================
+        $sheet1 = $spreadsheet->getSheetByName('BASE');
+
+        $row = $filaInicial;
+
         foreach ($facturas as $f) {
-            $tiraje = $f['tiraje'];
-            $correlativo = $f['correlativo'];
+
             $sheet1->fromArray([
-                $tiraje,
-                $correlativo,
-                $f['codigo'],
+                $f['tiraje'],
+                $f['correlativo'],
+                (int)$f['codigo'],
                 $f['cliente'],
-                $f['total'],
-                'No pagó',
-                'ACTIVO'
-            ], NULL, 'A' . $row);
+                $f['total']
+            ], null, "A{$row}");
+
             $row++;
         }
 
-        $lastRow = $row - 1;
-        $range1 = "A1:G{$lastRow}";
+        $ultimaFilaDatos = $row - 1;
 
-        // 🔥 USANDO HELPERS
-        $this->aplicarEstiloEncabezado($sheet1, 'A1:G1');
-        $this->aplicarBordesTabla($sheet1, $range1);
-        $this->autoSizeColumnas($sheet1, 'A', 'G');
-        $this->configurarHoja($sheet1, $range1);
+        // Eliminar filas sobrantes de la plantilla
+        if ($ultimaFilaDatos < $capacidadPlantilla) {
 
+            $sheet1->removeRow(
+                $ultimaFilaDatos + 1,
+                $capacidadPlantilla - $ultimaFilaDatos
+            );
+        }
 
-        // =========================
-        // HOJA 2: COBROS
-        // =========================
-        $sheet2 = $spreadsheet->createSheet();
-        $sheet2->setTitle('COBROS');
+        // ============================================
+        // HOJA COBROS
+        // ============================================
+        $sheet2 = $spreadsheet->getSheetByName('COBROS');
 
-        $sheet2->fromArray([
-            'Tiraje',
-            'Correlativo',
-            'Fecha de pago',
-            'CANTIDAD RECIBO',
-            'fcliente',
-            'Nombre o Razon Social',
-            'Total Pagado',
-            'Fecha de emision',
-            'Fecha de Vencimiento',
-        ], NULL, 'A1');
+        $row = $filaInicial;
 
-        $row = 2;
         foreach ($facturas as $d) {
-            $tiraje2 = $d['tiraje'];
-            $correlativo2 = $d['correlativo'];
+
             $sheet2->fromArray([
                 '',
                 '',
@@ -234,68 +377,48 @@ class CargarGenerarPlantillas extends BaseController
                 '',
                 '',
                 $d['fechaEmision'],
-                $d['fechaVencimiento'],
-            ], NULL, 'A' . $row);
+                $d['fechaVencimiento']
+            ], null, "A{$row}");
+
             $row++;
         }
 
-        $lastRow = $row - 1;
-        $range2 = "A1:I{$lastRow}";
+        $ultimaFilaDatos = $row - 1;
 
-        // 🔥 USANDO HELPERS
-        $this->aplicarEstiloEncabezado($sheet2, 'A1:I1');
-        $this->aplicarBordesTabla($sheet2, $range2);
-        $this->autoSizeColumnas($sheet2, 'A', 'I');
-        $this->configurarHoja($sheet2, $range2);
+        if ($ultimaFilaDatos < $capacidadPlantilla) {
 
-        // Alineaciones específicas
-        $sheet2->getStyle("A2:A{$lastRow}")->getAlignment()->setHorizontal('center');
-        $sheet2->getStyle("B2:B{$lastRow}")->getAlignment()->setHorizontal('center');
-        $sheet2->getStyle("E2:E{$lastRow}")->getAlignment()->setHorizontal('right');
+            $sheet2->removeRow(
+                $ultimaFilaDatos + 1,
+                $capacidadPlantilla - $ultimaFilaDatos
+            );
+        }
 
-
-        // =========================
+        // ============================================
         // ABRIR EN HOJA BASE
-        // =========================
+        // ============================================
         $spreadsheet->setActiveSheetIndexByName('BASE');
 
-
-        // =========================
-        // NOMBRE ARCHIVO
-        // =========================
-        $meses = [
-            1 => 'ENERO',
-            2 => 'FEBRERO',
-            3 => 'MARZO',
-            4 => 'ABRIL',
-            5 => 'MAYO',
-            6 => 'JUNIO',
-            7 => 'JULIO',
-            8 => 'AGOSTO',
-            9 => 'SEPTIEMBRE',
-            10 => 'OCTUBRE',
-            11 => 'NOVIEMBRE',
-            12 => 'DICIEMBRE'
-        ];
-
-        $mes = $meses[(int)date('n')];
+        // ============================================
+        // NOMBRE DEL ARCHIVO
+        // ============================================
         $anio = date('Y');
 
         $filename = "BASE DE ACAYCCOMAC {$periodo['nombre']} {$anio}.xlsx";
 
-
-        // =========================
-        // DESCARGA
-        // =========================
+        // ============================================
+        // DESCARGAR
+        // ============================================
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header("Content-Disposition: attachment; filename=\"$filename\"");
         header('Cache-Control: max-age=0');
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        // NO calcular las fórmulas de Excel
+        $writer->setPreCalculateFormulas(false);
+
         $writer->save('php://output');
         exit;
     }
-
     public function exportarExcelAlcaldia()
     {
         $periodo = $this->periodosModel->getPeriodoActivo();
