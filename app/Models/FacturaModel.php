@@ -491,7 +491,7 @@ class FacturaModel extends Model
         }
 
         if (!empty($tipo) && $tipo !== 'Todos') {
-            $builder->where('f.tipo', $tipo);
+            $builder->where('f.estado', $tipo);
         }
 
         if (!empty($searchValue)) {

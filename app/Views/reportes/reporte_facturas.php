@@ -33,11 +33,11 @@
                         <select id="periodo" class="form-control"></select>
                     </div>
                     <div class="col-md-3">
-                        <label>Tipo</label>
+                        <label>Estado</label>
                         <select id="tipo" class="form-control">
                             <option value="Todos">Todos</option>
-                            <option value="Consumo">Consumo</option>
-                            <option value="Instalacion">Instalación</option>
+                            <option value="PAGADA">PAGADAS</option>
+                            <option value="NO PAGADA">NO PAGADAS</option>
                         </select>
                     </div>
                     <div class="col-md-3">

@@ -179,7 +179,7 @@ function eventosUsuarios() {
         let formData = new FormData();
         formData.append("excel", fileInput.files[0]);
 
-        // 🔵 LOADING INMEDIATO
+        // Loader
         Swal.fire({
             title: 'Importando Excel...',
             html: 'Procesando archivo, por favor espera',
@@ -195,12 +195,15 @@ function eventosUsuarios() {
             body: formData
         })
             .then(res => {
-                if (!res.ok) throw new Error('Error en la respuesta del servidor');
+                if (!res.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
                 return res.json();
             })
             .then(data => {
 
-                Swal.close(); // 🔴 cerrar loader
+                // Cerrar únicamente el loader
+                Swal.close();
 
                 if (data.success) {
 
@@ -208,24 +211,29 @@ function eventosUsuarios() {
 
                     if (data.errores && data.errores.length > 0) {
                         erroresHtml = `
-                    <div style="text-align:left; max-height:200px; overflow:auto; margin-top:10px;">
-                        <b>Errores:</b>
-                        <ul style="margin-top:5px;">
-                            ${data.errores.map(e => `<li>${e}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
+                        <div style="text-align:left; max-height:200px; overflow:auto; margin-top:10px;">
+                            <b>Errores:</b>
+                            <ul style="margin-top:5px;">
+                                ${data.errores.map(e => `<li>${e}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
                     }
 
                     Swal.fire({
-                        icon: data.errores && data.errores.length > 0 ? 'warning' : 'success',
+                        icon: (data.errores && data.errores.length > 0) ? 'warning' : 'success',
                         title: 'Resultado de importación',
                         html: `
-                    <p><b>Procesados:</b> ${data.procesados ?? 0}</p>
-                    ${erroresHtml}
-                `,
+                        <p><b>Procesados:</b> ${data.procesados ?? 0}</p>
+                        ${erroresHtml}
+                    `,
                         width: 600,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
                         confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        // Limpiar el input al cerrar el mensaje
+                        fileInput.value = "";
                     });
 
                 } else {
@@ -233,8 +241,15 @@ function eventosUsuarios() {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: data.message || 'Error desconocido'
+                        text: data.message || 'Error desconocido',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        // Limpiar el input al cerrar el mensaje
+                        fileInput.value = "";
                     });
+
                 }
 
             })
@@ -242,15 +257,21 @@ function eventosUsuarios() {
 
                 console.error(error);
 
-                Swal.close(); // 🔴 cerrar loader también en error
+                // Cerrar únicamente el loader
+                Swal.close();
 
                 Swal.fire({
                     icon: 'error',
                     title: 'Error inesperado',
-                    text: 'No se pudo procesar el archivo'
+                    text: 'No se pudo procesar el archivo',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    // Limpiar el input al cerrar el mensaje
+                    fileInput.value = "";
                 });
             });
-
     });
 
     $("#btnCancelarImportacionExcel").on("click", function () {
