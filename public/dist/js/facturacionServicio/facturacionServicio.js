@@ -346,14 +346,16 @@ function crearFacturaOtro() {
 
             Swal.fire({
                 icon: "success",
-                title: "Factura creada",
+                title: "Factura Generada",
                 text: mensaje,
                 showCancelButton: true,
                 confirmButtonText: "Ver PDF",
-                cancelButtonText: "Cerrar"
+                cancelButtonText: "Cerrar",
+                allowOutsideClick: false, // no cerrar al hacer click fuera
+                allowEscapeKey: false // opcional: no cerrar desde el boton de esc
             }).then((result) => {
                 if (result.isConfirmed && idFactura) {
-                    window.open(baseURL + "facturaCobroServicio/" + idFactura, "_blank");
+                    window.open(baseURL + "verFacturaPdf/" + idFactura, "_blank");
                 }
             });
 

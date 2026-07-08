@@ -300,7 +300,7 @@ class FacturacionServicio extends BaseController
                 'estado' => 'PENDIENTE',
                 'total' => $totalFactura,
                 'id_usuario' => session()->get('id_usuario'),
-                'tipo' => 'OTRO'
+                'tipo' => 'Otro'
             ]);
 
             $idFactura = $this->facturaModel->insertID();
@@ -318,7 +318,7 @@ class FacturacionServicio extends BaseController
             $db->transCommit();
 
             return $this->respondSuccess([
-                'mensaje' => 'Factura tipo OTRO creada correctamente',
+                'mensaje' => 'Factura generada correctamente',
                 'id_factura' => $idFactura
             ]);
         } catch (\Throwable $th) {

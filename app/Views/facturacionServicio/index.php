@@ -113,7 +113,7 @@
 
                             <button type="button" id="btn-crear-factura-otro" class="btn btn-success">
                                 <i class="fas fa-file-invoice mr-1"></i>
-                                Crear factura OTRO
+                                Generar Factura
                             </button>
                         </div>
                     </div>
