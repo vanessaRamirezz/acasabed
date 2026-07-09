@@ -1623,7 +1623,8 @@ class CargarGenerarPlantillas extends BaseController
         $c,
         $facturasPorCodigo,
         &$fechaActual,
-        &$cobrosIndex
+        &$cobrosIndex,
+        &$errores
     ): void {
 
         $codigoCliente = trim((string)($c[2] ?? ''));
@@ -1644,9 +1645,13 @@ class CargarGenerarPlantillas extends BaseController
                 'No se encontró factura para cliente: ' . $codigoCliente
             );
 
-            throw new \Exception(
-                "No se encontró factura para cliente: {$codigoCliente}."
-            );
+            // throw new \Exception(
+            //     "No se encontró factura para cliente: {$codigoCliente}."
+            // );
+
+            $errores[] = "No se encontró factura para cliente: {$codigoCliente}.";
+
+            return;
         }
 
         $facturaEncontrada = null;
@@ -1664,18 +1669,24 @@ class CargarGenerarPlantillas extends BaseController
 
             log_message(
                 'warning',
-                'No se encontró coincidencia en el total pagado para cliente '
+                'No se encontró coincidencia en el total pagado para codigo de cliente '
                     . $codigoCliente
                     . ' monto ' . $montoPagado
                     . ' y en el sistema ' . (float)$factura['total']
             );
 
-            throw new \Exception(
-                "No se encontró coincidencia en el total pagado para el cliente
-                {$codigoCliente}
-                monto {$montoPagado}
-                y en el sistema {$factura['total']}."
-            );
+            // throw new \Exception(
+            //     "No se encontró coincidencia en el total pagado para el cliente
+            //     {$codigoCliente}
+            //     monto {$montoPagado}
+            //     y en el sistema {$factura['total']}."
+            // );
+
+            $errores[] =
+                "No se encontró coincidencia para el codigo de cliente {$codigoCliente}. "
+                . "Monto Excel: {$montoPagado}.";
+
+            return;
         }
 
         $fechaExcel = trim((string)($c[0] ?? ''));
@@ -1696,6 +1707,7 @@ class CargarGenerarPlantillas extends BaseController
             'fecha_pago'   => $fechaActual,
             'monto_pagado' => $montoPagado
         ];
+        
     }
 
     private function prepararDatosCobros($cobrosData, $facturasPeriodo)
@@ -1723,7 +1735,8 @@ class CargarGenerarPlantillas extends BaseController
                     $c,
                     $facturasPorCodigo,
                     $fechaActual,
-                    $cobrosIndex
+                    $cobrosIndex,
+                    $errores
                 );
             } else {
                 $this->procesarCobroTradicional(
@@ -1748,10 +1761,11 @@ class CargarGenerarPlantillas extends BaseController
         $file,
         $facturasPorReferencia,
         $facturasPorCodigo,
-        $cobrosIndex
+        $cobrosIndex,
+        $errores = []
     ) {
 
-        $errores = [];
+        // $errores = [];
         $procesados = 0;
 
         $pagadas = [];
@@ -1993,7 +2007,8 @@ class CargarGenerarPlantillas extends BaseController
                 $file,
                 $resultado['facturasPorReferencia'],
                 $resultado['facturasPorCodigo'],
-                $resultado['cobrosIndex']
+                $resultado['cobrosIndex'],
+                $resultado['errores']
             );
 
             if ($db->transStatus() === false) {
