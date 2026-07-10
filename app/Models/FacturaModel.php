@@ -889,4 +889,78 @@ class FacturaModel extends Model
             ->get()
             ->getResultArray();
     }
+
+    public function getReportePagos($idPeriodo = null, $estado = 'Todos')
+    {
+        return $this->db->table('facturas f')
+            ->join('facturas_detalle fd', 'fd.id_factura = f.id_factura', 'inner')
+            ->join('servicios s', 's.id_servicio = fd.id_servicio', 'left')
+            ->join('contratos c', 'c.id_contrato = f.id_contrato', 'left')
+            ->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left')
+            ->where('f.id_periodo', $idPeriodo)
+            ->where('f.estado', $estado)
+            ->select("
+                cl.codigo AS numero_cliente,
+                c.ficha_alcaldia,
+                cl.nombre_completo AS cliente,
+                SUM(
+                    CASE
+                        WHEN UPPER(fd.concepto) LIKE '%SERVICIO DOMICILIAR%'
+                        OR UPPER(fd.concepto) LIKE '%USO DE RED%'
+                        OR UPPER(fd.concepto) LIKE '%TABLA DIFERENCIADA%'
+                        THEN COALESCE(fd.monto, 0)
+                        ELSE 0
+                    END
+                ) AS agua,
+                SUM(CASE
+                    WHEN UPPER(COALESCE(s.nombre, fd.concepto)) LIKE '%TREN DE ASEO%'
+                    THEN COALESCE(fd.monto, 0)
+                    ELSE 0
+                END) AS aseo,
+                SUM(CASE
+                    WHEN UPPER(COALESCE(s.nombre, fd.concepto)) LIKE '%ALUMBRADO PUBLICO%'
+                    THEN COALESCE(fd.monto, 0)
+                    ELSE 0
+                END) AS alumbrado,
+                SUM(
+                    CASE
+                        WHEN UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%SERVICIO DOMICILIAR%'
+                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%USO DE RED%'
+                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%TREN DE ASEO%'
+                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%TABLA DIFERENCIADA%'
+                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%ALUMBRADO PUBLICO%'
+                        THEN COALESCE(fd.monto, 0)
+                        ELSE 0
+                    END
+                ) AS saldoAnterior,
+
+
+
+                f.id_factura,
+                f.estado,
+                f.fecha_emision,
+                f.fecha_vencimiento,
+                f.fecha_de_pago,
+                c.estado AS estado_contrato,
+                c.numero_contrato
+                
+                
+            ", false)
+            ->groupBy([
+                'f.id_factura',
+                'f.estado',
+                'f.fecha_emision',
+                'f.fecha_vencimiento',
+                'f.fecha_de_pago',
+                'c.ficha_alcaldia',
+                'c.estado',
+                'c.numero_contrato',
+                'cl.codigo',
+                'cl.nombre_completo'
+            ])
+            ->orderBy('cl.codigo', 'ASC')
+            ->orderBy('f.id_factura', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 }

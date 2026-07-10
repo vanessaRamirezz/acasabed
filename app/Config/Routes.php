@@ -188,6 +188,10 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // REPORTE DETALLE DE FACTURAS
     $routes->get('reporte_detalle_facturas', 'ReporteDetalleFacturas::index');
     $routes->get('reporte-detalle-facturas/pdf', 'ReporteDetalleFacturas::generarPDF');
+    // REPORTE DE PAGOS
+    $routes->get('reporte_pagos', 'ReportePagos::index');
+    $routes->get('reporte-pagos/pdf', 'ReportePagos::generarPDF');
+    $routes->get('reporte-pagos/excel', 'ReportePagos::generarExcelReportePagos');
 
     // PLANTILLAS
     $routes->get('cargar_generar_plantillas', 'CargarGenerarPlantillas::index');
