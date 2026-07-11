@@ -631,7 +631,7 @@ class CargarGenerarPlantillas extends BaseController
     private function normalizarFechaPago($fechaPago)
     {
         if (empty($fechaPago)) {
-            return date('Y-m-d');
+            return null;
         }
 
         // Fecha serial de Excel
@@ -1640,7 +1640,8 @@ class CargarGenerarPlantillas extends BaseController
                 (int)$f['codigo'],
                 $f['nombre_completo'],
                 $e['monto_excel'],
-                $f['total']
+                $f['total'],
+                $e['fecha_pago']
             ], null, "A{$row}");
             $row++;
         }
@@ -1661,6 +1662,95 @@ class CargarGenerarPlantillas extends BaseController
         return $nombreArchivo;
     }
 
+    // private function procesarCobroCliente(
+    //     $c,
+    //     $facturasPorCodigo,
+    //     &$fechaActual,
+    //     &$cobrosIndex,
+    //     &$errores,
+    //     &$facturasConDiferencia
+    // ): void {
+
+    //     $codigoCliente = trim((string)($c[2] ?? ''));
+    //     $codigoCliente = ltrim($codigoCliente, '0');
+
+    //     $montoPagado = (float)($c[4] ?? 0);
+
+    //     if (!$codigoCliente) {
+    //         return;
+    //     }
+
+    //     $facturasCliente = $facturasPorCodigo[$codigoCliente] ?? [];
+
+    //     if (empty($facturasCliente)) {
+
+    //         log_message(
+    //             'warning',
+    //             'No se encontró factura para cliente: ' . $codigoCliente
+    //         );
+
+    //         $errores[] = "No se encontró factura para cliente: {$codigoCliente}.";
+
+    //         return;
+    //     }
+
+    //     $facturaEncontrada = null;
+
+    //     foreach ($facturasCliente as $factura) {
+
+    //         if (abs((float)$factura['total'] - $montoPagado) < 0.01) {
+
+    //             $facturaEncontrada = $factura;
+    //             break;
+    //         }
+    //     }
+
+    //     if (!$facturaEncontrada) {
+
+    //         log_message(
+    //             'warning',
+    //             'No se encontró coincidencia en el total pagado para codigo de cliente '
+    //                 . $codigoCliente
+    //                 . ' monto ' . $montoPagado
+    //                 . ' y en el sistema ' . (float)$factura['total']
+    //         );
+
+    //         // log_message('info', 'Datos de la factura de error ' . print_r($factura, true));
+
+    //         $facturasConDiferencia[] = [
+    //             'factura' => $factura,
+    //             'monto_excel' => $montoPagado,
+    //             'codigo_cliente' => $codigoCliente
+    //         ];
+
+    //         $errores[] =
+    //             "No se encontró coincidencia para el codigo de cliente {$codigoCliente}. "
+    //             . "Monto Excel: {$montoPagado}."
+    //             . ' y en el sistema ' . (float)$factura['total'];
+
+    //         return;
+    //     }
+
+    //     $fechaExcel = trim((string)($c[0] ?? ''));
+
+    //     $tiraje = trim((string)($facturaEncontrada['tiraje'] ?? ''));
+    //     $correlativo = trim((string)($facturaEncontrada['correlativo'] ?? ''));
+
+    //     $referencia = $tiraje !== ''
+    //         ? $tiraje . '-' . $correlativo
+    //         : $correlativo;
+
+    //     if (!empty($fechaExcel)) {
+    //         $fechaActual = $fechaExcel;
+    //     }
+
+
+    //     $cobrosIndex[$referencia] = [
+    //         'fecha_pago'   => $fechaActual,
+    //         'monto_pagado' => $montoPagado
+    //     ];
+    // }
+
     private function procesarCobroCliente(
         $c,
         $facturasPorCodigo,
@@ -1674,6 +1764,13 @@ class CargarGenerarPlantillas extends BaseController
         $codigoCliente = ltrim($codigoCliente, '0');
 
         $montoPagado = (float)($c[4] ?? 0);
+
+        // Capturar la fecha desde el inicio
+        // log_message('info', 'Valor original de fecha: ' . print_r($c[0] ?? null, true));
+        $fechaExcel = $this->normalizarFechaPago($c[0] ?? null);
+        if (!empty($fechaExcel)) {
+            $fechaActual = $fechaExcel;
+        }
 
         if (!$codigoCliente) {
             return;
@@ -1714,12 +1811,13 @@ class CargarGenerarPlantillas extends BaseController
                     . ' y en el sistema ' . (float)$factura['total']
             );
 
-            // log_message('info', 'Datos de la factura de error ' . print_r($factura, true));
+            // log_message('info', 'fecha de excel ' . $fechaActual);
 
             $facturasConDiferencia[] = [
-                'factura' => $factura,
-                'monto_excel' => $montoPagado,
-                'codigo_cliente' => $codigoCliente
+                'factura'        => $factura,
+                'monto_excel'    => $montoPagado,
+                'codigo_cliente' => $codigoCliente,
+                'fecha_pago'     => $fechaActual
             ];
 
             $errores[] =
@@ -1730,19 +1828,12 @@ class CargarGenerarPlantillas extends BaseController
             return;
         }
 
-        $fechaExcel = trim((string)($c[0] ?? ''));
-
         $tiraje = trim((string)($facturaEncontrada['tiraje'] ?? ''));
         $correlativo = trim((string)($facturaEncontrada['correlativo'] ?? ''));
 
         $referencia = $tiraje !== ''
             ? $tiraje . '-' . $correlativo
             : $correlativo;
-
-        if (!empty($fechaExcel)) {
-            $fechaActual = $fechaExcel;
-        }
-
 
         $cobrosIndex[$referencia] = [
             'fecha_pago'   => $fechaActual,
