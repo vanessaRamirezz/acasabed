@@ -1619,12 +1619,55 @@ class CargarGenerarPlantillas extends BaseController
         ];
     }
 
+    private function generarExcelDiferencias(array $errores): string
+    {
+        $spreadsheet = IOFactory::load(
+            APPPATH . 'Templates/plantilla_errores.xlsx'
+        );
+
+        $sheet1 = $spreadsheet->getSheetByName('COBROS');
+
+        $row = 2;
+
+        foreach ($errores as $e) {
+
+            log_message('info', 'errores ' . print_r($e, true));
+            $f = $e['factura'];
+
+            $sheet1->fromArray([
+                $f['id_factura'],
+                $f['correlativo'],
+                (int)$f['codigo'],
+                $f['nombre_completo'],
+                $e['monto_excel'],
+                $f['total']
+            ], null, "A{$row}");
+            $row++;
+        }
+
+        $carpeta = WRITEPATH . 'uploads/temp/';
+
+        if (!is_dir($carpeta)) {
+            mkdir($carpeta, 0777, true);
+        }
+
+        $nombreArchivo = 'Errores_Cobros_' . date('Ymd_His') . '.xlsx';
+
+        $rutaCompleta = $carpeta . $nombreArchivo;
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($rutaCompleta);
+
+        return $nombreArchivo;
+    }
+
     private function procesarCobroCliente(
         $c,
         $facturasPorCodigo,
         &$fechaActual,
         &$cobrosIndex,
-        &$errores
+        &$errores,
+        &$facturasConDiferencia
     ): void {
 
         $codigoCliente = trim((string)($c[2] ?? ''));
@@ -1644,10 +1687,6 @@ class CargarGenerarPlantillas extends BaseController
                 'warning',
                 'No se encontró factura para cliente: ' . $codigoCliente
             );
-
-            // throw new \Exception(
-            //     "No se encontró factura para cliente: {$codigoCliente}."
-            // );
 
             $errores[] = "No se encontró factura para cliente: {$codigoCliente}.";
 
@@ -1675,16 +1714,18 @@ class CargarGenerarPlantillas extends BaseController
                     . ' y en el sistema ' . (float)$factura['total']
             );
 
-            // throw new \Exception(
-            //     "No se encontró coincidencia en el total pagado para el cliente
-            //     {$codigoCliente}
-            //     monto {$montoPagado}
-            //     y en el sistema {$factura['total']}."
-            // );
+            // log_message('info', 'Datos de la factura de error ' . print_r($factura, true));
+
+            $facturasConDiferencia[] = [
+                'factura' => $factura,
+                'monto_excel' => $montoPagado,
+                'codigo_cliente' => $codigoCliente
+            ];
 
             $errores[] =
                 "No se encontró coincidencia para el codigo de cliente {$codigoCliente}. "
-                . "Monto Excel: {$montoPagado}.";
+                . "Monto Excel: {$montoPagado}."
+                . ' y en el sistema ' . (float)$factura['total'];
 
             return;
         }
@@ -1707,7 +1748,6 @@ class CargarGenerarPlantillas extends BaseController
             'fecha_pago'   => $fechaActual,
             'monto_pagado' => $montoPagado
         ];
-        
     }
 
     private function prepararDatosCobros($cobrosData, $facturasPeriodo)
@@ -1715,6 +1755,7 @@ class CargarGenerarPlantillas extends BaseController
         $fechaActual = null;
         $cobrosIndex = [];
         $errores = [];
+        $facturasConDiferencia = [];
 
         $indices = $this->indexarFacturas($facturasPeriodo);
 
@@ -1736,7 +1777,8 @@ class CargarGenerarPlantillas extends BaseController
                     $facturasPorCodigo,
                     $fechaActual,
                     $cobrosIndex,
-                    $errores
+                    $errores,
+                    $facturasConDiferencia
                 );
             } else {
                 $this->procesarCobroTradicional(
@@ -1752,6 +1794,7 @@ class CargarGenerarPlantillas extends BaseController
             'errores' => $errores,
             'facturasPorReferencia' => $facturasPorReferencia,
             'facturasPorCodigo' => $facturasPorCodigo,
+            'facturasConDiferencia' => $facturasConDiferencia
         ];
     }
 
@@ -1952,6 +1995,17 @@ class CargarGenerarPlantillas extends BaseController
         ];
     }
 
+    public function descargarExcelDiferencias($archivo)
+    {
+        $ruta = WRITEPATH . 'uploads/temp/' . $archivo;
+
+        if (!file_exists($ruta)) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        return $this->response->download($ruta, null);
+    }
+
     public function importarExcel()
     {
         ini_set('memory_limit', '512M');
@@ -1979,7 +2033,8 @@ class CargarGenerarPlantillas extends BaseController
         $facturasPeriodo = $this->facturasModel
             ->select('
             facturas.*,
-            clientes.codigo
+            clientes.codigo,
+            clientes.nombre_completo
         ')
             ->join('contratos', 'contratos.id_contrato=facturas.id_contrato')
             ->join('clientes', 'clientes.id_cliente=contratos.id_cliente')
@@ -2017,11 +2072,21 @@ class CargarGenerarPlantillas extends BaseController
 
             $db->transCommit();
 
+            $archivoExcel = null;
+
+            if (!empty($resultado['facturasConDiferencia'])) {
+                $archivoExcel = $this->generarExcelDiferencias(
+                    $resultado['facturasConDiferencia']
+                );
+            }
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Archivo procesado correctamente',
                 'procesados' => $resultadoImportacion['procesados'],
-                'errores' => $resultadoImportacion['errores']
+                'errores' => $resultadoImportacion['errores'],
+                'hayDiferencias' => !empty($resultado['facturasConDiferencia']),
+                'archivoDiferencias' => $archivoExcel
             ]);
         } catch (\Throwable $e) {
 

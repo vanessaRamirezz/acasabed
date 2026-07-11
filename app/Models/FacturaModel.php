@@ -908,6 +908,7 @@ class FacturaModel extends Model
                         WHEN UPPER(fd.concepto) LIKE '%SERVICIO DOMICILIAR%'
                         OR UPPER(fd.concepto) LIKE '%USO DE RED%'
                         OR UPPER(fd.concepto) LIKE '%TABLA DIFERENCIADA%'
+                        OR fd.concepto = ''
                         THEN COALESCE(fd.monto, 0)
                         ELSE 0
                     END
@@ -924,12 +925,13 @@ class FacturaModel extends Model
                 END) AS alumbrado,
                 SUM(
                     CASE
-                        WHEN UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%SERVICIO DOMICILIAR%'
-                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%USO DE RED%'
-                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%TREN DE ASEO%'
-                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%TABLA DIFERENCIADA%'
-                        AND UPPER(COALESCE(s.nombre, fd.concepto)) NOT LIKE '%ALUMBRADO PUBLICO%'
-                        THEN COALESCE(fd.monto, 0)
+                        WHEN UPPER(fd.concepto) NOT LIKE '%SERVICIO DOMICILIAR%'
+                        AND UPPER(fd.concepto) NOT LIKE '%USO DE RED%'
+                        AND UPPER(fd.concepto) NOT LIKE '%TREN DE ASEO%'
+                        AND UPPER(fd.concepto) NOT LIKE '%TABLA DIFERENCIADA%'
+                        AND UPPER(fd.concepto) NOT LIKE '%ALUMBRADO PUBLICO%'
+                        AND TRIM(fd.concepto) <> ''
+                        THEN COALESCE(fd.monto,0)
                         ELSE 0
                     END
                 ) AS saldoAnterior,

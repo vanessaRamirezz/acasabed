@@ -230,10 +230,24 @@ function eventosUsuarios() {
                         width: 600,
                         allowOutsideClick: false,
                         allowEscapeKey: false,
-                        confirmButtonText: 'Aceptar'
-                    }).then(() => {
-                        // Limpiar el input al cerrar el mensaje
+
+                        showCancelButton: data.hayDiferencias,
+                        confirmButtonText: data.hayDiferencias ? 'Descargar Excel' : 'Aceptar',
+                        cancelButtonText: 'Cerrar'
+
+                    }).then((result) => {
+
                         fileInput.value = "";
+
+                        if (result.isConfirmed && data.hayDiferencias) {
+
+                            window.open(
+                                baseURL + 'facturas/descargarExcelDiferencias/' + data.archivoDiferencias,
+                                '_blank'
+                            );
+
+                        }
+
                     });
 
                 } else {

@@ -209,4 +209,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // PROCESO DE IMPRESION DE TEXTO DE FACTURAS DE COBROS
     $routes->get('enviarImprimirTextoCobrosInstalacion', 'CobrosInstalacion::enviarImprimirTextoCobrosInstalacion');
     $routes->get('verFacturaPdfTextoInstalacion/(:num)', 'CobrosInstalacion::verFacturaPdfTextoInstalacion/$1');
+
+    // descargar excel de errores
+    $routes->get('facturas/descargarExcelDiferencias/(:any)','CargarGenerarPlantillas::descargarExcelDiferencias/$1');
 });
