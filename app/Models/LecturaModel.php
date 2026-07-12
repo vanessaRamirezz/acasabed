@@ -60,7 +60,7 @@ class LecturaModel extends Model
             $builder->groupStart()
                 ->like('lecturas.fecha', $searchValue)
                 ->orLike('periodos.nombre', $searchValue)
-                ->orLike('contratos.codigo', $searchValue)
+                ->orLike('contratos.numero_contrato', $searchValue)
                 ->orLike('instaladores.nombre_completo', $searchValue)
                 ->groupEnd();
         }

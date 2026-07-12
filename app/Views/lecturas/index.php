@@ -68,7 +68,7 @@
 
                 <div class="d-flex justify-content-end mb-4">
                     <div class="input-group col-md-8">
-                        <input type="text" id="customSearchLecturas" placeholder="Buscar por contrato, instalador y numero de serie" class="form-control">
+                        <input type="text" id="customSearchLecturas" placeholder="Buscar por contrato, instalador o periodo" class="form-control">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" id="searchBtnLecturas" type="button">
                                 <i class="fas fa-search"></i>
