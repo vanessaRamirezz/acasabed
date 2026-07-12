@@ -21,7 +21,7 @@ $lado = $lado ?? 'izquierda';
     </div>
 
     <div class="campo cuenta">
-        <?= esc($factura['codigo_solicitud']) ?>
+        <?= esc($factura['ficha_alcaldia']) ?>
     </div>
 
     <div class="campo medidor">

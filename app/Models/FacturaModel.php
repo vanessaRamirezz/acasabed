@@ -208,6 +208,7 @@ class FacturaModel extends Model
             f.correlativo,
             s.codigo_solicitud,
             c.numero_contrato,
+            c.ficha_alcaldia,
             cl.nombre_completo AS cliente,
 
             cl.complemento_direccion AS direccion,
@@ -443,6 +444,7 @@ class FacturaModel extends Model
             f.correlativo,
             s.codigo_solicitud,
             c.numero_contrato,
+            c.ficha_alcaldia,
             cl.nombre_completo AS cliente,
             cl.complemento_direccion AS direccion,
             DATE_FORMAT(lec.fecha, '%d-%m-%Y') AS fechaLectura,

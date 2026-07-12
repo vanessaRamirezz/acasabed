@@ -593,7 +593,7 @@ class CobrosInstalacion extends BaseController
 
         $pdf->SetTextColor(0, 0, 0);
         $pdf->SetFont('helvetica', '', 5);
-        $pdf->Cell($rightW, $hValue, $factura['codigo_solicitud'], 1, 0, 'C');
+        $pdf->Cell($rightW, $hValue, $factura['ficha_alcaldia'], 1, 0, 'C');
 
 
         // LECTURAS
