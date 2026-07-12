@@ -368,6 +368,7 @@ class FacturaModel extends Model
             f.correlativo,
             s.codigo_solicitud,
             c.numero_contrato,
+            c.ficha_alcaldia,
             cl.nombre_completo AS cliente,
             CONCAT_WS(', ',
                 d.nombre,
