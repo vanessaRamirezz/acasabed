@@ -17,6 +17,8 @@ use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 
 class CargarGenerarPlantillas extends BaseController
 {
+    private string $carpetaDiferencias = 'uploads/diferencias_facturas/';
+
     protected bool $tieneIdPeriodoPagoFactura = false;
 
     protected bool $tieneEstadoExcelPagoFactura = false;
@@ -52,6 +54,182 @@ class CargarGenerarPlantillas extends BaseController
     private function pagosFacturaTieneCampo(string $campo): bool
     {
         return \Config\Database::connect()->fieldExists($campo, 'pagos_factura');
+    }
+
+    private function getCarpetaDiferencias(): string
+    {
+        $carpeta = WRITEPATH . $this->carpetaDiferencias;
+
+        if (!is_dir($carpeta)) {
+            mkdir($carpeta, 0777, true);
+        }
+
+        return $carpeta;
+    }
+
+    private function sanitizarNombreArchivo(string $archivo): string
+    {
+        return basename($archivo);
+    }
+
+    private function getRutaDiferencia(string $archivo): string
+    {
+        return $this->getCarpetaDiferencias() . $this->sanitizarNombreArchivo($archivo);
+    }
+
+    private function getRutaMetaDiferencia(string $archivo): string
+    {
+        return preg_replace('/\.(xlsx|xls)$/i', '.json', $this->getRutaDiferencia($archivo));
+    }
+
+    private function guardarMetaDiferencia(string $archivo, array $rows): void
+    {
+        $meta = [
+            'archivo' => $this->sanitizarNombreArchivo($archivo),
+            'fecha_creacion' => date('Y-m-d H:i:s'),
+            'rows' => $rows
+        ];
+
+        file_put_contents(
+            $this->getRutaMetaDiferencia($archivo),
+            json_encode($meta, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+        );
+    }
+
+    private function leerMetaDiferencia(string $archivo): array
+    {
+        $rutaMeta = $this->getRutaMetaDiferencia($archivo);
+
+        if (!file_exists($rutaMeta)) {
+            $rows = $this->leerRowsDiferenciasDesdeExcel($this->getRutaDiferencia($archivo));
+            $this->guardarMetaDiferencia($archivo, $rows);
+        }
+
+        $meta = json_decode((string)file_get_contents($rutaMeta), true);
+
+        return is_array($meta) ? $meta : ['archivo' => $archivo, 'rows' => []];
+    }
+
+    private function leerRowsDiferenciasDesdeExcel(string $rutaExcel): array
+    {
+        if (!file_exists($rutaExcel)) {
+            return [];
+        }
+
+        $reader = IOFactory::createReaderForFile($rutaExcel);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($rutaExcel);
+        $sheet = $spreadsheet->getSheetByName('COBROS') ?: $spreadsheet->getActiveSheet();
+        $highestRow = $sheet->getHighestDataRow();
+        $rows = [];
+
+        for ($row = 2; $row <= $highestRow; $row++) {
+            $idFactura = trim((string)$sheet->getCell("A{$row}")->getCalculatedValue());
+
+            if ($idFactura === '') {
+                continue;
+            }
+
+            $rows[] = [
+                'row_id' => count($rows) + 1,
+                'excel_row' => $row,
+                'id_factura' => (int)$idFactura,
+                'correlativo' => trim((string)$sheet->getCell("B{$row}")->getCalculatedValue()),
+                'cliente' => trim((string)$sheet->getCell("C{$row}")->getCalculatedValue()),
+                'nombre' => trim((string)$sheet->getCell("D{$row}")->getCalculatedValue()),
+                'total_excel' => (float)$sheet->getCell("E{$row}")->getCalculatedValue(),
+                'total_bd' => (float)$sheet->getCell("F{$row}")->getCalculatedValue(),
+                'fecha_pago' => $this->normalizarFechaPago($sheet->getCell("G{$row}")->getCalculatedValue()),
+                'resuelto' => false,
+                'fecha_resuelto' => null,
+                'usuario_resuelto' => null
+            ];
+        }
+
+        $spreadsheet->disconnectWorksheets();
+
+        return $rows;
+    }
+
+    private function marcarDiferenciaResuelta(string $archivo, int $rowId): bool
+    {
+        $meta = $this->leerMetaDiferencia($archivo);
+        $pendientes = 0;
+
+        foreach ($meta['rows'] as &$row) {
+            if ((int)($row['row_id'] ?? 0) === $rowId) {
+                $row['resuelto'] = true;
+                $row['fecha_resuelto'] = date('Y-m-d H:i:s');
+                $row['usuario_resuelto'] = session()->get('id_usuario');
+            }
+
+            if (empty($row['resuelto'])) {
+                $pendientes++;
+            }
+        }
+        unset($row);
+
+        $this->guardarMetaDiferencia($archivo, $meta['rows']);
+
+        if ($pendientes === 0) {
+            $rutaExcel = $this->getRutaDiferencia($archivo);
+            $rutaMeta = $this->getRutaMetaDiferencia($archivo);
+
+            if (file_exists($rutaExcel)) {
+                unlink($rutaExcel);
+            }
+
+            if (file_exists($rutaMeta)) {
+                unlink($rutaMeta);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function obtenerFacturaDiferencia(int $idFactura): ?array
+    {
+        $db = \Config\Database::connect();
+
+        $factura = $db->table('facturas f')
+            ->select("
+                f.*,
+                c.numero_contrato,
+                cl.nombre_completo AS cliente,
+                cl.codigo AS codigo_cliente,
+                p.nombre AS periodo
+            ", false)
+            ->join('contratos c', 'c.id_contrato = f.id_contrato', 'left')
+            ->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left')
+            ->join('periodos p', 'p.id_periodo = f.id_periodo', 'left')
+            ->where('f.id_factura', $idFactura)
+            ->get()
+            ->getRowArray();
+
+        if (!$factura) {
+            return null;
+        }
+
+        $detalle = $db->table('facturas_detalle fd')
+            ->select('fd.id_factura_detalle, fd.id_servicio, fd.concepto, fd.monto, fd.mora, fd.id_cobro_instalacion')
+            ->where('fd.id_factura', $idFactura)
+            ->orderBy('fd.id_factura_detalle', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $pago = $db->table('pagos_factura')
+            ->where('id_factura', $idFactura)
+            ->orderBy('id_pago_factura', 'DESC')
+            ->get()
+            ->getRowArray();
+
+        return [
+            'factura' => $factura,
+            'detalle' => $detalle,
+            'pago' => $pago
+        ];
     }
 
     private function registrarImportacionFactura(
@@ -1646,18 +1824,17 @@ class CargarGenerarPlantillas extends BaseController
             $row++;
         }
 
-        $carpeta = WRITEPATH . 'uploads/temp/';
-
-        if (!is_dir($carpeta)) {
-            mkdir($carpeta, 0777, true);
-        }
-
         $nombreArchivo = 'Errores_Cobros_' . date('Ymd_His') . '.xlsx';
 
-        $rutaCompleta = $carpeta . $nombreArchivo;
+        $rutaCompleta = $this->getRutaDiferencia($nombreArchivo);
 
         $writer = new Xlsx($spreadsheet);
         $writer->save($rutaCompleta);
+
+        $this->guardarMetaDiferencia(
+            $nombreArchivo,
+            $this->leerRowsDiferenciasDesdeExcel($rutaCompleta)
+        );
 
         return $nombreArchivo;
     }
@@ -2088,13 +2265,343 @@ class CargarGenerarPlantillas extends BaseController
 
     public function descargarExcelDiferencias($archivo)
     {
-        $ruta = WRITEPATH . 'uploads/temp/' . $archivo;
+        $archivo = $this->sanitizarNombreArchivo($archivo);
+        $ruta = $this->getRutaDiferencia($archivo);
+
+        if (!file_exists($ruta)) {
+            $ruta = WRITEPATH . 'uploads/temp/' . $archivo;
+        }
 
         if (!file_exists($ruta)) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
         return $this->response->download($ruta, null);
+    }
+
+    public function listarExcelDiferencias()
+    {
+        $archivos = array_merge(
+            glob($this->getCarpetaDiferencias() . '*.xlsx') ?: [],
+            glob($this->getCarpetaDiferencias() . '*.xls') ?: []
+        );
+        $data = [];
+
+        foreach ($archivos as $ruta) {
+            $archivo = basename($ruta);
+            $meta = $this->leerMetaDiferencia($archivo);
+            $rows = $meta['rows'] ?? [];
+            $total = count($rows);
+            $resueltos = count(array_filter($rows, fn($row) => !empty($row['resuelto'])));
+
+            $data[] = [
+                'archivo' => $archivo,
+                'fecha' => date('d-m-Y H:i', filemtime($ruta)),
+                'timestamp' => filemtime($ruta),
+                'total' => $total,
+                'resueltos' => $resueltos,
+                'pendientes' => max(0, $total - $resueltos)
+            ];
+        }
+
+        usort($data, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+
+        $data = array_map(function ($item) {
+            unset($item['timestamp']);
+            return $item;
+        }, $data);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+    public function importarExcelDiferencias()
+    {
+        $file = $this->request->getFile('excel');
+
+        if (!$file || !$file->isValid()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Archivo no recibido o inválido'
+            ]);
+        }
+
+        $extension = strtolower($file->getClientExtension());
+
+        if (!in_array($extension, ['xlsx', 'xls'], true)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'El archivo debe ser Excel'
+            ]);
+        }
+
+        try {
+            $nombreBase = pathinfo($file->getClientName(), PATHINFO_FILENAME);
+            $nombreBase = preg_replace('/[^A-Za-z0-9_\-]/', '_', $nombreBase);
+            $nombreArchivo = $nombreBase . '_' . date('Ymd_His') . '.' . $extension;
+            $file->move($this->getCarpetaDiferencias(), $nombreArchivo, true);
+
+            $rows = $this->leerRowsDiferenciasDesdeExcel($this->getRutaDiferencia($nombreArchivo));
+
+            if (empty($rows)) {
+                @unlink($this->getRutaDiferencia($nombreArchivo));
+
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'El Excel no contiene registros de diferencias'
+                ]);
+            }
+
+            $this->guardarMetaDiferencia($nombreArchivo, $rows);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Excel de diferencias registrado correctamente',
+                'archivo' => $nombreArchivo
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function eliminarExcelDiferencias()
+    {
+        $archivo = (string)$this->request->getPost('archivo');
+
+        if ($archivo === '') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se recibió el archivo a eliminar'
+            ]);
+        }
+
+        $archivo = $this->sanitizarNombreArchivo($archivo);
+        $rutaExcel = $this->getRutaDiferencia($archivo);
+        $rutaMeta = $this->getRutaMetaDiferencia($archivo);
+
+        if (!file_exists($rutaExcel) && !file_exists($rutaMeta)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'El archivo de diferencias no existe'
+            ]);
+        }
+
+        if (file_exists($rutaExcel)) {
+            unlink($rutaExcel);
+        }
+
+        if (file_exists($rutaMeta)) {
+            unlink($rutaMeta);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Excel de diferencias eliminado correctamente'
+        ]);
+    }
+
+    public function getRowsExcelDiferencias()
+    {
+        $archivo = (string)$this->request->getGet('archivo');
+
+        if ($archivo === '' || !file_exists($this->getRutaDiferencia($archivo))) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se encontró el archivo de diferencias'
+            ]);
+        }
+
+        $meta = $this->leerMetaDiferencia($archivo);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'archivo' => $this->sanitizarNombreArchivo($archivo),
+            'rows' => $meta['rows'] ?? []
+        ]);
+    }
+
+    public function getFacturaDiferencia()
+    {
+        $archivo = (string)$this->request->getGet('archivo');
+        $rowId = (int)$this->request->getGet('rowId');
+        $idFactura = (int)$this->request->getGet('idFactura');
+
+        if ($archivo === '' || $rowId <= 0 || $idFactura <= 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Datos incompletos para consultar la factura'
+            ]);
+        }
+
+        $meta = $this->leerMetaDiferencia($archivo);
+        $row = null;
+
+        foreach ($meta['rows'] ?? [] as $item) {
+            if ((int)($item['row_id'] ?? 0) === $rowId) {
+                $row = $item;
+                break;
+            }
+        }
+
+        $info = $this->obtenerFacturaDiferencia($idFactura);
+
+        if (!$row || !$info) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se encontró la factura o la fila seleccionada'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'row' => $row,
+            'data' => $info
+        ]);
+    }
+
+    public function resolverDiferenciaFactura()
+    {
+        $db = \Config\Database::connect();
+
+        $archivo = (string)$this->request->getPost('archivo');
+        $rowId = (int)$this->request->getPost('rowId');
+        $idFactura = (int)$this->request->getPost('idFactura');
+        $estado = strtoupper(trim((string)$this->request->getPost('estado')));
+        $total = (float)$this->request->getPost('total');
+        $fechaPago = $this->normalizarFechaPago($this->request->getPost('fechaPago'));
+        $montoPagado = (float)$this->request->getPost('montoPagado');
+        $detalles = json_decode((string)$this->request->getPost('detalles'), true);
+
+        if ($archivo === '' || $rowId <= 0 || $idFactura <= 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Datos incompletos para resolver la diferencia'
+            ]);
+        }
+
+        if (!in_array($estado, ['PAGADA', 'NO PAGADA', 'PENDIENTE'], true)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Estado de factura inválido'
+            ]);
+        }
+
+        if ($total < 0 || !is_array($detalles)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Total o detalles inválidos'
+            ]);
+        }
+
+        if ($estado === 'PAGADA' && empty($fechaPago)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Debe indicar fecha de pago para una factura pagada'
+            ]);
+        }
+
+        $factura = $this->facturasModel->find($idFactura);
+
+        if (!$factura) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Factura no encontrada'
+            ]);
+        }
+
+        try {
+            $db->transBegin();
+
+            foreach ($detalles as $detalle) {
+                $idDetalle = (int)($detalle['id_factura_detalle'] ?? 0);
+
+                if ($idDetalle <= 0) {
+                    continue;
+                }
+
+                $concepto = trim((string)($detalle['concepto'] ?? ''));
+                $montoDetalle = (float)($detalle['monto'] ?? 0);
+                $esMora = !empty($detalle['es_mora'])
+                    || stripos($concepto, 'mora') !== false;
+
+                $db->table('facturas_detalle')
+                    ->where('id_factura_detalle', $idDetalle)
+                    ->where('id_factura', $idFactura)
+                    ->update([
+                        'concepto' => $concepto,
+                        'monto' => $esMora ? 0 : $montoDetalle,
+                        'mora' => $esMora ? $montoDetalle : 0,
+                    ]);
+            }
+
+            $this->facturasModel->update($idFactura, [
+                'estado' => $estado,
+                'total' => $total,
+                'fecha_de_pago' => $estado === 'PAGADA' ? $fechaPago : null,
+            ]);
+
+            $pagoExistente = $this->pagosFacturaModel
+                ->where('id_factura', $idFactura)
+                ->orderBy('id_pago_factura', 'DESC')
+                ->first();
+
+            $payloadPago = [
+                'id_factura' => $idFactura,
+                'tiraje' => $factura['tiraje'] ?? null,
+                'correlativo' => $factura['correlativo'] ?? null,
+                'referencia' => trim(($factura['tiraje'] ?? '') . '-' . ($factura['correlativo'] ?? ''), '-'),
+                'monto_pagado' => $estado === 'PAGADA' ? ($montoPagado > 0 ? $montoPagado : $total) : 0,
+                'fecha_pago' => $estado === 'PAGADA' ? $fechaPago : null,
+                'fecha_carga' => date('Y-m-d'),
+                'id_usuario' => session()->get('id_usuario'),
+                'archivo_origen' => $this->sanitizarNombreArchivo($archivo)
+            ];
+
+            if ($this->pagosFacturaTieneCampo('id_periodo')) {
+                $payloadPago['id_periodo'] = $factura['id_periodo'] ?? null;
+            }
+
+            if ($this->pagosFacturaTieneCampo('estado_excel')) {
+                $payloadPago['estado_excel'] = $estado === 'PAGADA' ? 'PAGADA' : 'NO PAGADA';
+            }
+
+            if ($pagoExistente) {
+                $this->pagosFacturaModel->update($pagoExistente['id_pago_factura'], $payloadPago);
+            } else {
+                $this->pagosFacturaModel->insert($payloadPago);
+            }
+
+            if ($db->transStatus() === false) {
+                throw new \Exception('No se pudo actualizar la factura');
+            }
+
+            $archivoEliminado = $this->marcarDiferenciaResuelta($archivo, $rowId);
+
+            $db->transCommit();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => $archivoEliminado
+                    ? 'Diferencia resuelta. El Excel fue eliminado porque ya no tiene pendientes.'
+                    : 'Diferencia resuelta correctamente',
+                'archivoEliminado' => $archivoEliminado
+            ]);
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function importarExcel()

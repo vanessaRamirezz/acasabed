@@ -199,6 +199,12 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('facturas/exportar-excel-alcaldia', 'CargarGenerarPlantillas::exportarExcelAlcaldia');
     $routes->post('facturas/importar-excel', 'CargarGenerarPlantillas::importarExcel');
     $routes->post('facturas/cancelar-importacion-excel', 'CargarGenerarPlantillas::cancelarImportacionExcelPeriodoActivo');
+    $routes->get('facturas/diferencias/listar', 'CargarGenerarPlantillas::listarExcelDiferencias');
+    $routes->post('facturas/diferencias/importar', 'CargarGenerarPlantillas::importarExcelDiferencias');
+    $routes->post('facturas/diferencias/eliminar', 'CargarGenerarPlantillas::eliminarExcelDiferencias');
+    $routes->get('facturas/diferencias/rows', 'CargarGenerarPlantillas::getRowsExcelDiferencias');
+    $routes->get('facturas/diferencias/factura', 'CargarGenerarPlantillas::getFacturaDiferencia');
+    $routes->post('facturas/diferencias/resolver', 'CargarGenerarPlantillas::resolverDiferenciaFactura');
     $routes->post('cargarExcelAlcaldia', 'CargarGenerarPlantillas::cargarExcelAlcaldia');
     $routes->post('cancelarExcelAlcaldia', 'CargarGenerarPlantillas::cancelarExcelAlcaldia');
     $routes->get('validarExcelCargado', 'CargarGenerarPlantillas::validarExcelCargado');
