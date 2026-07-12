@@ -690,6 +690,7 @@ function eventosUsuarios() {
     });
 
     $("#btnCancelarImportacionExcel").on("click", function () {
+        const tbody = $("#tablaExcelsDiferencias tbody");
         Swal.fire({
             icon: "warning",
             title: "Cancelar importación",
@@ -745,10 +746,20 @@ function eventosUsuarios() {
                         icon: 'success',
                         title: 'Importación revertida',
                         html: `
-                    <p><b>Facturas revertidas:</b> ${data.facturas_revertidas ?? 0}</p>
-                    <p class="mb-0"><b>Pagos eliminados:</b> ${data.pagos_eliminados ?? 0}</p>
-                `
-                    });
+                                <p><b>Facturas revertidas:</b> ${data.facturas_revertidas ?? 0}</p>
+                                <p class="mb-0"><b>Pagos eliminados:</b> ${data.pagos_eliminados ?? 0}</p>
+                            `
+                    }).then(() => {
+                        tbody.html(`
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No hay Excel de diferencias pendientes.
+                                </td>
+                            </tr>
+                        `);
+                    })
+
+
                 })
                 .catch(error => {
 

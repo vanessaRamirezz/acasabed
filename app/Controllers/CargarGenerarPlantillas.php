@@ -1212,6 +1212,23 @@ class CargarGenerarPlantillas extends BaseController
     //     }
     // }
 
+    private function eliminarArchivosDiferencias(): void
+    {
+        $carpeta = WRITEPATH . 'uploads/diferencias_facturas/';
+
+        if (!is_dir($carpeta)) {
+            return;
+        }
+
+        $archivos = glob($carpeta . '*');
+
+        foreach ($archivos as $archivo) {
+            if (is_file($archivo)) {
+                @unlink($archivo);
+            }
+        }
+    }
+
     public function cancelarImportacionExcelPeriodoActivo()
     {
         ini_set('memory_limit', '512M');
@@ -1459,6 +1476,9 @@ class CargarGenerarPlantillas extends BaseController
                     'message' => 'No se pudieron revertir los cambios de la importacion'
                 ]);
             }
+
+            // Eliminar todos los Excel de diferencias
+            $this->eliminarArchivosDiferencias();
 
             return $this->response->setJSON([
                 'success' => true,
