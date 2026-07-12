@@ -100,17 +100,27 @@ async function generarReporte() {
 
 async function generarReporteExcel() {
 
+    const boton = document.getElementById("btnGenerarReportePagosExcel");
     const periodo = $("#periodo").val();
+    const estado = $("#estado").val();
 
     if (!periodo) {
         alertaError("Debe seleccionar un período.");
         return;
     }
 
+    if (!estado || estado === "") {
+        alertaError("Debe seleccionar un estado de facturas.");
+        return;
+    }
+
     const params = new URLSearchParams();
     params.append("periodo", periodo);
+    params.append("estado", estado);
+
 
     try {
+        boton.disabled = true;
 
         const response = await fetch(
             `${baseURL}reporte-pagos/excel?${params.toString()}`
@@ -135,6 +145,12 @@ async function generarReporteExcel() {
 
         window.URL.revokeObjectURL(url);
 
+        // Esperar 3 segundos antes de habilitar nuevamente
+        setTimeout(() => {
+            boton.disabled = false;
+        }, 3000);
+
+
     } catch (error) {
 
         alertEnSweet(
@@ -144,6 +160,8 @@ async function generarReporteExcel() {
         );
 
         console.error(error);
+
+        boton.disabled = false;
     }
 
 }

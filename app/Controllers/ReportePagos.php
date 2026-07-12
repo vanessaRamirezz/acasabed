@@ -46,14 +46,16 @@ class ReportePagos extends BaseController
         $pdf->SetTextColor(255, 255, 255);
         $pdf->SetFont('helvetica', 'B', 6);
 
-        $pdf->Cell(18, 6, '# Cliente', 1, 0, 'C', true);
-        $pdf->Cell(18, 6, 'Ficha', 1, 0, 'C', true);
+        $pdf->Cell(17, 6, '# Cliente', 1, 0, 'C', true);
+        $pdf->Cell(11, 6, 'Ficha', 1, 0, 'C', true);
         $pdf->Cell(62, 6, 'Nombre Usuario', 1, 0, 'C', true);
-        $pdf->Cell(16, 6, 'Agua', 1, 0, 'C', true);
-        $pdf->Cell(16, 6, 'Aseo', 1, 0, 'C', true);
-        $pdf->Cell(16, 6, 'Alumbrado', 1, 0, 'C', true);
-        $pdf->Cell(22, 6, 'Cargo', 1, 0, 'C', true);
-        $pdf->Cell(22, 6, 'Saldo Ant.', 1, 1, 'C', true);
+        $pdf->Cell(11, 6, 'Agua', 1, 0, 'C', true);
+        $pdf->Cell(11, 6, 'Aseo', 1, 0, 'C', true);
+        $pdf->Cell(15, 6, 'Alumbrado', 1, 0, 'C', true);
+        $pdf->Cell(21, 6, 'T. Alcaldía', 1, 0, 'C', true);
+        $pdf->Cell(21, 6, 'Saldo Ant.', 1, 0, 'C', true);
+        $pdf->Cell(10, 6, 'Total', 1, 0, 'C', true);
+        $pdf->Cell(11, 6, 'Estado', 1, 1, 'C', true);
 
         $pdf->SetTextColor(0, 0, 0);
         $pdf->SetFont('helvetica', '', 6);
@@ -64,7 +66,7 @@ class ReportePagos extends BaseController
         try {
             $idPeriodo = $this->request->getGet('periodo');
             $idPeriodo = !empty($idPeriodo) ? $idPeriodo : null;
-            $estado = $this->request->getGet('estado') ?? 'Todos';
+            $estado = $this->request->getGet('estado') ?? 'TODAS';
             $periodo = $idPeriodo ? $this->periodosModel->find($idPeriodo) : null;
 
             $facturas = $this->facturaModel->getReportePagos($idPeriodo, $estado);
@@ -124,6 +126,12 @@ class ReportePagos extends BaseController
 
             foreach ($facturas as $factura) {
 
+                $total = $factura['agua']
+                    + $factura['aseo']
+                    + $factura['alumbrado']
+                    + $factura['saldoAnterior'];
+
+
                 $aseo = $factura['aseo'];
                 $alumbrado = $factura['alumbrado'];
 
@@ -131,6 +139,14 @@ class ReportePagos extends BaseController
                 //==========================================
                 // DATOS
                 //==========================================
+
+                if ($factura['estado'] === 'PAGADA') {
+                    $estado = "Pagó";
+                } else if ($factura['estado'] === 'NO PAGADA') {
+                    $estado = "No pagó";
+                } else {
+                    $estado = "--";
+                }
 
                 $fila = [
                     $factura['numero_cliente'], // o el campo que corresponda
@@ -140,11 +156,13 @@ class ReportePagos extends BaseController
                     $aseo,
                     $alumbrado,
                     $totalCargoAlcaldia,
-                    $factura['saldoAnterior']
+                    $factura['saldoAnterior'],
+                    $total,
+                    $estado
                 ];
 
 
-                $anchos = [18, 18, 62, 16, 16, 16, 22, 22];
+                $anchos = [17, 11, 62, 11, 11, 15, 21, 21, 10, 11];
 
                 $fila = array_map(function ($valor) {
                     return (string)($valor ?? '');
@@ -349,6 +367,7 @@ class ReportePagos extends BaseController
         try {
 
             $idPeriodo = $this->request->getGet('periodo');
+            $estado = $this->request->getGet('estado') ?? 'TODAS';
 
             if (empty($idPeriodo)) {
                 return $this->response->setStatusCode(400)->setJSON([
@@ -357,12 +376,13 @@ class ReportePagos extends BaseController
                 ]);
             }
 
-            //=========================
-            // CONSULTAS
-            //=========================
+            if (empty($estado)) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success' => false,
+                    'message' => 'Debe seleccionar un estado de facturas.'
+                ]);
+            }
 
-            $datosPagos = $this->facturaModel->getReportePagos($idPeriodo, 'PAGADA');
-            $datosNoPagos = $this->facturaModel->getReportePagos($idPeriodo, 'NO PAGADA');
             //=========================
             // CARGAR PLANTILLA
             //=========================
@@ -378,7 +398,6 @@ class ReportePagos extends BaseController
             //=========================
             // OBTENER HOJAS
             //=========================
-
             $hojaPagos = $spreadsheet->getSheetByName('PAGO');
             $hojaNoPagos = $spreadsheet->getSheetByName('NO PAGO');
 
@@ -386,11 +405,28 @@ class ReportePagos extends BaseController
                 throw new \Exception('No se encontraron las hojas PAGO y NO PAGO.');
             }
 
-            //========================================================
-            // AQUÍ EN EL SIGUIENTE PASO LLENAREMOS LAS DOS HOJAS
-            //========================================================
-            $this->llenarHoja($hojaPagos, $datosPagos);
-            $this->llenarHoja($hojaNoPagos, $datosNoPagos);
+            //=========================
+            // CONSULTAS
+            //=========================
+            $datosPagos = $this->facturaModel->getReportePagos($idPeriodo, 'PAGADA');
+            $datosNoPagos = $this->facturaModel->getReportePagos($idPeriodo, 'NO PAGADA');
+            if ($estado === "PAGADA") {
+                //========================================================
+                // AQUÍ EN EL SIGUIENTE PASO LLENAREMOS LAS DOS HOJAS
+                //========================================================
+                $this->llenarHoja($hojaPagos, $datosPagos);
+            } else if ($estado === "NO PAGADA") {
+                //========================================================
+                // AQUÍ EN EL SIGUIENTE PASO LLENAREMOS LAS DOS HOJAS
+                //========================================================
+                $this->llenarHoja($hojaNoPagos, $datosNoPagos);
+            } else {
+                //========================================================
+                // AQUÍ EN EL SIGUIENTE PASO LLENAREMOS LAS DOS HOJAS
+                //========================================================
+                $this->llenarHoja($hojaPagos, $datosPagos);
+                $this->llenarHoja($hojaNoPagos, $datosNoPagos);
+            }
 
             //=========================
             // GENERAR EXCEL

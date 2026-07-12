@@ -40,18 +40,19 @@
                             <option value="">Seleccione</option>
                             <option value="PAGADA">PAGADAS</option>
                             <option value="NO PAGADA">NO PAGADAS</option>
+                            <option value="TODAS">TODAS</option>
                         </select>
                     </div>
 
                     <div class="col-md-2 align-self-end">
-                        <button id="btnGenerarReportePagos" class="btn btn-primary btn-block">
-                            Generar PDF
+                        <button id="btnGenerarReportePagos" class="btn btn-danger btn-block">
+                            <i class="fas fa-file-pdf"></i> PDF
                         </button>
                     </div>
 
                     <div class="col-md-2 align-self-end">
                         <button id="btnGenerarReportePagosExcel" class="btn btn-success btn-block">
-                            Generar Excel
+                            <i class="fas fa-file-excel"></i> Excel
                         </button>
                     </div>
                 </div>
