@@ -154,6 +154,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('generarFacturasServicio', 'FacturacionServicio::generarFacturasServicio');
     $routes->post('crearFacturaOtro', 'FacturacionServicio::crearFacturaOtro');
     $routes->get('imprimirFacturasConsumoPeriodoActivo', 'FacturacionServicio::imprimirFacturasConsumoPeriodoActivo');
+    $routes->post('eliminarFacturasPeriodo', 'FacturacionServicio::eliminarFacturasPeriodo');
 
 
     // RANGO DE FACTURAS

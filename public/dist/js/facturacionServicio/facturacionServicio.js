@@ -818,6 +818,72 @@ function eventosUsuarios() {
         );
 
     });
+
+    // evento eliminar facturas periodo activo
+    $("#btn-eliminar-facturas-servicio").on("click", function () {
+
+        Swal.fire({
+            title: "¿Eliminar facturas?",
+            text: "Se eliminarán las facturas generadas del periodo actual. Esta acción no se puede deshacer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            const url = baseURL + "eliminarFacturasPeriodo";
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                dataType: "json",
+                beforeSend: function () {
+                    $("#btn-eliminar-facturas-servicio")
+                        .prop("disabled", true);
+                },
+                success: function (response) {
+
+                    if (response.status) {
+
+                        Swal.fire({
+                            icon: "success",
+                            title: "Proceso completado",
+                            text: response.message
+                        }).then(() => {
+                            location.reload();
+                        });
+
+                    } else {
+
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message
+                        });
+                    }
+                },
+                error: function () {
+
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "No se pudo completar el proceso."
+                    });
+
+                },
+                complete: function () {
+                    $("#btn-eliminar-facturas-servicio")
+                        .prop("disabled", false);
+                }
+            });
+
+        });
+
+    });
 }
 
 function iniciarTodo() {

@@ -1667,4 +1667,78 @@ class FacturacionServicio extends BaseController
             return $this->respondError($th->getMessage());
         }
     }
+
+    // eliminar las facturas
+    public function eliminarFacturasPeriodo()
+    {
+        try {
+
+            $db = \Config\Database::connect();
+
+            $db->transBegin();
+
+            // Obtener periodo activo
+            $periodo = $this->periodosModel
+                ->where('estado', 'ACTIVO')
+                ->first();
+
+            if (!$periodo) {
+                throw new \Exception("No existe periodo activo.");
+            }
+
+            $idPeriodo = $periodo['id_periodo'];
+
+
+            // Obtener facturas del periodo
+            $facturas = $this->facturaModel
+                ->select('id_factura')
+                ->where('id_periodo', $idPeriodo)
+                ->findAll();
+
+
+            if (!empty($facturas)) {
+
+                $idsFacturas = array_column($facturas, 'id_factura');
+
+
+                // Eliminar detalles
+                $this->facturaDetalleModel
+                    ->whereIn('id_factura', $idsFacturas)
+                    ->delete();
+
+
+                // Eliminar facturas
+                $this->facturaModel
+                    ->where('id_periodo', $idPeriodo)
+                    ->delete();
+            }
+
+
+            if ($db->transStatus() === false) {
+                throw new \Exception("No se pudieron eliminar las facturas.");
+            }
+
+
+            $db->transCommit();
+
+
+            return $this->response->setJSON([
+                'status' => true,
+                'message' => 'Facturas eliminadas correctamente.',
+                'facturas_eliminadas' => count($facturas)
+            ]);
+        } catch (\Throwable $e) {
+
+            if (isset($db)) {
+                $db->transRollback();
+            }
+
+            log_message('error', $e->getMessage());
+
+            return $this->response->setJSON([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 }

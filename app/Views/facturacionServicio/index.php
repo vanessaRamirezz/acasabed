@@ -59,6 +59,12 @@
                         <i class="fas fa-file-invoice-dollar mr-1"></i>
                         Generar Facturas
                     </button>
+                    <button type="button"
+                        id="btn-eliminar-facturas-servicio"
+                        class="btn btn-danger">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i>
+                        Eliminar Facturas
+                    </button>
                 </div>
 
             </div>
