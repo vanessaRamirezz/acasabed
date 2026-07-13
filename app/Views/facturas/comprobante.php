@@ -101,9 +101,8 @@ $lado = $lado ?? 'izquierda';
     <!-- TOTAL -->
     <?php
     $totalConMora = $total + 2;
-    $totalConMoraFormateado = number_format($totalConMora, 2);
     ?>
-    <div class="d-total-si-no-paga"><?= number_format($totalConMoraFormateado, 2) ?></div>
+    <div class="d-total-si-no-paga"><?= number_format($totalConMora, 2) ?></div>
     <div class="d-total-value"><?= number_format($total, 2) ?></div>
     <div class="d-fecha-vencimiento"><?= esc($factura['fechaVencimiento']) ?></div>
 </div>

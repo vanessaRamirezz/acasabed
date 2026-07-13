@@ -22,7 +22,8 @@ class FacturaModel extends Model
         'id_usuario',
         'fecha_de_pago',
         'mora',
-        'tipo'
+        'tipo',
+        'consumo'
     ];
 
     public function getFacturasExcel(?int $idPeriodo)
