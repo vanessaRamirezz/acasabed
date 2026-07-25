@@ -10,7 +10,7 @@
 
         body {
             font-family: "Times New Roman", serif;
-            font-size: 14px;
+            font-size: 13.5px;
             line-height: 1.5;
             text-align: justify;
         }
@@ -112,10 +112,19 @@
     </div>
 
     <div class="titulo1">
-        CONTRATO DE ACOMETIDA ENTRE USUARIO/A Y LA JUNTA DIRECTIVA DE LA ASOCIACION
-        COMUNAL ADMINISTRADORA DEL SISTEMA DE AGUA POTABLE DEL CASERÍO EL COYOLITO,
-        CANTÓN QUITASOL, DEL MUNICIPIO DE TEJUTLA DEPARTAMENTO DE CHALATENANGO.
-        BENDICIÓN DE DIOS (ACASABED)
+        <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td width="90">
+                    <img src="file://<?= $logo ?? '' ?>" width="90">
+                </td>
+                <td>
+                    CONTRATO DE ACOMETIDA ENTRE USUARIO/A Y LA JUNTA DIRECTIVA DE LA ASOCIACION
+                    COMUNAL ADMINISTRADORA DEL SISTEMA DE AGUA POTABLE DEL CASERÍO EL COYOLITO,
+                    CANTÓN QUITASOL, DEL MUNICIPIO DE TEJUTLA DEPARTAMENTO DE CHALATENANGO.
+                    BENDICIÓN DE DIOS (ACASABED)
+                </td>
+            </tr>
+        </table>
     </div>
 
     <p>
@@ -208,7 +217,7 @@
         </li>
     </ol>
 
-    <div style="page-break-before: always;"></div>
+    <!-- <div style="page-break-before: always;"></div> -->
     <p>
         <strong>USUARIO.</strong> Persona beneficiaria del servicio de agua que presta la asociación y como usuario me
         comprometo a cumplir las disposiciones establecidas en los estatutos reglamento interno y otras leyes de

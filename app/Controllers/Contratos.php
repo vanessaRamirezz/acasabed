@@ -61,9 +61,15 @@ class Contratos extends BaseController
             "rolFirmante4" => $request->getPost('puestoFirmante4'),
         ];
 
+        $data['logo'] = FCPATH . 'dist/img/agua.png';
+
         $html = view('contratos/contrato', $data);
 
-        $dompdf = new \Dompdf\Dompdf();
+        $options = new \Dompdf\Options();
+        $options->set('chroot', FCPATH);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new \Dompdf\Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('letter', 'portrait');
         $dompdf->render();
@@ -126,9 +132,15 @@ class Contratos extends BaseController
             "rolFirmante4" => $data['rolFirmante4'] ?? '',
         ];
 
+        $data['logo'] = FCPATH . 'dist/img/agua.png';
+
         $html = view('contratos/contrato', $data);
 
-        $dompdf = new \Dompdf\Dompdf();
+        $options = new \Dompdf\Options();
+        $options->set('chroot', FCPATH);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new \Dompdf\Dompdf($options);
         $dompdf->loadHtml($html);
         $dompdf->setPaper('letter', 'portrait');
         $dompdf->render();
