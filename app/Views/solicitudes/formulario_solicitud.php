@@ -309,7 +309,7 @@
                     <div class="card-body">
                         <div class="row">
                             <!-- Dirección -->
-                            <div class="col-md-6">
+                            <div class="col-md-9">
                                 <div class="form-group">
                                     <label for="direccion-inmueble">Dirección del Inmueble</label>
                                     <input type="text" class="form-control" id="direccion-inmueble" name="direccion-inmueble">
@@ -342,11 +342,11 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-check">
                                     <label class="form-check-label d-flex align-items-center" for="otro-check">
                                         <span class="mr-2">Otro</span>
-                                        <input type="text" class="form-control form-control-sm" style="width: 150px;" id="otro-check" name="otro-check">
+                                        <input type="text" class="form-control form-control-sm" style="width: 700px;" id="otro-check" name="otro-check">
                                     </label>
                                 </div>
                             </div>
@@ -381,11 +381,11 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-check">
                                     <label class="form-check-label d-flex align-items-center" for="otro-baño">
                                         <span class="mr-2">Otro</span>
-                                        <input type="text" class="form-control form-control-sm" style="width: 150px;" id="otro-baño" name="otro-baño">
+                                        <input type="text" class="form-control form-control-sm" style="width: 700px;" id="otro-baño" name="otro-baño">
                                     </label>
                                 </div>
                             </div>
