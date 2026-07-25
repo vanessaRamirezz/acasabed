@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ContratoModel;
 use App\Models\SolicitudModel;
+use DateTime;
 use Dompdf\Dompdf;
 use NumberFormatter;
 
@@ -23,6 +24,62 @@ class Contratos extends BaseController
         return view('contratos/index');
     }
 
+    private function fechaEnTexto($fecha)
+    {
+        if (empty($fecha)) {
+            return '';
+        }
+
+        $date = new DateTime($fecha);
+
+        $dias = (int)$date->format('d');
+
+        $meses = [
+            1 => 'enero',
+            2 => 'febrero',
+            3 => 'marzo',
+            4 => 'abril',
+            5 => 'mayo',
+            6 => 'junio',
+            7 => 'julio',
+            8 => 'agosto',
+            9 => 'septiembre',
+            10 => 'octubre',
+            11 => 'noviembre',
+            12 => 'diciembre'
+        ];
+
+        $mes = $meses[(int)$date->format('m')];
+        $anio = (int)$date->format('Y');
+
+        $fmt = new \NumberFormatter('es_ES', \NumberFormatter::SPELLOUT);
+
+        $diaTexto = ($dias == 1)
+            ? 'primero'
+            : mb_strtolower($fmt->format($dias), 'UTF-8');
+
+        $anioTexto = mb_strtolower($fmt->format($anio), 'UTF-8');
+
+        return $diaTexto . ' de ' . $mes . ' del año ' . $anioTexto;
+    }
+
+    private function horaEnTexto($fecha)
+    {
+        if (empty($fecha)) {
+            return '';
+        }
+
+        $date = new DateTime($fecha);
+
+        $hora = (int)$date->format('G'); // 0-23
+
+        $fmt = new \NumberFormatter('es_ES', \NumberFormatter::SPELLOUT);
+
+        $horaTexto = mb_strtolower($fmt->format($hora), 'UTF-8');
+
+        return $horaTexto . ' horas';
+    }
+
     public function pdf()
     {
         $request = service('request');
@@ -38,6 +95,10 @@ class Contratos extends BaseController
         $textDecimal = str_pad($montoDecimal, 2, "0", STR_PAD_LEFT);
         $text = $textEntero . " con " . $textDecimal . "/100 dólares";
 
+        $fechaActual = date('Y-m-d H:i:s');
+        $fechaContrato = $this->fechaEnTexto($fechaActual);
+        $horaContrato = $this->horaEnTexto($fechaActual);
+
         $data = [
             "numeroContrato" => $request->getPost('numeroContrato'),
             "edadRepresentante" => '43',
@@ -47,6 +108,8 @@ class Contratos extends BaseController
             "dui" => $request->getPost('dui'),
             "montoNumero" => $request->getPost('monto'),
             "montoTexto" => $text,
+            "fechaTexto" => $fechaContrato,
+            "horaTexto" => $horaContrato,
 
             "nombreFirmante1" => $request->getPost('nombreFirmante1'),
             "rolFirmante1" => $request->getPost('puestoFirmante1'),
@@ -103,6 +166,10 @@ class Contratos extends BaseController
         // exit;
         $total = $data['monto'] ?? 0;
 
+
+        $fechaContrato = $this->fechaEnTexto($data['fechaCreacionContrato']);
+        $horaContrato = $this->horaEnTexto($data['fechaCreacionContrato']);
+
         $fmt = new \NumberFormatter("es_ES", \NumberFormatter::SPELLOUT);
         $montoEntero = floor($total);
         $montoDecimal = round(($total - $montoEntero) * 100);
@@ -118,6 +185,8 @@ class Contratos extends BaseController
             "dui" => $data['dui'] ?? '',
             "montoNumero" => $total,
             "montoTexto" => $text,
+            "fechaTexto" => $fechaContrato,
+            "horaTexto" => $horaContrato,
 
             "nombreFirmante1" => $data['nombreFirmante1'] ?? '',
             "rolFirmante1" => $data['rolFirmante1'] ?? '',

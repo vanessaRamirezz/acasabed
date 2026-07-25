@@ -342,8 +342,7 @@
             Tanto la persona representante legal de la Asociación como el usuario, nos damos por enterados/as y
             ratificamos el contenido de este convenio, el cual firmamos dando FE de nuestra conformidad, en la
             oficina de la Administrativa del sistema de agua ubicada en Plaza comercial don Yon Caserío el Coyolito,
-            Cantón Quitasol del Municipio Tejutla, del Departamento de Chalatenango a las once horas del día veinte
-            de diciembre del año dos mil catorce.
+            Cantón Quitasol del Municipio Tejutla, del Departamento de Chalatenango, a las <?= esc($horaTexto ?? '') ?> del día <?= esc($fechaTexto ?? '') ?>.
         </li>
     </ol>
 

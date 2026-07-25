@@ -456,6 +456,7 @@ class SolicitudModel extends Model
         contratos.fecha_de_inicio AS fechaInicio,
         contratos.fecha_de_vencimiento AS fechaVencimiento,
         contratos.direccion_medidor AS direccionMedidor,
+        contratos.fecha_creacion AS fechaCreacionContrato,
 
         rutas.id_ruta AS idRuta,
         rutas.nombre AS nombreRuta,
