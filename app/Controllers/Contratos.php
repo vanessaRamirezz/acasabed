@@ -179,7 +179,8 @@ class Contratos extends BaseController
 
         $data = [
             "numeroContrato" => $data['numeroContrato'] ?? '',
-            "edadRepresentante" => '43',
+            "edadRepresentante" => $data['edad'],
+            "duiRepresentante" => $data['duiRepresentante'],
             "nombre" => $data['nombre'] ?? '',
             "edad" => $data['edad'] ?? '',
             "dui" => $data['dui'] ?? '',
@@ -187,6 +188,8 @@ class Contratos extends BaseController
             "montoTexto" => $text,
             "fechaTexto" => $fechaContrato,
             "horaTexto" => $horaContrato,
+            "ocupacion" => $data['ocupacion'],
+            "direccion" => $data['direccion'],
 
             "nombreFirmante1" => $data['nombreFirmante1'] ?? '',
             "rolFirmante1" => $data['rolFirmante1'] ?? '',

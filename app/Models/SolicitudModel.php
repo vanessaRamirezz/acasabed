@@ -437,6 +437,9 @@ class SolicitudModel extends Model
         f1.id_firmante AS idFirmante1,
         f1.nombre AS nombreFirmante1,
         f1.rol AS rolFirmante1,
+        f1.ocupacion,
+        f1.direccion,
+        f1.edad,
 
         f2.id_firmante AS idFirmante2,
         f2.nombre AS nombreFirmante2,
