@@ -228,8 +228,7 @@ class ContratoModel extends Model
         $idMunicipio = null,
         $idDistrito = null,
         $idColonia = null
-    )
-    {
+    ) {
         $builder = $this->db->table('contratos');
 
         $builder->select('
@@ -241,9 +240,11 @@ class ContratoModel extends Model
 
         $builder->join('solicitudes', 'contratos.id_solicitud = solicitudes.id_solicitud', 'left');
         $builder->join('clientes', 'contratos.id_cliente = clientes.id_cliente', 'left');
+        $builder->join('medidores', 'contratos.id_medidor = medidores.id_medidor', 'left');
 
         // $builder->where('solicitudes.estado', 'APROBADA');
         $builder->where('contratos.estado', 'APROBADO');
+        $builder->where('medidores.estado', 'ACTIVO');
 
         if (!empty($idRuta) && $idRuta !== '-1') {
             $builder->where('contratos.id_ruta', $idRuta);
@@ -323,6 +324,7 @@ class ContratoModel extends Model
 
         // $builder->where('solicitudes.estado', 'APROBADA');
         $builder->where('contratos.estado', 'APROBADO');
+        $builder->where('medidores.estado', 'ACTIVO');
 
         if (!empty($idRuta) && $idRuta !== '-1') {
             $builder->where('rutas.id_ruta', $idRuta);

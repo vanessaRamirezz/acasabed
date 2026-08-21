@@ -42,6 +42,7 @@ class Lecturas extends BaseController
         return view('lecturas/index');
     }
 
+    // PARA LISTAR LAS LECTURAS EN LA VISTA
     public function getLecturas()
     {
         try {
@@ -355,6 +356,7 @@ class Lecturas extends BaseController
         }
     }
 
+    // pdf que se genera al enviar a toma de lecturas
     public function generarPDFTomaLecturas()
     {
         try {
