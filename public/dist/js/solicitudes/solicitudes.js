@@ -2121,7 +2121,7 @@ function cargarSolicitudDesdeURLSoloVer() {
                 // SECCION SOLO DE CONTRATO
                 inputs.numeroContrato.val(d.numeroContrato)
                 inputs.fichaAlcaldia.val(d.fichaAlcaldia)
-                inputs.fechaInicio.val(d.fechaInicio)
+                inputs.fechaInicio.val(d.fechaInicio.split(" ")[0]);
                 inputs.fechaVencimiento.val(d.fechaVencimiento)
                 setRutaSeleccionada(d.idRuta, d.nombreRuta);
                 setMedidorSeleccionada(d.idMedidor, d.numeroSerie);
@@ -2332,7 +2332,7 @@ function cargarSolicitudDesdeURLeditarYaAprobada() {
                 // SECCION SOLO DE CONTRATO
                 inputs.numeroContrato.val(d.numeroContrato)
                 inputs.fichaAlcaldia.val(d.fichaAlcaldia)
-                inputs.fechaInicio.val(d.fechaInicio)
+                inputs.fechaInicio.val(d.fechaInicio.split(" ")[0]);
                 inputs.fechaVencimiento.val(d.fechaVencimiento)
                 setRutaSeleccionada(d.idRuta, d.nombreRuta);
                 setMedidorSeleccionada(d.idMedidor, d.numeroSerie);

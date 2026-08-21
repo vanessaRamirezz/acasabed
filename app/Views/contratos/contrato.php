@@ -129,7 +129,7 @@
 
     <p>
         <span>
-            <strong><?= esc($nombreFirmante1 ?? '') ?></strong>, <?= esc($ocupacion ?? '') ?>, de <?= $edadRepresentante ?? '' ?> años de edad, del domicilio de <?= esc($direccion ?? '') ?> del Municipio de Tejutla del Departamento de Chalatenango, con documento único de
+            <strong><?= esc($nombreFirmante1 ?? '') ?></strong>, <?= esc($ocupacion ?? '') ?>, de <?= $edadRepresentante ?? '' ?> años de edad, del domicilio de <?= esc($direccion ?? '') ?> , con documento único de
             identidad personal número <?= esc($duiRepresentante ?? '') ?>, actuando en calidad de administrador y en representación de la ASOCIACION
             COMUNAL ADMINISTRADORA DEL SISTEMA DE AGUA POTABLE DEL CANTÓN EL COYOLITO DEL
             MUNICIPIO DE TEJUTLA Y DEPARTAMENTO DE CHALATENANGO. BENDICION DE DIOS. (ACASABED)

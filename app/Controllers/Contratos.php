@@ -85,7 +85,6 @@ class Contratos extends BaseController
         $request = service('request');
 
         log_message('info', 'solicitud data para ver contrato' . print_r($request->getPost(), true));
-        // exit;
 
         $total = (float) $request->getPost('monto');
         $fmt = new NumberFormatter("es_ES", NumberFormatter::SPELLOUT);
@@ -95,21 +94,37 @@ class Contratos extends BaseController
         $textDecimal = str_pad($montoDecimal, 2, "0", STR_PAD_LEFT);
         $text = $textEntero . " con " . $textDecimal . "/100 dólares";
 
-        $fechaActual = date('Y-m-d H:i:s');
-        $fechaContrato = $this->fechaEnTexto($fechaActual);
-        $horaContrato = $this->horaEnTexto($fechaActual);
+        $idSolicitud = $request->getPost('idSolicitud');
+
+        $dataSolicitud = $this->solicitudesModel
+            ->getInfoSolicitudPorId($idSolicitud);
+
+
+        $fechaBase = !empty($dataSolicitud['fechaInicio'])
+            ? $dataSolicitud['fechaInicio']
+            : date('Y-m-d H:i:s');
+
+        $fechaContrato = $this->fechaEnTexto($fechaBase);
+        $horaContrato  = $this->horaEnTexto($fechaBase);
 
         $data = [
             "numeroContrato" => $request->getPost('numeroContrato'),
-            "edadRepresentante" => '43',
+
+            "edadRepresentante" => $dataSolicitud['edad'],
+            "duiRepresentante" => $dataSolicitud['duiRepresentante'],
 
             "nombre" => $request->getPost('nombre'),
             "edad" => $request->getPost('edad'),
             "dui" => $request->getPost('dui'),
+
             "montoNumero" => $request->getPost('monto'),
             "montoTexto" => $text,
+
             "fechaTexto" => $fechaContrato,
             "horaTexto" => $horaContrato,
+
+            "ocupacion" => $dataSolicitud['ocupacion'],
+            "direccion" => $dataSolicitud['direccion'],
 
             "nombreFirmante1" => $request->getPost('nombreFirmante1'),
             "rolFirmante1" => $request->getPost('puestoFirmante1'),
@@ -167,8 +182,8 @@ class Contratos extends BaseController
         $total = $data['monto'] ?? 0;
 
 
-        $fechaContrato = $this->fechaEnTexto($data['fechaCreacionContrato']);
-        $horaContrato = $this->horaEnTexto($data['fechaCreacionContrato']);
+        $fechaContrato = $this->fechaEnTexto($data['fechaInicio']);
+        $horaContrato = $this->horaEnTexto($data['fechaInicio']);
 
         $fmt = new \NumberFormatter("es_ES", \NumberFormatter::SPELLOUT);
         $montoEntero = floor($total);

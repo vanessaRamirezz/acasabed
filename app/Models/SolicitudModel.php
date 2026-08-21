@@ -440,6 +440,7 @@ class SolicitudModel extends Model
         f1.ocupacion,
         f1.direccion,
         f1.edad,
+        f1.dui AS duiRepresentante,
 
         f2.id_firmante AS idFirmante2,
         f2.nombre AS nombreFirmante2,
