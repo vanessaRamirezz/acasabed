@@ -531,6 +531,33 @@ class Lecturas extends BaseController
             $pdf->Ln(12);
             $pdf->writeHTML($html, true, false, true, false, '');
 
+            $altoFirmas = 28;
+            $margenPie = 22;
+
+            if (($pdf->GetY() + $altoFirmas) > ($pdf->getPageHeight() - $margenPie)) {
+                $pdf->AddPage();
+            }
+
+            $pdf->Ln(16);
+
+            $margenIzquierdo = 10;
+            $anchoLinea = 80;
+            $espacioEntre = 30;
+            $yLinea = $pdf->GetY();
+            $xIzquierda = $margenIzquierdo;
+            $xDerecha = $margenIzquierdo + $anchoLinea + $espacioEntre;
+
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->SetLineWidth(0.3);
+            $pdf->Line($xIzquierda, $yLinea, $xIzquierda + $anchoLinea, $yLinea);
+            $pdf->Line($xDerecha, $yLinea, $xDerecha + $anchoLinea, $yLinea);
+
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->SetXY($xIzquierda, $yLinea + 2);
+            $pdf->Cell($anchoLinea, 6, 'NOMBRE Y FIRMA DEL LECTOR', 0, 0, 'C');
+            $pdf->SetXY($xDerecha, $yLinea + 2);
+            $pdf->Cell($anchoLinea, 6, 'NOMBRE Y FIRMA DE ADMINISTRADOR', 0, 0, 'C');
+
             return $this->response
                 ->setHeader('Content-Type', 'application/pdf')
                 ->setHeader('Content-Disposition', 'inline; filename="toma_de_lecturas.pdf"')
