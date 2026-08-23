@@ -68,26 +68,25 @@ const inputs = {
     numeroActa: $("#numero-acta"),
 
     // datos de los firmantes
+    administradorBuscar: $("#buscar-administrador"),
+    idAdministrador: $("#id-administrador"),
+    nombreAdministrador: $("#nombre-administrador"),
+    rolAdministrador: $("#rol-administrador"),
+
     firmante1: $("#buscar-firmante-1"),
     idFirmante1: $("#id-firmante-1"),
     nombreFirmante1: $("#nombre-firmante-1"),
-    puestoFirmante1: $("#puesto-firmante-1"),
-
+    rolFirmante1: $("#rol-firmante-1"),
 
     firmante2: $("#buscar-firmante-2"),
     idFirmante2: $("#id-firmante-2"),
     nombreFirmante2: $("#nombre-firmante-2"),
-    puestoFirmante2: $("#puesto-firmante-2"),
+    rolFirmante2: $("#rol-firmante-2"),
 
     firmante3: $("#buscar-firmante-3"),
     idFirmante3: $("#id-firmante-3"),
     nombreFirmante3: $("#nombre-firmante-3"),
-    puestoFirmante3: $("#puesto-firmante-3"),
-
-    firmante4: $("#buscar-firmante-4"),
-    idFirmante4: $("#id-firmante-4"),
-    nombreFirmante4: $("#nombre-firmante-4"),
-    puestoFirmante4: $("#puesto-firmante-4"),
+    rolFirmante3: $("#rol-firmante-3"),
 
 
     // datos del contrato
@@ -164,23 +163,22 @@ function getData() {
     formData.append('fechaSession', inputs.fechaSession.val().trim());
     formData.append('numeroActa', inputs.numeroActa.val().trim());
 
-    // datos del firmante
+    // administrador (slot 1) y firmantes (slots 2-4)
+    formData.append('idAdministrador', inputs.idAdministrador.val().trim());
+    formData.append('nombreAdministrador', inputs.nombreAdministrador.val().trim());
+    formData.append('rolAdministrador', inputs.rolAdministrador.val().trim());
+
     formData.append('idFirmante1', inputs.idFirmante1.val().trim());
     formData.append('nombreFirmante1', inputs.nombreFirmante1.val().trim());
-    formData.append('puestoFirmante1', inputs.puestoFirmante1.val().trim());
-
+    formData.append('rolFirmante1', inputs.rolFirmante1.val().trim());
 
     formData.append('idFirmante2', inputs.idFirmante2.val().trim());
     formData.append('nombreFirmante2', inputs.nombreFirmante2.val().trim());
-    formData.append('puestoFirmante2', inputs.puestoFirmante2.val().trim());
+    formData.append('rolFirmante2', inputs.rolFirmante2.val().trim());
 
     formData.append('idFirmante3', inputs.idFirmante3.val().trim());
     formData.append('nombreFirmante3', inputs.nombreFirmante3.val().trim());
-    formData.append('puestoFirmante3', inputs.puestoFirmante3.val().trim());
-
-    formData.append('idFirmante4', inputs.idFirmante4.val().trim());
-    formData.append('nombreFirmante4', inputs.nombreFirmante4.val().trim());
-    formData.append('puestoFirmante4', inputs.puestoFirmante4.val().trim());
+    formData.append('rolFirmante3', inputs.rolFirmante3.val().trim());
 
     // datos del contrato
     formData.append('numeroContrato', inputs.numeroContrato.val().trim());
@@ -317,87 +315,128 @@ function eventoSeccionBeneficarioEditar() {
 }
 
 
-function llenarInputFirmante1(firmanteUno) {
-    inputs.idFirmante1.val(firmanteUno.id_firmante);
-    inputs.nombreFirmante1.val(firmanteUno.nombre).prop('disabled', false);
-    inputs.puestoFirmante1.val(firmanteUno.rol).prop('disabled', false);
+function llenarInputPersona(idInput, nombreInput, rolInput, persona, idField) {
+    idInput.val(persona[idField]);
+    nombreInput.val(persona.nombre).prop('readonly', true);
+    rolInput.val(persona.rol).prop('readonly', true);
+}
+
+function limpiarInputPersona(idInput, nombreInput, rolInput) {
+    idInput.val('');
+    nombreInput.val('').prop('readonly', true);
+    rolInput.val('').prop('readonly', true);
+}
+
+function setPersonaSeleccionada(selector, id, texto) {
+    if (!id) {
+        $(selector).val(null).trigger('change');
+        return;
+    }
+
+    let select = $(selector);
+    let option = new Option(texto, id, true, true);
+    select.append(option).trigger('change');
+}
+
+function pintarSeleccionFirmas(d, soloLectura = false) {
+    const items = [
+        { selector: '#buscar-administrador', idInput: inputs.idAdministrador, nombreInput: inputs.nombreAdministrador, rolInput: inputs.rolAdministrador, id: d.idAdministrador, nombre: d.nombreAdministrador, rol: d.rolAdministrador },
+        { selector: '#buscar-firmante-1', idInput: inputs.idFirmante1, nombreInput: inputs.nombreFirmante1, rolInput: inputs.rolFirmante1, id: d.idFirmante1, nombre: d.nombreFirmante1, rol: d.rolFirmante1 },
+        { selector: '#buscar-firmante-2', idInput: inputs.idFirmante2, nombreInput: inputs.nombreFirmante2, rolInput: inputs.rolFirmante2, id: d.idFirmante2, nombre: d.nombreFirmante2, rol: d.rolFirmante2 },
+        { selector: '#buscar-firmante-3', idInput: inputs.idFirmante3, nombreInput: inputs.nombreFirmante3, rolInput: inputs.rolFirmante3, id: d.idFirmante3, nombre: d.nombreFirmante3, rol: d.rolFirmante3 },
+    ];
+
+    items.forEach((item) => {
+        item.idInput.val(item.id || '');
+        item.nombreInput.val(item.nombre || '').prop('readonly', true);
+        item.rolInput.val(item.rol || '').prop('readonly', true);
+        const texto = [item.nombre, item.rol].filter(Boolean).join(' - ');
+        setPersonaSeleccionada(item.selector, item.id, texto);
+        $(item.selector).prop('disabled', soloLectura);
+    });
+}
+
+function configurarSelectPersona(selector, idInput, nombreInput, rolInput, url, idField) {
+    $(selector).select2({
+        placeholder: "Busque y seleccione",
+        allowClear: true,
+        theme: 'bootstrap4',
+        ajax: {
+            url: baseURL + url,
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term
+                };
+            },
+            processResults: function (response) {
+                return {
+                    results: (response.data || []).map(persona => ({
+                        id: persona[idField],
+                        text: persona.nombre + ' - ' + (persona.rol || ''),
+                        data: persona
+                    }))
+                };
+            },
+            cache: true
+        }
+    });
+
+    $(selector).on('select2:select', function (e) {
+        const selected = e.params.data.data;
+        if (selected) {
+            llenarInputPersona(idInput, nombreInput, rolInput, selected, idField);
+        }
+    });
+
+    $(selector).on('select2:clear', function () {
+        limpiarInputPersona(idInput, nombreInput, rolInput);
+    });
+}
+
+function eventoSeleccionAdministrador() {
+    configurarSelectPersona(
+        '#buscar-administrador',
+        inputs.idAdministrador,
+        inputs.nombreAdministrador,
+        inputs.rolAdministrador,
+        'getAdministradoresSelect',
+        'id_administrador'
+    );
 }
 
 function eventoSeleccionFirmante1() {
-    $('#buscar-firmante-1').on('select2:select', function (e) {
-        const selected = e.params.data.data;
-
-        if (selected) {
-            llenarInputFirmante1(selected);
-        }
-        $('#buscar-firmante-1').on('select2:clear', function () {
-            inputs.idFirmante1.val('');
-            inputs.nombreFirmante1.val('').prop('disabled', false);
-            inputs.puestoFirmante1.val('').prop('disabled', false);
-        });
-    });
-}
-
-function llenarInputFirmante2(firmanteUno) {
-    inputs.idFirmante2.val(firmanteUno.id_firmante);
-    inputs.nombreFirmante2.val(firmanteUno.nombre).prop('disabled', false);
-    inputs.puestoFirmante2.val(firmanteUno.rol).prop('disabled', false);
+    configurarSelectPersona(
+        '#buscar-firmante-1',
+        inputs.idFirmante1,
+        inputs.nombreFirmante1,
+        inputs.rolFirmante1,
+        'getFirmantesSelect',
+        'id_firmante'
+    );
 }
 
 function eventoSeleccionFirmante2() {
-    $('#buscar-firmante-2').on('select2:select', function (e) {
-        const selected = e.params.data.data;
-
-        if (selected) {
-            llenarInputFirmante2(selected);
-        }
-        $('#buscar-firmante-2').on('select2:clear', function () {
-            inputs.idFirmante2.val('');
-            inputs.nombreFirmante2.val('').prop('disabled', false);
-            inputs.puestoFirmante2.val('').prop('disabled', false);
-        });
-    });
+    configurarSelectPersona(
+        '#buscar-firmante-2',
+        inputs.idFirmante2,
+        inputs.nombreFirmante2,
+        inputs.rolFirmante2,
+        'getFirmantesSelect',
+        'id_firmante'
+    );
 }
 
-function llenarInputFirmante3(firmanteUno) {
-    inputs.idFirmante3.val(firmanteUno.id_firmante);
-    inputs.nombreFirmante3.val(firmanteUno.nombre).prop('disabled', false);
-    inputs.puestoFirmante3.val(firmanteUno.rol).prop('disabled', false);
-}
-
-function eventoSeleccionFirmante3() {
-    $('#buscar-firmante-3').on('select2:select', function (e) {
-        const selected = e.params.data.data;
-
-        if (selected) {
-            llenarInputFirmante3(selected);
-        }
-        $('#buscar-firmante-3').on('select2:clear', function () {
-            inputs.idFirmante3.val('');
-            inputs.nombreFirmante3.val('').prop('disabled', false);
-            inputs.puestoFirmante3.val('').prop('disabled', false);
-        });
-    });
-}
-
-function llenarInputFirmante4(firmanteUno) {
-    inputs.idFirmante4.val(firmanteUno.id_firmante);
-    inputs.nombreFirmante4.val(firmanteUno.nombre).prop('disabled', false);
-    inputs.puestoFirmante4.val(firmanteUno.rol).prop('disabled', false);
-}
 function eventoSeleccionFirmante4() {
-    $('#buscar-firmante-4').on('select2:select', function (e) {
-        const selected = e.params.data.data;
-
-        if (selected) {
-            llenarInputFirmante4(selected);
-        }
-        $('#buscar-firmante-4').on('select2:clear', function () {
-            inputs.idFirmante4.val('');
-            inputs.nombreFirmante4.val('').prop('disabled', false);
-            inputs.puestoFirmante4.val('').prop('disabled', false);
-        });
-    });
+    configurarSelectPersona(
+        '#buscar-firmante-3',
+        inputs.idFirmante3,
+        inputs.nombreFirmante3,
+        inputs.rolFirmante3,
+        'getFirmantesSelect',
+        'id_firmante'
+    );
 }
 
 function cargarClientes() {
@@ -587,23 +626,22 @@ function getDataForPDF() {
         fechaSession: inputs.fechaSession.val().trim(),
         numeroActa: inputs.numeroActa.val().trim(),
 
-        // datos del firmante
+        // administrador y firmantes (solo ids se persisten)
+        idAdministrador: inputs.idAdministrador.val().trim(),
+        nombreAdministrador: inputs.nombreAdministrador.val().trim(),
+        rolAdministrador: inputs.rolAdministrador.val().trim(),
+
         idFirmante1: inputs.idFirmante1.val().trim(),
         nombreFirmante1: inputs.nombreFirmante1.val().trim(),
-        puestoFirmante1: inputs.puestoFirmante1.val().trim(),
-
+        rolFirmante1: inputs.rolFirmante1.val().trim(),
 
         idFirmante2: inputs.idFirmante2.val().trim(),
         nombreFirmante2: inputs.nombreFirmante2.val().trim(),
-        puestoFirmante2: inputs.puestoFirmante2.val().trim(),
+        rolFirmante2: inputs.rolFirmante2.val().trim(),
 
         idFirmante3: inputs.idFirmante3.val().trim(),
         nombreFirmante3: inputs.nombreFirmante3.val().trim(),
-        puestoFirmante3: inputs.puestoFirmante3.val().trim(),
-
-        idFirmante4: inputs.idFirmante4.val().trim(),
-        nombreFirmante4: inputs.nombreFirmante4.val().trim(),
-        puestoFirmante4: inputs.puestoFirmante4.val().trim(),
+        rolFirmante3: inputs.rolFirmante3.val().trim(),
 
         // datos del contrato
         numeroContrato: inputs.numeroContrato.val().trim(),
@@ -1183,11 +1221,11 @@ function vistaPrevia(dataObj) {
     // =========================
     setFont("normal", 7);
     const firmantes = [
-        { nombre: dataObj.nombre || '', puesto: 'Persona Solicitante' || '' },
-        { nombre: dataObj.nombreFirmante1 || '', puesto: dataObj.puestoFirmante1 || dataObj.rolFirmante1 || '' },
-        { nombre: dataObj.nombreFirmante2 || '', puesto: dataObj.puestoFirmante2 || dataObj.rolFirmante2 || '' },
-        { nombre: dataObj.nombreFirmante3 || '', puesto: dataObj.puestoFirmante3 || dataObj.rolFirmante3 || '' },
-        { nombre: dataObj.nombreFirmante4 || '', puesto: dataObj.puestoFirmante4 || dataObj.rolFirmante4 || '' },
+        { nombre: dataObj.nombre || '', rol: 'Persona Solicitante' || '' },
+        { nombre: dataObj.nombreAdministrador || '', rol: dataObj.rolAdministrador || '' },
+        { nombre: dataObj.nombreFirmante1 || '', rol: dataObj.rolFirmante1 || '' },
+        { nombre: dataObj.nombreFirmante2 || '', rol: dataObj.rolFirmante2 || '' },
+        { nombre: dataObj.nombreFirmante3 || '', rol: dataObj.rolFirmante3 || '' },
     ];
 
     setFont("normal", 7);
@@ -1199,7 +1237,7 @@ function vistaPrevia(dataObj) {
     const mitad = pageWidth / 2;
 
     firmantes.forEach((f, index) => {
-        if (!f.nombre == '' || !f.puesto == '') {
+        if (!f.nombre == '' || !f.rol == '') {
             const fila = Math.floor(index / 2); // 0 o 1
             const col = index % 2; // 0 izquierda, 1 derecha
 
@@ -1215,8 +1253,8 @@ function vistaPrevia(dataObj) {
             // Nombre
             doc.text(f.nombre, centro, yBase + 10, { align: "center" });
 
-            // Puesto
-            doc.text('Firma ' + f.puesto, centro, yBase + 18, { align: "center" });
+            // Rol
+            doc.text('Firma ' + f.rol, centro, yBase + 18, { align: "center" });
         }
 
     });
@@ -1314,118 +1352,6 @@ function cargarTarifas() {
     })
 }
 
-
-function cargarFirmantes1() {
-    $('#buscar-firmante-1').select2({
-        placeholder: "Busque y seleccione",
-        allowClear: true,
-        theme: 'bootstrap4',
-        ajax: {
-            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
-            dataType: "json",
-            delay: 250, // Espera para reducir solicitudes
-            data: function (params) {
-                return {
-                    q: params.term // El término de búsqueda
-                };
-            },
-            processResults: function (response) {
-                return {
-                    results: response.data.map(firmante => ({
-                        id: firmante.id_firmante,
-                        text: firmante.nombre + ' - ' + firmante.rol,
-                        data: firmante
-                    }))
-                };
-            },
-            cache: true
-        }
-    })
-}
-
-function cargarFirmantes2() {
-    $('#buscar-firmante-2').select2({
-        placeholder: "Busque y seleccione",
-        allowClear: true,
-        theme: 'bootstrap4',
-        ajax: {
-            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
-            dataType: "json",
-            delay: 250, // Espera para reducir solicitudes
-            data: function (params) {
-                return {
-                    q: params.term // El término de búsqueda
-                };
-            },
-            processResults: function (response) {
-                return {
-                    results: response.data.map(firmante => ({
-                        id: firmante.id_firmante,
-                        text: firmante.nombre + ' - ' + firmante.rol,
-                        data: firmante
-                    }))
-                };
-            },
-            cache: true
-        }
-    })
-}
-
-function cargarFirmantes3() {
-    $('#buscar-firmante-3').select2({
-        placeholder: "Busque y seleccione",
-        allowClear: true,
-        theme: 'bootstrap4',
-        ajax: {
-            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
-            dataType: "json",
-            delay: 250, // Espera para reducir solicitudes
-            data: function (params) {
-                return {
-                    q: params.term // El término de búsqueda
-                };
-            },
-            processResults: function (response) {
-                return {
-                    results: response.data.map(firmante => ({
-                        id: firmante.id_firmante,
-                        text: firmante.nombre + ' - ' + firmante.rol,
-                        data: firmante
-                    }))
-                };
-            },
-            cache: true
-        }
-    })
-}
-
-function cargarFirmantes4() {
-    $('#buscar-firmante-4').select2({
-        placeholder: "Busque y seleccione",
-        allowClear: true,
-        theme: 'bootstrap4',
-        ajax: {
-            url: baseURL + 'getFirmantesSelect', // Ruta de búsqueda en tu backend
-            dataType: "json",
-            delay: 250, // Espera para reducir solicitudes
-            data: function (params) {
-                return {
-                    q: params.term // El término de búsqueda
-                };
-            },
-            processResults: function (response) {
-                return {
-                    results: response.data.map(firmante => ({
-                        id: firmante.id_firmante,
-                        text: firmante.nombre + ' - ' + firmante.rol,
-                        data: firmante
-                    }))
-                };
-            },
-            cache: true
-        }
-    })
-}
 
 function validarTipoPago() {
     $('input[name="pago"]').on('change', function () {
@@ -1947,21 +1873,7 @@ function cargarSolicitudDesdeURL() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', false);
-                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', false);
-                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', false);
-
-                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', false);
-                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', false);
-                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', false);
-
-                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', false);
-                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', false);
-                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', false);
-
-                inputs.idFirmante4.val(d.idFirmante4).prop('disabled', false);
-                inputs.nombreFirmante4.val(d.nombreFirmante4).prop('disabled', false);
-                inputs.puestoFirmante4.val(d.rolFirmante4).prop('disabled', false);
+                pintarSeleccionFirmas(d, false);
 
             }
         });
@@ -2102,21 +2014,7 @@ function cargarSolicitudDesdeURLSoloVer() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', true);
-                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', true);
-                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', true);
-
-                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', true);
-                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', true);
-                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', true);
-
-                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', true);
-                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', true);
-                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', true);
-
-                inputs.idFirmante4.val(d.idFirmante4).prop('disabled', true);
-                inputs.nombreFirmante4.val(d.nombreFirmante4).prop('disabled', true);
-                inputs.puestoFirmante4.val(d.rolFirmante4).prop('disabled', true);
+                pintarSeleccionFirmas(d, true);
 
                 // SECCION SOLO DE CONTRATO
                 inputs.numeroContrato.val(d.numeroContrato)
@@ -2313,21 +2211,7 @@ function cargarSolicitudDesdeURLeditarYaAprobada() {
                 inputs.numeroActa.val(d.numeroActa);
 
                 // SECCION DE LOS QUE FIRMAN
-                inputs.idFirmante1.val(d.idFirmante1).prop('disabled', false);
-                inputs.nombreFirmante1.val(d.nombreFirmante1).prop('disabled', false);
-                inputs.puestoFirmante1.val(d.rolFirmante1).prop('disabled', false);
-
-                inputs.idFirmante2.val(d.idFirmante2).prop('disabled', false);
-                inputs.nombreFirmante2.val(d.nombreFirmante2).prop('disabled', false);
-                inputs.puestoFirmante2.val(d.rolFirmante2).prop('disabled', false);
-
-                inputs.idFirmante3.val(d.idFirmante3).prop('disabled', false);
-                inputs.nombreFirmante3.val(d.nombreFirmante3).prop('disabled', false);
-                inputs.puestoFirmante3.val(d.rolFirmante3).prop('disabled', false);
-
-                inputs.idFirmante4.val(d.idFirmante4).prop('disabled', false);
-                inputs.nombreFirmante4.val(d.nombreFirmante4).prop('disabled', false);
-                inputs.puestoFirmante4.val(d.rolFirmante4).prop('disabled', false);
+                pintarSeleccionFirmas(d, false);
 
                 // SECCION SOLO DE CONTRATO
                 inputs.numeroContrato.val(d.numeroContrato)
@@ -2586,6 +2470,11 @@ function iniciarTodo() {
 
     detectarModo(); // primero definir modo
 
+    eventoSeleccionAdministrador();
+    eventoSeleccionFirmante1();
+    eventoSeleccionFirmante2();
+    eventoSeleccionFirmante4();
+
     if (modo === 'editar') {
         cargarSolicitudDesdeURL();
     } else if (modo === 'ver') {
@@ -2600,10 +2489,6 @@ function iniciarTodo() {
     validarCampoDui();
     cargarClientes();
     cargarRutas();
-    cargarFirmantes1();
-    cargarFirmantes2();
-    cargarFirmantes3();
-    cargarFirmantes4();
     cargarMedidores();
     cargarTarifas();
     eventoSeleccionCliente();
@@ -2611,11 +2496,6 @@ function iniciarTodo() {
     validarTipoPago();
     cargarSolicitudes();
     cargarSolicitudesAprobadas();
-
-    eventoSeleccionFirmante1();
-    eventoSeleccionFirmante2();
-    eventoSeleccionFirmante3();
-    eventoSeleccionFirmante4();
 }
 
 document.addEventListener('DOMContentLoaded', iniciarTodo);

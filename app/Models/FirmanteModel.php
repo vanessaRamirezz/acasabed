@@ -10,6 +10,37 @@ class FirmanteModel extends Model
     protected $primaryKey = 'id_firmante';
     protected $allowedFields = ['nombre', 'rol'];
 
+    public function getTodosFirmantes($start, $length, $searchValue = '')
+    {
+        $builder = $this->db->table('firmantes');
+
+        $total = $builder->countAll();
+
+        if (!empty($searchValue)) {
+            $builder->groupStart()
+                ->like('nombre', $searchValue)
+                ->orLike('rol', $searchValue)
+                ->groupEnd();
+        }
+
+        $filtered = $builder->countAllResults(false);
+
+        $data = $builder
+            ->select('id_firmante AS id,
+                    nombre AS nombre_firmante,
+                    rol AS rol_firmante')
+            ->orderBy('id_firmante', 'DESC')
+            ->limit($length, $start)
+            ->get()
+            ->getResultArray();
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'filtered' => $filtered
+        ];
+    }
+
     public function insertarFirmantes($nombre, $rol)
     {
         return $this->insert([
@@ -28,10 +59,17 @@ class FirmanteModel extends Model
 
     public function buscarFirmantes($search)
     {
-        return $this->select('id_firmante, nombre, rol')
-            ->like('nombre', $search)
+        $builder = $this->select('id_firmante, nombre, rol')
             ->orderBy('id_firmante', 'ASC')
-            ->limit(5)
-            ->findAll();
+            ->limit(10);
+
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('nombre', $search)
+                ->orLike('rol', $search)
+                ->groupEnd();
+        }
+
+        return $builder->findAll();
     }
 }

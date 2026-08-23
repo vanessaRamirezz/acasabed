@@ -72,6 +72,16 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('editarInstalador', 'Instaladores::editarInstalador');
     $routes->post('actualizarEstadoInstalador', 'Instaladores::actualizarEstadoInstalador');
 
+    // ADMINISTRADORES (personas que firman en solicitudes/contratos)
+    $routes->get('administradores', 'Administradores::index');
+    $routes->get('getAdministradores', 'Administradores::getAdministradores');
+    $routes->post('nuevoAdministrador', 'Administradores::nuevoAdministrador');
+    $routes->post('editarAdministrador', 'Administradores::editarAdministrador');
+    $routes->post('actualizarEstadoAdministrador', 'Administradores::actualizarEstadoAdministrador');
+    $routes->get('getFirmantes', 'Administradores::getFirmantes');
+    $routes->post('nuevoFirmante', 'Administradores::nuevoFirmante');
+    $routes->post('editarFirmante', 'Administradores::editarFirmante');
+
     // TARIFARIO
     $routes->get('tarifario', 'Tarifario::index');
     $routes->get('getTarifas', 'Tarifario::getTarifas');
@@ -118,6 +128,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->post('aprobarSolicitud', 'Solicitudes::aprobarSolicitud');
     $routes->post('anularSolicitud', 'Solicitudes::anularSolicitud');
     $routes->get('getRutasSelect', 'Solicitudes::getRutasSelect');
+    $routes->get('getAdministradoresSelect', 'Solicitudes::getAdministradoresSelect');
     $routes->get('getFirmantesSelect', 'Solicitudes::getFirmantesSelect');
     $routes->get('getMedidoresSelect', 'Solicitudes::getMedidoresSelect');
     $routes->get('getTarifasSelect', 'Solicitudes::getTarifasSelect');

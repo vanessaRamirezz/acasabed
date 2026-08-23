@@ -6,6 +6,7 @@ use App\Models\BeneficiarioModel;
 use App\Models\ClienteModel;
 use App\Models\CobroContratoModel;
 use App\Models\ContratoModel;
+use App\Models\AdministradorModel;
 use App\Models\FirmanteModel;
 use App\Models\MedidorModel;
 use App\Models\PlanDePagoModel;
@@ -15,16 +16,17 @@ use App\Models\TarifaModel;
 
 class Solicitudes extends BaseController
 {
-    private $clientesModel;
-    private $beneficiariosModel;
-    private $solicitudesModel;
-    private $contratosModel;
-    private $rutasModel;
-    private $medidoresModel;
-    private $tarifasModel;
-    private $planDePagosModel;
-    private $contratosCobrosModel;
-    private $firmantesModel;
+    private ClienteModel $clientesModel;
+    private BeneficiarioModel $beneficiariosModel;
+    private SolicitudModel $solicitudesModel;
+    private ContratoModel $contratosModel;
+    private RutaModel $rutasModel;
+    private MedidorModel $medidoresModel;
+    private TarifaModel $tarifasModel;
+    private PlanDePagoModel $planDePagosModel;
+    private CobroContratoModel $contratosCobrosModel;
+    private AdministradorModel $administradoresModel;
+    private FirmanteModel $firmantesModel;
 
     public function __construct()
     {
@@ -37,6 +39,7 @@ class Solicitudes extends BaseController
         $this->tarifasModel = new TarifaModel();
         $this->planDePagosModel = new PlanDePagoModel();
         $this->contratosCobrosModel = new CobroContratoModel();
+        $this->administradoresModel = new AdministradorModel();
         $this->firmantesModel = new FirmanteModel();
     }
 
@@ -77,6 +80,21 @@ class Solicitudes extends BaseController
             log_message('error', $errorMessage);
 
             return $this->respondError('Error al traer las rutas');
+        }
+    }
+
+    public function getAdministradoresSelect()
+    {
+        try {
+            $search = $this->request->getVar('q') ?? '';
+            $administradores = $this->administradoresModel->buscarAdministradores($search);
+            return $this->respondSuccess($administradores);
+        } catch (\Throwable $th) {
+            $errorMessage = 'Ocurrió un error: ' . $th->getMessage() . PHP_EOL;
+            $errorMessage .= 'Trace: ' . $th->getTraceAsString();
+            log_message('error', $errorMessage);
+
+            return $this->respondError('Error al traer los administradores');
         }
     }
 
@@ -191,28 +209,6 @@ class Solicitudes extends BaseController
         $parentesco = $data['parentescoBeneficiario'] ?? null;
         $direccion = $data['direccionBeneficiario'] ?? null;
 
-        // // VALIDACIONES (una por una)
-        // if (empty($nombre)) {
-        //     return [
-        //         'valido' => false,
-        //         'error' => 'El nombre del beneficiario es requerido'
-        //     ];
-        // }
-
-        // if (!is_numeric($edad) || $edad <= 0) {
-        //     return [
-        //         'valido' => false,
-        //         'error' => 'La edad debe ser un número válido'
-        //     ];
-        // }
-
-        // if (empty($parentesco)) {
-        //     return [
-        //         'valido' => false,
-        //         'error' => 'El parentesco es requerido'
-        //     ];
-        // }
-
         return [
             'valido' => true,
             'data' => [
@@ -270,8 +266,6 @@ class Solicitudes extends BaseController
             $estado = 'APROBADA';
         }
 
-
-
         return [
             'valido' => true,
             'data' => [
@@ -306,49 +300,16 @@ class Solicitudes extends BaseController
             || !empty($beneficiario['direccion']);
     }
 
-    private function tieneDatosFirmante($nombreFirmante, $rolFirmante)
+    public function crearAdministradorYFirmantes($data)
     {
-        return !empty($this->valorComparable($nombreFirmante))
-            && !empty($this->valorComparable($rolFirmante));
-    }
-
-    public function crearFirmantes($data)
-    {
-        $idFirmante1 = $data['idFirmante1'] ?? null;
-        $nombreFirmante1 = $data['nombreFirmante1'] ?? null;
-        $puestoFirmante1 = $data['puestoFirmante1'] ?? null;
-
-        $idFirmante2 = $data['idFirmante2'] ?? null;
-        $nombreFirmante2 = $data['nombreFirmante2'] ?? null;
-        $puestoFirmante2 = $data['puestoFirmante2'] ?? null;
-
-        $idFirmante3 = $data['idFirmante3'] ?? null;
-        $nombreFirmante3 = $data['nombreFirmante3'] ?? null;
-        $puestoFirmante3 = $data['puestoFirmante3'] ?? null;
-
-        $idFirmante4 = $data['idFirmante4'] ?? null;
-        $nombreFirmante4 = $data['nombreFirmante4'] ?? null;
-        $puestoFirmante4 = $data['puestoFirmante4'] ?? null;
-
 
         return [
             'valido' => true,
             'data' => [
-                'idFirmante1' => $idFirmante1,
-                'nombreFirmante1' => $nombreFirmante1,
-                'puestoFirmante1' => $puestoFirmante1,
-
-                'idFirmante2' => $idFirmante2,
-                'nombreFirmante2' => $nombreFirmante2,
-                'puestoFirmante2' => $puestoFirmante2,
-
-                'idFirmante3' => $idFirmante3,
-                'nombreFirmante3' => $nombreFirmante3,
-                'puestoFirmante3' => $puestoFirmante3,
-
-                'idFirmante4' => $idFirmante4,
-                'nombreFirmante4' => $nombreFirmante4,
-                'puestoFirmante4' => $puestoFirmante4,
+                'idAdministrador' => $data['idAdministrador'] ?? null,
+                'idFirmante1' => $data['idFirmante1'] ?? null,
+                'idFirmante2' => $data['idFirmante2'] ?? null,
+                'idFirmante3' => $data['idFirmante3'] ?? null,
             ]
         ];
     }
@@ -472,15 +433,6 @@ class Solicitudes extends BaseController
             $medidor = null;
         }
 
-        // // VALIDACIONES (una por una)
-        // if (empty($medidor)) {
-        //     return [
-        //         'valido' => false,
-        //         'error' => 'Seleccionar un medidor es necesario'
-        //     ];
-        // }
-
-
         return [
             'valido' => true,
             'data' => [
@@ -572,44 +524,38 @@ class Solicitudes extends BaseController
         return false;
     }
 
-    private function procesarFirmante($idFirmante, $nombreFirmante, $rolFirmante)
+    private function procesarAdministrador($idAdministrador)
     {
-        $idFirmante = $this->valorComparable($idFirmante);
-        $nombreFirmante = $this->valorComparable($nombreFirmante);
-        $rolFirmante = $this->valorComparable($rolFirmante);
+        $idAdministrador = $this->valorComparable($idAdministrador);
 
-        if (!empty($idFirmante)) {
-            $firmanteActual = $this->firmantesModel->find($idFirmante);
-
-            if (!$firmanteActual) {
-                throw new \Exception("El {$rolFirmante} seleccionado no existe");
-            }
-
-            if ($this->hayCambios($firmanteActual, [
-                'nombre' => $nombreFirmante,
-                'rol' => $rolFirmante
-            ])) {
-                $firmanteActualizado = $this->firmantesModel->actualizarFirmante($idFirmante, $nombreFirmante, $rolFirmante);
-
-                if (!$firmanteActualizado) {
-                    throw new \Exception("Error al actualizar {$rolFirmante}");
-                }
-            }
-
-            return (int)$idFirmante;
-        }
-
-        if (!$this->tieneDatosFirmante($nombreFirmante, $rolFirmante)) {
+        if (empty($idAdministrador)) {
             return null;
         }
 
-        $nuevoIdFirmante = $this->firmantesModel->insertarFirmantes($nombreFirmante, $rolFirmante);
+        $administrador = $this->administradoresModel->find($idAdministrador);
 
-        if (!$nuevoIdFirmante) {
-            throw new \Exception("Error al insertar {$rolFirmante}");
+        if (!$administrador) {
+            throw new \Exception('El administrador seleccionado no existe');
         }
 
-        return $nuevoIdFirmante;
+        return (int)$idAdministrador;
+    }
+
+    private function procesarFirmante($idFirmante)
+    {
+        $idFirmante = $this->valorComparable($idFirmante);
+
+        if (empty($idFirmante)) {
+            return null;
+        }
+
+        $firmante = $this->firmantesModel->find($idFirmante);
+
+        if (!$firmante) {
+            throw new \Exception('El firmante seleccionado no existe');
+        }
+
+        return (int)$idFirmante;
     }
 
     public function nuevaSolicitud()
@@ -763,43 +709,24 @@ class Solicitudes extends BaseController
 
             // exit;
             // =========================
-            // 4. FIRMANTES
+            // 4. ADMINISTRADORES
             // =========================
-            $firmantes = $this->crearFirmantes($data);
+            $firmantesData = $this->crearAdministradorYFirmantes($data);
 
-            if (!$firmantes['valido']) {
-                throw new \Exception($firmantes['error']);
+            if (!$firmantesData['valido']) {
+                throw new \Exception($firmantesData['error']);
             }
 
-            $idFirmante1 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante1'],
-                $firmantes['data']['nombreFirmante1'],
-                $firmantes['data']['puestoFirmante1'],
-            );
+            $idAdministradorGuardar = $this->procesarAdministrador($firmantesData['data']['idAdministrador']);
+            $idFirmante1 = $this->procesarFirmante($firmantesData['data']['idFirmante1']);
+            $idFirmante2 = $this->procesarFirmante($firmantesData['data']['idFirmante2']);
+            $idFirmante3 = $this->procesarFirmante($firmantesData['data']['idFirmante3']);
 
-            $idFirmante2 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante2'],
-                $firmantes['data']['nombreFirmante2'],
-                $firmantes['data']['puestoFirmante2'],
-            );
-
-            $idFirmante3 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante3'],
-                $firmantes['data']['nombreFirmante3'],
-                $firmantes['data']['puestoFirmante3'],
-            );
-
-            $idFirmante4 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante4'],
-                $firmantes['data']['nombreFirmante4'],
-                $firmantes['data']['puestoFirmante4'],
-            );
-
-            log_message('info', 'ids firmantes ' . print_r([
+            log_message('info', 'ids administrador y firmantes ' . print_r([
+                'idAdministrador' => $idAdministradorGuardar,
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
                 'idFirmante3' => $idFirmante3,
-                'idFirmante4' => $idFirmante4,
             ], true));
 
             // =========================
@@ -809,10 +736,10 @@ class Solicitudes extends BaseController
                 'id_beneficiario' => $idBeneficiario,
                 'id_plan_de_pago' => $insert,
                 'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
+                'id_administrador' => $idAdministradorGuardar,
                 'id_firmante_1' => $idFirmante1,
                 'id_firmante_2' => $idFirmante2,
-                'id_firmante_3' => $idFirmante3,
-                'id_firmante_4' => $idFirmante4
+                'id_firmante_3' => $idFirmante3
             ]);
 
             if (!$solicitudActualizada) {
@@ -829,10 +756,10 @@ class Solicitudes extends BaseController
                 'id_solicitud' => $idSolicitud,
                 'id_plan_pago' => $idPlan,
                 'id_beneficiario' => $idBeneficiario,
+                'idAdministrador' => $idAdministradorGuardar,
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
                 'idFirmante3' => $idFirmante3,
-                'idFirmante4' => $idFirmante4,
             ]));
 
             return $this->respondOk('Solicitud creada correctamente con codigo ' . $codigoFormateado);
@@ -1021,43 +948,24 @@ class Solicitudes extends BaseController
             log_message('info', 'id plan de pago ' . print_r($idPlan, true));
             // exit;
             // =========================
-            // 4. FIRMANTES
+            // 4. ADMINISTRADORES
             // =========================
-            $firmantes = $this->crearFirmantes($data);
+            $firmantesData = $this->crearAdministradorYFirmantes($data);
 
-            if (!$firmantes['valido']) {
-                throw new \Exception($firmantes['error']);
+            if (!$firmantesData['valido']) {
+                throw new \Exception($firmantesData['error']);
             }
 
-            $idFirmante1 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante1'],
-                $firmantes['data']['nombreFirmante1'],
-                $firmantes['data']['puestoFirmante1'],
-            );
+            $idAdministradorGuardar = $this->procesarAdministrador($firmantesData['data']['idAdministrador']);
+            $idFirmante1 = $this->procesarFirmante($firmantesData['data']['idFirmante1']);
+            $idFirmante2 = $this->procesarFirmante($firmantesData['data']['idFirmante2']);
+            $idFirmante3 = $this->procesarFirmante($firmantesData['data']['idFirmante3']);
 
-            $idFirmante2 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante2'],
-                $firmantes['data']['nombreFirmante2'],
-                $firmantes['data']['puestoFirmante2'],
-            );
-
-            $idFirmante3 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante3'],
-                $firmantes['data']['nombreFirmante3'],
-                $firmantes['data']['puestoFirmante3'],
-            );
-
-            $idFirmante4 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante4'],
-                $firmantes['data']['nombreFirmante4'],
-                $firmantes['data']['puestoFirmante4'],
-            );
-
-            log_message('info', 'ids firmantes ' . print_r([
+            log_message('info', 'ids administrador y firmantes ' . print_r([
+                'idAdministrador' => $idAdministradorGuardar,
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
                 'idFirmante3' => $idFirmante3,
-                'idFirmante4' => $idFirmante4,
             ], true));
 
             // =========================
@@ -1067,10 +975,10 @@ class Solicitudes extends BaseController
                 'id_beneficiario' => $idBeneficiario,
                 'id_plan_de_pago' => $idPlan,
                 'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
+                'id_administrador' => $idAdministradorGuardar,
                 'id_firmante_1' => $idFirmante1,
                 'id_firmante_2' => $idFirmante2,
-                'id_firmante_3' => $idFirmante3,
-                'id_firmante_4' => $idFirmante4
+                'id_firmante_3' => $idFirmante3
             ]);
 
             if (!$relacionesActualizadas) {
@@ -1355,7 +1263,7 @@ class Solicitudes extends BaseController
 
         try {
 
-            log_message('debug', 'POST EDITAR SOLICITUD YA CREADA JUNTO A CONTRATO: ' . print_r($this->request->getPost(), true));
+            log_message('debug', 'ACA EMPIEZA POST EDITAR SOLICITUD YA CREADA JUNTO A CONTRATO: ' . print_r($this->request->getPost(), true));
             // exit;
             $data = $this->request->getPost();
             $idSolicitud = $data['idSolicitud'] ?? null;
@@ -1520,43 +1428,24 @@ class Solicitudes extends BaseController
             log_message('info', 'id plan de pago ' . print_r($idPlan, true));
             // exit;
             // =========================
-            // 4. FIRMANTES
+            // 4. ADMINISTRADORES
             // =========================
-            $firmantes = $this->crearFirmantes($data);
+            $firmantesData = $this->crearAdministradorYFirmantes($data);
 
-            if (!$firmantes['valido']) {
-                throw new \Exception($firmantes['error']);
+            if (!$firmantesData['valido']) {
+                throw new \Exception($firmantesData['error']);
             }
 
-            $idFirmante1 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante1'],
-                $firmantes['data']['nombreFirmante1'],
-                $firmantes['data']['puestoFirmante1'],
-            );
+            $idAdministradorGuardar = $this->procesarAdministrador($firmantesData['data']['idAdministrador']);
+            $idFirmante1 = $this->procesarFirmante($firmantesData['data']['idFirmante1']);
+            $idFirmante2 = $this->procesarFirmante($firmantesData['data']['idFirmante2']);
+            $idFirmante3 = $this->procesarFirmante($firmantesData['data']['idFirmante3']);
 
-            $idFirmante2 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante2'],
-                $firmantes['data']['nombreFirmante2'],
-                $firmantes['data']['puestoFirmante2'],
-            );
-
-            $idFirmante3 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante3'],
-                $firmantes['data']['nombreFirmante3'],
-                $firmantes['data']['puestoFirmante3'],
-            );
-
-            $idFirmante4 = $this->procesarFirmante(
-                $firmantes['data']['idFirmante4'],
-                $firmantes['data']['nombreFirmante4'],
-                $firmantes['data']['puestoFirmante4'],
-            );
-
-            log_message('info', 'ids firmantes ' . print_r([
+            log_message('info', 'ids administrador y firmantes ' . print_r([
+                'idAdministrador' => $idAdministradorGuardar,
                 'idFirmante1' => $idFirmante1,
                 'idFirmante2' => $idFirmante2,
-                'idFirmante3' => $idFirmante3,
-                'idFirmante4' => $idFirmante4
+                'idFirmante3' => $idFirmante3
             ], true));
 
             // =========================
@@ -1566,10 +1455,10 @@ class Solicitudes extends BaseController
                 'id_beneficiario' => $idBeneficiario,
                 'id_plan_de_pago' => $idPlan,
                 'saldo_pendiente' => $solicitud['data']['costoInstalacion'],
+                'id_administrador' => $idAdministradorGuardar,
                 'id_firmante_1' => $idFirmante1,
                 'id_firmante_2' => $idFirmante2,
-                'id_firmante_3' => $idFirmante3,
-                'id_firmante_4' => $idFirmante4
+                'id_firmante_3' => $idFirmante3
             ]);
 
             if (!$relacionesActualizadas) {
@@ -1724,7 +1613,7 @@ class Solicitudes extends BaseController
                 'id_comision_2' => $idComision2,
             ]));
 
-            return $this->respondOk('Solicitud aprobada correctamente y contrato generado con numero ' . $numeroContrato);
+            return $this->respondOk('Solicitud actualizada correctamente ' . $numeroContrato);
         } catch (\Throwable $e) {
 
             $db->transRollback();

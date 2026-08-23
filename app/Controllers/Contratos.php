@@ -126,17 +126,17 @@ class Contratos extends BaseController
             "ocupacion" => $dataSolicitud['ocupacion'],
             "direccion" => $dataSolicitud['direccion'],
 
-            "nombreFirmante1" => $request->getPost('nombreFirmante1'),
-            "rolFirmante1" => $request->getPost('puestoFirmante1'),
+            "nombreAdministrador" => $dataSolicitud['nombreAdministrador'] ?? $request->getPost('nombreAdministrador'),
+            "rolAdministrador" => $dataSolicitud['rolAdministrador'] ?? $request->getPost('rolAdministrador'),
 
-            "nombreFirmante2" => $request->getPost('nombreFirmante2'),
-            "rolFirmante2" => $request->getPost('puestoFirmante2'),
+            "nombreFirmante1" => $dataSolicitud['nombreFirmante1'] ?? $request->getPost('nombreFirmante1'),
+            "rolFirmante1" => $dataSolicitud['rolFirmante1'] ?? $request->getPost('rolFirmante1'),
 
-            "nombreFirmante3" => $request->getPost('nombreFirmante3'),
-            "rolFirmante3" => $request->getPost('puestoFirmante3'),
+            "nombreFirmante2" => $dataSolicitud['nombreFirmante2'] ?? $request->getPost('nombreFirmante2'),
+            "rolFirmante2" => $dataSolicitud['rolFirmante2'] ?? $request->getPost('rolFirmante2'),
 
-            "nombreFirmante4" => $request->getPost('nombreFirmante4'),
-            "rolFirmante4" => $request->getPost('puestoFirmante4'),
+            "nombreFirmante3" => $dataSolicitud['nombreFirmante3'] ?? $request->getPost('nombreFirmante3'),
+            "rolFirmante3" => $dataSolicitud['rolFirmante3'] ?? $request->getPost('rolFirmante3'),
         ];
 
         $data['logo'] = FCPATH . 'dist/img/agua.png';
@@ -206,6 +206,9 @@ class Contratos extends BaseController
             "ocupacion" => $data['ocupacion'],
             "direccion" => $data['direccion'],
 
+            "nombreAdministrador" => $data['nombreAdministrador'] ?? '',
+            "rolAdministrador" => $data['rolAdministrador'] ?? '',
+
             "nombreFirmante1" => $data['nombreFirmante1'] ?? '',
             "rolFirmante1" => $data['rolFirmante1'] ?? '',
 
@@ -214,9 +217,6 @@ class Contratos extends BaseController
 
             "nombreFirmante3" => $data['nombreFirmante3'] ?? '',
             "rolFirmante3" => $data['rolFirmante3'] ?? '',
-
-            "nombreFirmante4" => $data['nombreFirmante4'] ?? '',
-            "rolFirmante4" => $data['rolFirmante4'] ?? '',
         ];
 
         $data['logo'] = FCPATH . 'dist/img/agua.png';

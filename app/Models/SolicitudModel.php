@@ -37,10 +37,10 @@ class SolicitudModel extends Model
         'estado',
         'id_usuario',
         'fecha_creacion',
+        'id_administrador',
         'id_firmante_1',
         'id_firmante_2',
         'id_firmante_3',
-        'id_firmante_4',
         'fecha_anulada'
     ];
 
@@ -225,110 +225,6 @@ class SolicitudModel extends Model
         ];
     }
 
-    // public function getInfoSolicitudPorId($idSolicitud)
-    // {
-    //     if (empty($idSolicitud)) {
-    //         return null;
-    //     }
-
-    //     return $this->select("
-    //             solicitudes.id_solicitud,
-    //             solicitudes.codigo_solicitud AS codigoSolicitud,
-    //             solicitudes.fecha_generacion AS fechaCreacion,
-    //             solicitudes.id_cliente,
-    //             clientes.nombre_completo AS nombre,
-    //             clientes.edad,
-    //             clientes.dui,
-    //             clientes.nit,
-    //             clientes.extendido,
-    //             clientes.fecha,
-    //             clientes.lugar_nacimiento AS lugarNacimiento,
-    //             clientes.fecha_nacimiento AS fechaNacimiento,
-    //             clientes.estado_familiar AS estadoFamiliar,
-    //             clientes.numero_grupo_familiar AS numeroGrupoFamiliar,
-    //             CONCAT_WS(', ',
-    //                 departamentos.nombre,
-    //                 municipios.nombre,
-    //                 distritos.nombre,
-    //                 colonias.nombre,
-    //                 clientes.complemento_direccion
-    //             ) AS direccion,
-    //             clientes.lugar_de_trabajo AS lugarDeTrabajo,
-    //             clientes.ocupacion,
-    //             clientes.telefono AS telefonos,
-    //             beneficiarios.id_beneficiario AS idBeneficiario,
-    //             beneficiarios.nombre AS nombreBeneficiario,
-    //             beneficiarios.edad AS edadBeneficiario,
-    //             beneficiarios.parentesco AS parentescoBeneficiario,
-    //             beneficiarios.direccion AS direccionBeneficiario,
-    //             solicitudes.direccion_inmueble AS direccionInmueble,
-    //             solicitudes.propietario,
-    //             solicitudes.inquilino,
-    //             solicitudes.representante,
-    //             solicitudes.otro AS otroCheck,
-    //             solicitudes.abonera,
-    //             solicitudes.hoyo_seco AS hoyoSeco,
-    //             solicitudes.lavable,
-    //             solicitudes.`otro_tipo_baño` AS otroBaño,
-    //             solicitudes.acepta_construccion_letrina AS aceptaConstruccionLetrina,
-    //             solicitudes.tiempo_construccion AS tiempo,
-    //             solicitudes.costo_instalacion AS monto,
-    //             solicitudes.contado,
-    //             solicitudes.otro_tipo_de_pago AS otroTipoPago,
-    //             plan_de_pago.id_plan_de_pago AS idPlanDePago,
-    //             plan_de_pago.cantidad_cuotas AS cantidadDePagos,
-    //             plan_de_pago.monto_cuotas AS totalCuota,
-    //             solicitudes.interes AS interesACobrar,
-    //             solicitudes.saldo_pendiente AS saldoPendiente,
-    //             solicitudes.acuerdo,
-    //             solicitudes.fecha_session AS fechaSession,
-    //             solicitudes.numero_acta AS numeroActa,
-    //             solicitudes.estado,
-
-    //             f1.id_firmante AS idFirmante1,
-    //             f1.nombre AS nombreFirmante1,
-    //             f1.rol AS rolFirmante1,
-
-    //             f2.id_firmante AS idFirmante2,
-    //             f2.nombre AS nombreFirmante2,
-    //             f2.rol AS rolFirmante2,
-
-    //             f3.id_firmante AS idFirmante3,
-    //             f3.nombre AS nombreFirmante3,
-    //             f3.rol AS rolFirmante3,
-
-    //             contratos.ficha_alcaldia AS fichaAlcaldia,
-    //             contratos.fecha_de_inicio AS fechaInicio,
-    //             contratos.fecha_de_vencimiento AS fechaVencimiento,
-    //             rutas.id_ruta AS idRuta,
-    //             rutas.nombre AS nombreRuta,
-    //             medidores.id_medidor AS idMedidor,
-    //             medidores.numero_serie AS numeroSerie,
-    //             contratos.direccion_medidor AS direccionMedidor,
-    //             tarifas.id_tarifa AS idTarifa,
-    //             tarifas.codigo AS codigoTarifa,
-    //             tipos_de_cliente.nombre AS nombreTarifa,
-    //             contratos.numero_contrato AS numeroContrato
-    //         ", false)
-    //         ->join('clientes', 'clientes.id_cliente = solicitudes.id_cliente', 'left')
-    //         ->join('beneficiarios', 'beneficiarios.id_beneficiario = solicitudes.id_beneficiario', 'left')
-    //         ->join('plan_de_pago', 'plan_de_pago.id_plan_de_pago = solicitudes.id_plan_de_pago', 'left')
-    //         ->join('contratos', 'contratos.id_solicitud = solicitudes.id_solicitud', 'left')
-    //         ->join('firmantes AS f1', 'f1.id_firmante = solicitudes.id_firmante_1', 'left')
-    //         ->join('firmantes AS f2', 'f2.id_firmante = solicitudes.id_firmante_2', 'left')
-    //         ->join('firmantes AS f3', 'f3.id_firmante = solicitudes.id_firmante_3', 'left')
-    //         ->join('departamentos', 'departamentos.id_departamento = clientes.id_departamento', 'left')
-    //         ->join('municipios', 'municipios.id_municipio = clientes.id_municipio', 'left')
-    //         ->join('distritos', 'distritos.id_distrito = clientes.id_distrito', 'left')
-    //         ->join('colonias', 'colonias.id_colonia = clientes.id_colonia', 'left')
-    //         ->join('rutas', 'rutas.id_ruta = contratos.id_ruta', 'left')
-    //         ->join('medidores', 'medidores.id_medidor = contratos.id_medidor', 'left')
-    //         ->join('tarifas', 'tarifas.id_tarifa = contratos.id_tarifa', 'left')
-    //         ->join('tipos_de_cliente', 'tipos_de_cliente.id_tipo_cliente = tarifas.id_tipo_cliente', 'left')
-    //         ->where('solicitudes.id_solicitud', $idSolicitud)
-    //         ->first();
-    // }
-
     public function getInfoSolicitudPorId($idSolicitud = null, $idContrato = null)
     {
         // =========================================================
@@ -434,13 +330,17 @@ class SolicitudModel extends Model
         solicitudes.numero_acta AS numeroActa,
         solicitudes.estado,
 
+        a1.id_administrador AS idAdministrador,
+        a1.nombre AS nombreAdministrador,
+        a1.rol AS rolAdministrador,
+        a1.ocupacion,
+        a1.direccion,
+        a1.edad,
+        a1.dui AS duiRepresentante,
+
         f1.id_firmante AS idFirmante1,
         f1.nombre AS nombreFirmante1,
         f1.rol AS rolFirmante1,
-        f1.ocupacion,
-        f1.direccion,
-        f1.edad,
-        f1.dui AS duiRepresentante,
 
         f2.id_firmante AS idFirmante2,
         f2.nombre AS nombreFirmante2,
@@ -449,10 +349,6 @@ class SolicitudModel extends Model
         f3.id_firmante AS idFirmante3,
         f3.nombre AS nombreFirmante3,
         f3.rol AS rolFirmante3,
-
-        f4.id_firmante AS idFirmante4,
-        f4.nombre AS nombreFirmante4,
-        f4.rol AS rolFirmante4,
 
         contratos.id_contrato,
         contratos.numero_contrato AS numeroContrato,
@@ -502,8 +398,14 @@ class SolicitudModel extends Model
         );
 
         // =========================================================
-        // FIRMANTES
+        // ADMINISTRADOR Y FIRMANTES
         // =========================================================
+        $builder->join(
+            'administradores AS a1',
+            'a1.id_administrador = solicitudes.id_administrador',
+            'left'
+        );
+
         $builder->join(
             'firmantes AS f1',
             'f1.id_firmante = solicitudes.id_firmante_1',
@@ -519,12 +421,6 @@ class SolicitudModel extends Model
         $builder->join(
             'firmantes AS f3',
             'f3.id_firmante = solicitudes.id_firmante_3',
-            'left'
-        );
-
-        $builder->join(
-            'firmantes AS f4',
-            'f4.id_firmante = solicitudes.id_firmante_4',
             'left'
         );
 

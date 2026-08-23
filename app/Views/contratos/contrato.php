@@ -129,7 +129,7 @@
 
     <p>
         <span>
-            <strong><?= esc($nombreFirmante1 ?? '') ?></strong>, <?= esc($ocupacion ?? '') ?>, de <?= $edadRepresentante ?? '' ?> años de edad, del domicilio de <?= esc($direccion ?? '') ?> , con documento único de
+            <strong><?= esc($nombreAdministrador ?? '') ?></strong>, <?= esc($ocupacion ?? '') ?>, de <?= $edadRepresentante ?? '' ?> años de edad, del domicilio de <?= esc($direccion ?? '') ?> , con documento único de
             identidad personal número <?= esc($duiRepresentante ?? '') ?>, actuando en calidad de administrador y en representación de la ASOCIACION
             COMUNAL ADMINISTRADORA DEL SISTEMA DE AGUA POTABLE DEL CANTÓN EL COYOLITO DEL
             MUNICIPIO DE TEJUTLA Y DEPARTAMENTO DE CHALATENANGO. BENDICION DE DIOS. (ACASABED)
@@ -354,8 +354,17 @@
             <div class="titulo">Firma Usuario</div>
         </div>
 
+        <!-- ADMINISTRADOR 1 -->
+        <?php if (!empty($nombreAdministrador ?? '') || !empty($rolAdministrador ?? '')) : ?>
+            <div class="firma">
+                <div class="linea"></div>
+                <div class="nombre"><?= $nombreAdministrador ?? '' ?></div>
+                <div class="titulo"><?= $rolAdministrador ?? '' ?></div>
+            </div>
+        <?php endif; ?>
+
         <!-- Firmante 1 -->
-        <?php if (!empty($nombreFirmante1 ?? '') || !empty($rolFirmante1 ?? '')) : ?>
+        <?php if (!empty($nombreFirmante1) || !empty($rolFirmante1)) : ?>
             <div class="firma">
                 <div class="linea"></div>
                 <div class="nombre"><?= $nombreFirmante1 ?? '' ?></div>
@@ -378,15 +387,6 @@
                 <div class="linea"></div>
                 <div class="nombre"><?= $nombreFirmante3 ?? '' ?></div>
                 <div class="titulo"><?= $rolFirmante3 ?? '' ?></div>
-            </div>
-        <?php endif; ?>
-
-        <!-- Firmante 4 -->
-        <?php if (!empty($nombreFirmante4) || !empty($rolFirmante4)) : ?>
-            <div class="firma">
-                <div class="linea"></div>
-                <div class="nombre"><?= $nombreFirmante4 ?? '' ?></div>
-                <div class="titulo"><?= $rolFirmante4 ?? '' ?></div>
             </div>
         <?php endif; ?>
 
