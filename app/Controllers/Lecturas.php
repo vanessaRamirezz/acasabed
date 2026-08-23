@@ -504,7 +504,7 @@ class Lecturas extends BaseController
                 foreach ($contratos as $contrato) {
                     $lecturaAnterior = $contrato['lectura_anterior'];
                     $lecturaAnterior = ($lecturaAnterior !== null && $lecturaAnterior !== '')
-                        ? number_format((float)$lecturaAnterior, 2)
+                        ? number_format((float)$lecturaAnterior, 0, '.', '')
                         : '-';
 
                     $html .= '
