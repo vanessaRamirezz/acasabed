@@ -275,6 +275,7 @@ class SolicitudModel extends Model
         solicitudes.fecha_generacion AS fechaCreacion,
 
         clientes.id_cliente,
+        clientes.codigo AS codigoCliente,
         clientes.nombre_completo AS nombre,
         clientes.edad,
         clientes.dui,

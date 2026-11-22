@@ -63,6 +63,38 @@ class Contratos extends BaseController
         return $diaTexto . ' de ' . $mes . ' del año ' . $anioTexto;
     }
 
+    private function mesAnioEnTexto($fecha)
+    {
+        if (empty($fecha)) {
+            return '';
+        }
+
+        $date = new DateTime($fecha);
+
+        $meses = [
+            1 => 'enero',
+            2 => 'febrero',
+            3 => 'marzo',
+            4 => 'abril',
+            5 => 'mayo',
+            6 => 'junio',
+            7 => 'julio',
+            8 => 'agosto',
+            9 => 'septiembre',
+            10 => 'octubre',
+            11 => 'noviembre',
+            12 => 'diciembre'
+        ];
+
+        $mes = $meses[(int)$date->format('m')];
+        $anio = (int)$date->format('Y');
+
+        $fmt = new \NumberFormatter('es_ES', \NumberFormatter::SPELLOUT);
+        $anioTexto = mb_strtolower($fmt->format($anio), 'UTF-8');
+
+        return $mes . ' del año ' . $anioTexto;
+    }
+
     private function horaEnTexto($fecha)
     {
         if (empty($fecha)) {
@@ -100,15 +132,16 @@ class Contratos extends BaseController
             ->getInfoSolicitudPorId($idSolicitud);
 
 
-        $fechaBase = !empty($dataSolicitud['fechaInicio'])
-            ? $dataSolicitud['fechaInicio']
-            : date('Y-m-d H:i:s');
+        // Vista previa / PDF: fecha_de_inicio para la fecha; hora actual al generar
+        $fechaBase = $request->getPost('fechaInicio')
+            ?: ($dataSolicitud['fechaInicio'] ?? date('Y-m-d H:i:s'));
 
         $fechaContrato = $this->fechaEnTexto($fechaBase);
-        $horaContrato  = $this->horaEnTexto($fechaBase);
+        $horaContrato  = $this->horaEnTexto(date('Y-m-d H:i:s'));
+        $fechaDesdeContrato = $this->mesAnioEnTexto($fechaBase);
 
         $data = [
-            "numeroContrato" => $request->getPost('numeroContrato'),
+            "numeroContrato" => $dataSolicitud['codigoCliente'] ?? $request->getPost('numeroContrato'),
 
             "edadRepresentante" => $dataSolicitud['edad'],
             "duiRepresentante" => $dataSolicitud['duiRepresentante'],
@@ -122,6 +155,7 @@ class Contratos extends BaseController
 
             "fechaTexto" => $fechaContrato,
             "horaTexto" => $horaContrato,
+            "fechaDesdeTexto" => $fechaDesdeContrato,
 
             "ocupacion" => $dataSolicitud['ocupacion'],
             "direccion" => $dataSolicitud['direccion'],
@@ -182,8 +216,13 @@ class Contratos extends BaseController
         $total = $data['monto'] ?? 0;
 
 
-        $fechaContrato = $this->fechaEnTexto($data['fechaInicio']);
-        $horaContrato = $this->horaEnTexto($data['fechaInicio']);
+        // Contrato registrado: fecha_de_inicio para la fecha; hora de registro
+        $fechaBase = $data['fechaInicio'] ?? date('Y-m-d H:i:s');
+        $horaBase = $data['fechaCreacionContrato'] ?? date('Y-m-d H:i:s');
+
+        $fechaContrato = $this->fechaEnTexto($fechaBase);
+        $horaContrato = $this->horaEnTexto($horaBase);
+        $fechaDesdeContrato = $this->mesAnioEnTexto($fechaBase);
 
         $fmt = new \NumberFormatter("es_ES", \NumberFormatter::SPELLOUT);
         $montoEntero = floor($total);
@@ -193,7 +232,7 @@ class Contratos extends BaseController
         $text = $textEntero . " con " . $textDecimal . "/100 dólares";
 
         $data = [
-            "numeroContrato" => $data['numeroContrato'] ?? '',
+            "numeroContrato" => $data['codigoCliente'] ?? '',
             "edadRepresentante" => $data['edad'],
             "duiRepresentante" => $data['duiRepresentante'],
             "nombre" => $data['nombre'] ?? '',
@@ -203,6 +242,7 @@ class Contratos extends BaseController
             "montoTexto" => $text,
             "fechaTexto" => $fechaContrato,
             "horaTexto" => $horaContrato,
+            "fechaDesdeTexto" => $fechaDesdeContrato,
             "ocupacion" => $data['ocupacion'],
             "direccion" => $data['direccion'],
 

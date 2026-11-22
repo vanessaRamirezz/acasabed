@@ -141,7 +141,7 @@
             documento se denominará El/La USUARIO /A. Por este medio hacemos constar que hemos acordado
             celebrar el presente CONTRATO, mediante el cual como El/La USUARIO/A del servicio de agua, que soy
             me comprometo a responsabilizarme del cuidado de la acometida domiciliar que LA ASOCIACION,
-            representada por el primero que comparece, y que me brinda desde, noviembre del año dos mil once. El
+            representada por el primero que comparece, y que me brinda desde, <?= esc($fechaDesdeTexto ?? '') ?>. El
             cual consta de las siguientes cláusulas:
         </span>
     </p>
@@ -153,9 +153,9 @@
     <ol type="I">
         <li>
             Después de haber cumplido los requisitos estipulados en el Reglamento Interno para ser
-            Usuario/a del servicio de agua, como parte de los componentes de la acometida se le instalo el
+            Usuario/a del servicio de agua, como parte de los componentes de la acometida se le instalara el
             medidor en el lindero de su terreno y es responsabilidad del usuario, colocar los accesorios y
-            tubería necesaria hasta ka colocación del grifo. (haciendo excepciones en algunos casos referente a
+            tubería necesaria hasta la colocación del grifo. (haciendo excepciones en algunos casos referente a
             la colocación del medidor)
         </li>
         <li>
@@ -324,8 +324,9 @@
     </ol>
 
     <p>
-        <strong>EL COSTO.</strong> El costo de esta acometida fue de <span"><?= $montoTexto ?? '' ?></span> exactos ($<span"><?= $montoNumero ?? '' ?></span>) por haber estado en el
-                listado de beneficiarios desde inicios del ejecución del proyecto.
+        <strong>EL COSTO.</strong> El costo de esta acometida fue de <span"><?= $montoTexto ?? '' ?></span> exactos ($<span"><?= $montoNumero ?? '' ?></span>) por haber cumplido 
+            con los requisitos establecidos en Estatutos y Reglamento Interno de ACASABED y haber sido Aprobada la Solicitud por ACASABED
+                
     </p>
 
     <div class="seccion">
@@ -341,7 +342,7 @@
             Tanto la persona representante legal de la Asociación como el usuario, nos damos por enterados/as y
             ratificamos el contenido de este convenio, el cual firmamos dando FE de nuestra conformidad, en la
             oficina de la Administrativa del sistema de agua ubicada en Plaza comercial don Yon Caserío el Coyolito,
-            Cantón Quitasol del Municipio Tejutla, del Departamento de Chalatenango, a las <?= esc($horaTexto ?? '') ?> del día <?= esc($fechaTexto ?? '') ?>.
+            Cantón Quitasol del Distrito Tejutla, Municipio de Chalatenango Centro del Departamento de Chalatenango, a las <?= esc($horaTexto ?? '') ?> del día <?= esc($fechaTexto ?? '') ?>.
         </li>
     </ol>
 
