@@ -121,7 +121,9 @@ class ContratoModel extends Model
                 cl.nombre_completo AS cliente
             ", false)
             ->join('clientes cl', 'cl.id_cliente = c.id_cliente', 'left')
+            ->join('medidores m', 'm.id_medidor = c.id_medidor', 'left')
             ->where('c.id_ruta', $idRuta)
+            ->where('m.estado', 'ACTIVO')
             ->groupStart()
             ->where('c.estado', 'APROBADO')
             ->orWhere('c.estado', 'SUSPENDIDO')
